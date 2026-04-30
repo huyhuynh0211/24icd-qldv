@@ -6,7 +6,10 @@
 <meta name="description" content="Hệ thống quản lý Đoàn TNCS HCM - Số hóa tài liệu, quản lý đoàn viên">
 <title>Đoàn TNCS HCM — Hệ thống Quản lý & Số hóa Tài liệu</title>
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>Đ</text></svg>">
-<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
 *,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
@@ -203,11 +206,43 @@ body.light .form-group input,body.light .form-group select,body.light .form-grou
 @media(max-width:768px){.sidebar{transform:translateX(-100%)}.sidebar.open{transform:translateX(0);box-shadow:var(--shadow)}.main-content{margin-left:0}.menu-toggle{display:block}.page-content{padding:16px}.header{padding:0 12px}.header-search{display:none}.stats-grid{grid-template-columns:1fr 1fr}.doc-grid{grid-template-columns:1fr}.event-card{flex-direction:column;align-items:flex-start}}
 @media(max-width:480px){.stats-grid{grid-template-columns:1fr}.login-card{padding:28px 20px}}
 ::-webkit-scrollbar{width:5px}::-webkit-scrollbar-track{background:transparent}::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px}
+/* NOTIFICATIONS */
+.notif-wrapper{position:relative}
+.notif-panel{position:absolute;top:44px;right:0;width:320px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);box-shadow:var(--shadow);z-index:300;max-height:400px;overflow:hidden}
+.notif-panel-header{padding:12px 16px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;font-size:14px}
+.notif-list{max-height:280px;overflow-y:auto}
+.notif-item{padding:10px 16px;border-bottom:1px solid var(--border);font-size:12px;cursor:pointer;transition:var(--tr)}
+.notif-item:hover{background:var(--hover)}
+.notif-item.unread{background:rgba(211,47,47,.05);border-left:3px solid var(--primary)}
+.notif-item .notif-time{font-size:10px;color:var(--muted);margin-top:2px}
+.notif-panel-footer{padding:8px 16px;border-top:1px solid var(--border);text-align:center}
+/* SEARCH RESULTS */
+.search-results{position:absolute;top:100%;left:0;right:0;background:var(--surface);border:1px solid var(--border);border-radius:0 0 var(--radius-sm) var(--radius-sm);box-shadow:var(--shadow);z-index:300;max-height:300px;overflow-y:auto}
+.search-group{padding:6px 12px;font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;background:var(--bg)}
+.search-item{padding:8px 12px;font-size:12px;cursor:pointer;transition:var(--tr)}
+.search-item:hover{background:var(--hover)}
+/* PROGRESS */
+.progress-bar{height:6px;background:var(--border);border-radius:3px;overflow:hidden}
+.progress-fill{height:100%;background:linear-gradient(90deg,var(--primary),var(--accent));border-radius:3px;transition:width .3s;width:0}
+/* LOADING */
+.loading-overlay{position:fixed;inset:0;background:rgba(0,0,0,.3);z-index:999;display:flex;align-items:center;justify-content:center}
+.spinner{width:40px;height:40px;border:4px solid var(--border);border-top-color:var(--primary);border-radius:50%;animation:spin .8s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+/* FORM */
+.form-input{width:100%;padding:8px 12px;background:var(--input);border:1px solid var(--border);border-radius:var(--radius-sm);color:var(--text);font-size:13px;transition:var(--tr);font-family:inherit}
+body.light .form-input{background:#f8fafc;color:#1e293b}
+.form-input:focus{border-color:var(--primary);box-shadow:0 0 0 2px rgba(211,47,47,.15)}
+.form-group textarea.form-input{min-height:60px;resize:vertical}
+.field-error{color:#ef4444;font-size:11px;min-height:14px;display:block}
+/* DARK MODE override */
+body.light .login-card{color:#1e293b}
+body.light .sidebar{background:linear-gradient(180deg,#1a1025,#1e293b)}
+body.light .notif-panel{background:#fff}
+body.light .search-results{background:#fff}
 </style>
 </head>
 <body>
-
-<!-- LOGIN PAGE -->
+<!-- LOGIN -->
 <div id="loginPage" class="login-page">
 <div class="login-bg"></div>
 <div class="login-card">
@@ -215,30 +250,21 @@ body.light .form-group input,body.light .form-group select,body.light .form-grou
 <h1>Đoàn TNCS HCM</h1>
 <p class="login-subtitle">Hệ thống Quản lý & Số hóa Tài liệu</p>
 <form id="loginForm" autocomplete="off">
-<div class="login-field">
-<label>Tên đăng nhập</label>
-<input type="text" id="loginUser" placeholder="Nhập tên đăng nhập" required>
-</div>
-<div class="login-field">
-<label>Mật khẩu</label>
-<input type="password" id="loginPass" placeholder="Nhập mật khẩu" required>
-</div>
+<div class="login-field"><label for="loginUser">Tên đăng nhập</label><input type="text" id="loginUser" placeholder="Nhập tên đăng nhập" required></div>
+<div class="login-field"><label for="loginPass">Mật khẩu</label><input type="password" id="loginPass" placeholder="Nhập mật khẩu" required></div>
 <div id="loginError" class="login-error"></div>
 <label class="login-remember"><input type="checkbox" id="rememberMe"> Ghi nhớ đăng nhập</label>
 <button type="submit" class="login-btn">Đăng nhập</button>
 </form>
-<div class="login-demo">
-<a href="#" onclick="demoLogin('admin')">🔑 Đăng nhập Admin</a>
-<a href="#" onclick="demoLogin('user')">👤 Đăng nhập User</a>
-</div>
-<a href="#" class="login-forgot" onclick="showToast('Vui lòng liên hệ Admin để đặt lại mật khẩu','warning')">Quên mật khẩu?</a>
+<div class="login-demo"><a href="#" onclick="demoLogin('admin');return false">🔑 Admin</a><a href="#" onclick="demoLogin('user');return false">👤 Đoàn viên</a></div>
+<a href="#" class="login-forgot" onclick="showToast('Vui lòng liên hệ Admin để đặt lại mật khẩu','warning');return false">Quên mật khẩu?</a>
 </div>
 </div>
-
 <!-- TOAST -->
 <div id="toastContainer" class="toast-container"></div>
-
-<!-- APP LAYOUT -->
+<!-- LOADING -->
+<div id="loadingOverlay" class="loading-overlay" style="display:none"><div class="spinner"></div></div>
+<!-- APP -->
 <div class="app-layout" id="appLayout" style="display:none">
 <div class="sidebar-overlay" id="sidebarOverlay"></div>
 <aside class="sidebar" id="sidebar">
@@ -246,11 +272,11 @@ body.light .form-group input,body.light .form-group select,body.light .form-grou
 <nav class="sidebar-nav">
 <div class="nav-group"><div class="nav-group-title">Chính</div>
 <div class="nav-item active" data-page="dashboard"><span class="icon">📊</span>Dashboard</div>
-<div class="nav-item" data-page="members"><span class="icon">👤</span>Đoàn viên<span class="badge" id="memberBadge">25</span></div>
+<div class="nav-item" data-page="members"><span class="icon">👤</span>Đoàn viên<span class="badge" id="memberBadge">0</span></div>
 <div class="nav-item" data-page="events"><span class="icon">🏅</span>Hoạt động</div>
 </div>
 <div class="nav-group"><div class="nav-group-title">Tài liệu</div>
-<div class="nav-item" data-page="documents"><span class="icon">📂</span>Thư viện<span class="badge" id="docBadge">20</span></div>
+<div class="nav-item" data-page="documents"><span class="icon">📂</span>Thư viện<span class="badge" id="docBadge">0</span></div>
 <div class="nav-item admin-only" id="navUpload"><span class="icon">📤</span>Upload mới</div>
 </div>
 <div class="nav-group"><div class="nav-group-title">Hệ thống</div>
@@ -259,526 +285,509 @@ body.light .form-group input,body.light .form-group select,body.light .form-grou
 </div>
 </nav>
 </aside>
-
 <main class="main-content">
 <header class="header">
 <div class="header-left">
-<button class="menu-toggle" id="menuToggle">☰</button>
-<div class="header-search"><span class="search-icon">🔍</span><input type="text" placeholder="Tìm kiếm..." id="globalSearch"></div>
+<button class="menu-toggle" id="menuToggle" aria-label="Menu">☰</button>
+<div class="header-search"><span class="search-icon">🔍</span><input type="text" placeholder="Tìm kiếm..." id="globalSearch"><div class="search-results" id="searchResults" style="display:none"></div></div>
 </div>
 <div class="header-right">
-<button class="header-btn" title="Thông báo">🔔<span class="notif-dot"></span></button>
-<span id="headerUserName" style="font-size:13px;color:var(--text-secondary)"></span>
-<div class="user-avatar" id="headerAvatar" title="User">AD</div>
+<div class="notif-wrapper"><button class="header-btn" id="notifBtn" aria-label="Thông báo">🔔<span class="notif-dot" id="notifDot" style="display:none"></span></button>
+<div class="notif-panel" id="notifPanel" style="display:none"><div class="notif-panel-header"><strong>Thông báo</strong><span class="badge badge-danger" id="notifCount">0</span></div><div id="notifList" class="notif-list"></div><div class="notif-panel-footer"><button class="btn btn-sm btn-outline" onclick="App.ThongBao.markAllRead()">✓ Đánh dấu đã đọc</button></div></div>
+</div>
+<span id="headerUserName" style="font-size:12px;color:var(--text2)"></span>
+<div class="user-avatar" id="headerAvatar">AD</div>
 <button class="btn btn-outline btn-sm" id="logoutBtn">Đăng xuất</button>
 </div>
 </header>
-
 <div class="page-content">
-
 <!-- DASHBOARD -->
 <section class="page active" id="page-dashboard">
-<div class="page-header"><h1>Dashboard Tổng quan</h1><p id="dashGreeting">Xin chào, đây là tổng quan hệ thống</p></div>
+<div class="page-header"><h1>Dashboard Tổng quan</h1><p id="dashGreeting"></p></div>
 <div class="stats-grid" id="dashStats"></div>
 <div class="dashboard-grid">
-<div class="card"><div class="card-header"><h3>📈 Đoàn viên kết nạp 6 tháng</h3></div><div class="card-body"><div class="chart-area"><canvas id="lineChart"></canvas></div></div></div>
+<div class="card"><div class="card-header"><h3>📈 Kết nạp 6 tháng</h3></div><div class="card-body"><div class="chart-area"><canvas id="lineChart"></canvas></div></div></div>
 <div class="card"><div class="card-header"><h3>🥧 Phân bố Chi đoàn</h3></div><div class="card-body"><div class="chart-area"><canvas id="pieChart"></canvas></div></div></div>
 </div>
-<div class="card" style="margin-top:20px"><div class="card-header"><h3>🕐 Hoạt động gần đây</h3></div><div class="card-body"><div class="activity-list" id="recentActivity"></div></div></div>
+<div class="card" style="margin-top:16px"><div class="card-header"><h3>🕐 Hoạt động gần đây</h3></div><div class="card-body"><div class="activity-list" id="recentActivity"></div></div></div>
 </section>
-
 <!-- MEMBERS -->
 <section class="page" id="page-members">
-<div class="page-header" style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px">
-<div><h1>Quản lý Đoàn viên</h1><p>Quản lý hồ sơ, thi đua và đoàn phí</p></div>
+<div class="page-header" style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px">
+<div><h1>Quản lý Đoàn viên</h1><p>Hồ sơ, thi đua và đoàn phí</p></div>
 <button class="btn btn-primary admin-only" id="btnAddMember">➕ Thêm Đoàn viên</button>
 </div>
 <div class="card"><div class="card-header" style="flex-wrap:wrap;gap:8px">
-<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
-<input class="doc-search" placeholder="🔍 Tìm kiếm..." id="memberSearch" style="width:180px">
-<select class="doc-search" id="memberStatusFilter" style="width:140px;padding-left:10px"><option value="all">Trạng thái ▾</option><option value="active">Hoạt động</option><option value="paused">Tạm hoãn</option><option value="expired">Hết hạn</option></select>
-<select class="doc-search" id="memberUnitFilter" style="width:140px;padding-left:10px"><option value="all">Chi đoàn ▾</option><option>K22A</option><option>K22B</option><option>K21C</option><option>K23A</option></select>
-<select class="doc-search" id="memberFeeFilter" style="width:150px;padding-left:10px"><option value="all">Đoàn phí ▾</option><option value="paid">Đã đóng đủ</option><option value="debt">Còn nợ</option></select>
+<div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
+<input class="form-input" placeholder="🔍 Tìm kiếm..." id="memberSearch" style="width:170px">
+<select class="form-input" id="memberStatusFilter" style="width:130px"><option value="all">Trạng thái ▾</option><option value="hoat-dong">Hoạt động</option><option value="tam-hoan">Tạm hoãn</option><option value="het-han">Hết hạn</option></select>
+<select class="form-input" id="memberUnitFilter" style="width:140px"><option value="all">Chi đoàn ▾</option><option>Chi đoàn K22A</option><option>Chi đoàn K22B</option><option>Chi đoàn K21C</option><option>Chi đoàn K23A</option></select>
 </div>
-<span style="color:var(--text-muted);font-size:13px" id="memberCount"></span>
+<span style="color:var(--text2);font-size:12px" id="memberCount"></span>
 </div>
-<div class="card-body" style="padding:0"><div class="table-wrapper">
-<table class="data-table" id="memberTable"><thead><tr>
-<th class="sortable" data-sort="name">Đoàn viên ⇅</th><th class="sortable" data-sort="unit">Chi đoàn ⇅</th><th>Đoàn phí</th><th class="sortable" data-sort="rank">Thi đua ⇅</th><th>Trạng thái</th><th>Thao tác</th>
-</tr></thead><tbody id="memberTbody"></tbody></table>
-</div></div>
+<div class="card-body" style="padding:0"><div class="table-wrapper"><table class="data-table" id="memberTable"><thead><tr>
+<th class="sortable" data-sort="hoTen">Đoàn viên ⇅</th><th class="sortable" data-sort="chiDoan">Chi đoàn ⇅</th><th>Đoàn phí</th><th class="sortable" data-sort="thiDua">Thi đua ⇅</th><th>Trạng thái</th><th>Thao tác</th>
+</tr></thead><tbody id="memberTbody"></tbody></table></div></div>
 <div class="card-footer" id="memberPagination"></div>
-</div>
-</section>
-
+</div></section>
 <!-- DOCUMENTS -->
 <section class="page" id="page-documents">
-<div class="page-header" style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px">
-<div><h1>Thư viện Tài liệu</h1><p>Tra cứu tài liệu số hóa của tổ chức Đoàn</p></div>
-<button class="btn btn-primary admin-only" id="btnUploadDoc">📤 Upload tài liệu</button>
+<div class="page-header" style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px">
+<div><h1>Thư viện Tài liệu</h1><p>Tra cứu tài liệu số hóa</p></div>
+<button class="btn btn-primary admin-only" id="btnUploadDoc">📤 Upload</button>
 </div>
 <div class="tab-filters" id="docTabs"></div>
 <div class="toolbar">
-<input class="doc-search" placeholder="🔍 Tìm theo tiêu đề, tags..." id="docSearch" style="width:260px">
-<div style="display:flex;gap:8px">
-<select class="doc-search" id="docTypeFilter" style="width:130px;padding-left:10px"><option value="all">Loại file ▾</option><option value="pdf">PDF</option><option value="docx">DOCX</option><option value="pptx">PPTX</option><option value="img">Ảnh</option></select>
-<select class="doc-search" id="docSort" style="width:140px;padding-left:10px"><option value="newest">Mới nhất</option><option value="views">Lượt xem ▾</option><option value="az">A → Z</option></select>
+<input class="form-input" placeholder="🔍 Tìm theo tiêu đề, tags..." id="docSearch" style="width:240px">
+<div style="display:flex;gap:6px">
+<select class="form-input" id="docTypeFilter" style="width:120px"><option value="all">Loại file ▾</option><option value="PDF">PDF</option><option value="DOCX">DOCX</option><option value="PPTX">PPTX</option><option value="Image">Ảnh</option></select>
+<select class="form-input" id="docSort" style="width:130px"><option value="newest">Mới nhất</option><option value="views">Lượt xem ▾</option><option value="az">A → Z</option></select>
 </div>
 </div>
 <div class="doc-grid" id="docGrid"></div>
 </section>
-
 <!-- EVENTS -->
 <section class="page" id="page-events">
-<div class="page-header" style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px">
-<div><h1>Hoạt động & Sự kiện</h1><p>Quản lý sự kiện và điểm danh đoàn viên</p></div>
+<div class="page-header" style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px">
+<div><h1>Hoạt động & Sự kiện</h1><p>Quản lý sự kiện và điểm danh</p></div>
 <button class="btn btn-primary admin-only" id="btnAddEvent">📅 Tạo sự kiện</button>
 </div>
 <div class="stats-grid" id="eventStats"></div>
 <div class="card"><div class="card-header"><h3>Danh sách sự kiện</h3>
-<div style="display:flex;gap:6px"><button class="filter-btn active" data-ef="all">Tất cả</button><button class="filter-btn" data-ef="upcoming">Sắp tới</button><button class="filter-btn" data-ef="ongoing">Đang diễn ra</button><button class="filter-btn" data-ef="done">Đã xong</button></div>
+<div style="display:flex;gap:4px"><button class="filter-btn active" data-ef="all">Tất cả</button><button class="filter-btn" data-ef="sap-dien-ra">Sắp tới</button><button class="filter-btn" data-ef="dang-dien-ra">Đang diễn ra</button><button class="filter-btn" data-ef="hoan-thanh">Đã xong</button></div>
 </div><div class="card-body"><div class="event-list" id="eventList"></div></div></div>
 </section>
-
 <!-- REPORTS -->
 <section class="page" id="page-reports">
-<div class="page-header"><h1>Báo cáo & Thống kê</h1><p>Tổng hợp báo cáo và xuất file</p></div>
+<div class="page-header"><h1>Báo cáo & Thống kê</h1><p>Xuất báo cáo định kỳ</p></div>
 <div class="report-grid">
-<div class="card"><div class="card-header"><h3>📊 Báo cáo Đoàn viên</h3></div><div class="card-body">
-<div class="chart-area" style="height:200px"><canvas id="reportChart1"></canvas></div>
-<p style="color:var(--text-secondary);font-size:13px;margin:12px 0">Thống kê theo chi đoàn, thi đua, đoàn phí</p>
-<div style="display:flex;gap:8px"><button class="btn btn-primary btn-sm" onclick="exportCSV('members')">📥 Xuất Excel</button><button class="btn btn-outline btn-sm" onclick="exportPDF('members')">📄 Xuất PDF</button></div>
-</div></div>
-<div class="card"><div class="card-header"><h3>📅 Báo cáo Hoạt động</h3></div><div class="card-body">
-<div class="chart-area" style="height:200px"><canvas id="reportChart2"></canvas></div>
-<p style="color:var(--text-secondary);font-size:13px;margin:12px 0">Sự kiện, lượt tham gia theo tháng</p>
-<div style="display:flex;gap:8px"><button class="btn btn-primary btn-sm" onclick="exportCSV('events')">📥 Xuất Excel</button><button class="btn btn-outline btn-sm" onclick="exportPDF('events')">📄 Xuất PDF</button></div>
-</div></div>
-<div class="card"><div class="card-header"><h3>📂 Báo cáo Tài liệu</h3></div><div class="card-body">
-<div class="chart-area" style="height:200px"><canvas id="reportChart3"></canvas></div>
-<p style="color:var(--text-secondary);font-size:13px;margin:12px 0">Upload, lượt xem theo danh mục</p>
-<div style="display:flex;gap:8px"><button class="btn btn-primary btn-sm" onclick="exportCSV('docs')">📥 Xuất Excel</button><button class="btn btn-outline btn-sm" onclick="exportPDF('docs')">📄 Xuất PDF</button></div>
-</div></div>
-</div>
-</section>
-
+<div class="card"><div class="card-header"><h3>📊 Đoàn viên</h3></div><div class="card-body"><div class="chart-area" style="height:180px"><canvas id="rptChart1"></canvas></div><p style="color:var(--text2);font-size:12px;margin:10px 0">Theo chi đoàn, thi đua, đoàn phí</p><div style="display:flex;gap:6px"><button class="btn btn-primary btn-sm" onclick="App.BaoCao.exportExcel('doanvien')">📥 Excel</button><button class="btn btn-outline btn-sm" onclick="App.BaoCao.exportPDF('doanvien')">📄 PDF</button></div></div></div>
+<div class="card"><div class="card-header"><h3>📅 Hoạt động</h3></div><div class="card-body"><div class="chart-area" style="height:180px"><canvas id="rptChart2"></canvas></div><p style="color:var(--text2);font-size:12px;margin:10px 0">Sự kiện, lượt tham gia</p><div style="display:flex;gap:6px"><button class="btn btn-primary btn-sm" onclick="App.BaoCao.exportExcel('sukien')">📥 Excel</button><button class="btn btn-outline btn-sm" onclick="App.BaoCao.exportPDF('sukien')">📄 PDF</button></div></div></div>
+<div class="card"><div class="card-header"><h3>📂 Tài liệu</h3></div><div class="card-body"><div class="chart-area" style="height:180px"><canvas id="rptChart3"></canvas></div><p style="color:var(--text2);font-size:12px;margin:10px 0">Upload, lượt xem theo danh mục</p><div style="display:flex;gap:6px"><button class="btn btn-primary btn-sm" onclick="App.BaoCao.exportExcel('tailieu')">📥 Excel</button><button class="btn btn-outline btn-sm" onclick="App.BaoCao.exportPDF('tailieu')">📄 PDF</button></div></div></div>
+</div></section>
 <!-- SETTINGS -->
 <section class="page" id="page-settings">
-<div class="page-header"><h1>Cài đặt hệ thống</h1><p>Quản lý cấu hình và tùy chỉnh</p></div>
+<div class="page-header"><h1>Cài đặt</h1><p>Cấu hình hệ thống</p></div>
 <div class="card"><div class="card-body">
 <div class="settings-section"><h3>🔔 Thông báo</h3>
-<div class="setting-row"><div class="setting-label"><h4>Thông báo email</h4><p>Gửi email khi có hoạt động mới</p></div><div class="toggle active" data-key="emailNotif"></div></div>
-<div class="setting-row"><div class="setting-label"><h4>Thông báo web</h4><p>Push notification trên trình duyệt</p></div><div class="toggle active" data-key="webNotif"></div></div>
-<div class="setting-row"><div class="setting-label"><h4>Nhắc đoàn phí</h4><p>Tự động nhắc khi chưa đóng phí</p></div><div class="toggle" data-key="feeRemind"></div></div>
+<div class="setting-row"><div class="setting-label"><h4>Email</h4><p>Gửi email khi có hoạt động mới</p></div><div class="toggle" data-key="thongBaoEmail"></div></div>
+<div class="setting-row"><div class="setting-label"><h4>Web push</h4><p>Thông báo trên trình duyệt</p></div><div class="toggle" data-key="thongBaoWeb"></div></div>
+<div class="setting-row"><div class="setting-label"><h4>Nhắc đoàn phí</h4><p>Tự động nhắc khi chưa đóng</p></div><div class="toggle" data-key="nhacDoanPhi"></div></div>
 </div>
 <div class="settings-section"><h3>🎨 Giao diện</h3>
-<div class="setting-row"><div class="setting-label"><h4>Chế độ tối</h4><p>Sử dụng giao diện nền tối</p></div><div class="toggle" id="darkModeToggle" data-key="darkMode"></div></div>
-<div class="setting-row"><div class="setting-label"><h4>Hiệu ứng chuyển động</h4><p>Bật/tắt animation</p></div><div class="toggle active" data-key="animations"></div></div>
+<div class="setting-row"><div class="setting-label"><h4>Chế độ tối</h4><p>Giao diện nền tối</p></div><div class="toggle" id="darkModeToggle" data-key="darkMode"></div></div>
+<div class="setting-row"><div class="setting-label"><h4>Hiệu ứng</h4><p>Animation chuyển động</p></div><div class="toggle" data-key="hieu_ung"></div></div>
 </div>
 <div class="settings-section admin-only"><h3>🔐 Bảo mật</h3>
-<div class="setting-row"><div class="setting-label"><h4>Xác thực 2FA</h4><p>Yêu cầu OTP khi đăng nhập</p></div><div class="toggle" data-key="twoFA"></div></div>
-<div class="setting-row"><div class="setting-label"><h4>Tự động đăng xuất</h4><p>Đăng xuất sau 30 phút</p></div><div class="toggle active" data-key="autoLogout"></div></div>
+<div class="setting-row"><div class="setting-label"><h4>2FA</h4><p>Xác thực hai lớp</p></div><div class="toggle" data-key="baoMat2FA"></div></div>
+<div class="setting-row"><div class="setting-label"><h4>Tự động đăng xuất</h4><p>Sau 30 phút không hoạt động</p></div><div class="toggle" data-key="tuDongDangXuat"></div></div>
+<div style="margin-top:16px"><button class="btn btn-primary btn-sm" onclick="App.CaiDat.save()">💾 Lưu cài đặt</button><button class="btn btn-sm" style="background:#ef4444;color:#fff;margin-left:8px" onclick="App.CaiDat.resetData()">🗑️ Xóa dữ liệu</button></div>
 </div>
 <div class="settings-section admin-only"><h3>🔑 Đổi mật khẩu</h3>
-<div class="form-group"><label>Mật khẩu hiện tại</label><input type="password" id="oldPass"></div>
-<div class="form-group"><label>Mật khẩu mới</label><input type="password" id="newPass"></div>
-<button class="btn btn-primary btn-sm" onclick="changePassword()">Đổi mật khẩu</button>
+<div class="form-group"><label>Mật khẩu hiện tại</label><input type="password" id="oldPass" class="form-input"></div>
+<div class="form-group"><label>Mật khẩu mới</label><input type="password" id="newPass" class="form-input"></div>
+<button class="btn btn-primary btn-sm" onclick="App.CaiDat.changePassword()">Đổi mật khẩu</button>
 </div>
-<div class="settings-section"><h3>ℹ️ Thông tin hệ thống</h3>
-<div class="setting-row"><div class="setting-label"><h4>Phiên bản</h4><p>v1.0.0 — Build 2025.04.30</p></div></div>
-<div class="setting-row"><div class="setting-label"><h4>Đơn vị</h4><p>Đoàn TNCS Hồ Chí Minh — Khoa CNTT</p></div></div>
-<div class="setting-row"><div class="setting-label"><h4>Cập nhật</h4><p>30/04/2025</p></div></div>
+<div class="settings-section"><h3>ℹ️ Hệ thống</h3>
+<div class="setting-row"><div class="setting-label"><h4>Phiên bản</h4><p>v2.0.0 — 30/04/2025</p></div></div>
+<div class="setting-row"><div class="setting-label"><h4>Đơn vị</h4><p>Đoàn TNCS HCM — Khoa CNTT</p></div></div>
 </div>
 </div></div>
 </section>
-
 </div></main></div>
-
 <!-- MODAL: Upload -->
 <div class="modal-overlay" id="uploadModal"><div class="modal">
 <div class="modal-header"><h3>📤 Upload tài liệu</h3><button class="modal-close" onclick="closeModal('uploadModal')">&times;</button></div>
 <div class="modal-body">
-<div class="upload-zone"><div class="icon">📁</div><p>Kéo thả hoặc <strong>nhấn chọn file</strong></p><small>PDF, DOCX, PPTX, JPG/PNG — Tối đa 100MB</small></div>
-<div class="form-group" style="margin-top:16px"><label>Tiêu đề</label><input type="text" id="docTitle" placeholder="Nhập tiêu đề..."></div>
-<div class="form-group"><label>Mô tả</label><textarea id="docDesc" placeholder="Mô tả ngắn..."></textarea></div>
-<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
-<div class="form-group"><label>Danh mục</label><select id="docCat"><option value="nghi-quyet">Nghị quyết</option><option value="hoc-tap">Học tập CT</option><option value="phong-trao">Phong trào</option><option value="hanh-chinh">Hành chính</option></select></div>
-<div class="form-group"><label>Loại file</label><select id="docType"><option value="pdf">PDF</option><option value="docx">DOCX</option><option value="pptx">PPTX</option><option value="img">Ảnh</option></select></div>
+<div class="upload-zone" id="uploadZone"><div class="icon">📁</div><p>Kéo thả hoặc <strong>nhấn chọn file</strong></p><small>PDF, DOCX, PPTX, JPG/PNG, MP4 — Max 100MB</small><input type="file" id="fileInput" style="display:none" accept=".pdf,.docx,.pptx,.jpg,.jpeg,.png,.mp4"></div>
+<div id="filePreview" style="display:none;margin:12px 0;padding:10px;background:var(--input);border-radius:8px"></div>
+<div id="uploadProgress" style="display:none;margin:8px 0"><div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div><span id="progressText" style="font-size:11px;color:var(--text2)">0%</span></div>
+<div class="form-group" style="margin-top:12px"><label>Tiêu đề *</label><input type="text" id="docTitle" class="form-input" required><span class="field-error" id="docTitleErr"></span></div>
+<div class="form-group"><label>Mô tả</label><textarea id="docDesc" class="form-input"></textarea></div>
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+<div class="form-group"><label>Danh mục</label><select id="docCat" class="form-input"><option value="Nghị quyết">Nghị quyết</option><option value="Học tập CT">Học tập CT</option><option value="Phong trào">Phong trào</option><option value="Hành chính">Hành chính</option><option value="Khác">Khác</option></select></div>
+<div class="form-group"><label>Quyền xem</label><select id="docAccess" class="form-input"><option>Công khai</option><option>Nội bộ</option><option>Giới hạn</option></select></div>
 </div>
-<div class="form-group"><label>Tags</label><input type="text" id="docTags" placeholder="tag1, tag2..."></div>
+<div class="form-group"><label>Tags</label><input type="text" id="docTags" class="form-input" placeholder="tag1, tag2..."></div>
 </div>
-<div class="modal-footer"><button class="btn btn-outline" onclick="closeModal('uploadModal')">Hủy</button><button class="btn btn-primary" onclick="addDocument()">📤 Upload</button></div>
+<div class="modal-footer"><button class="btn btn-outline" onclick="closeModal('uploadModal')">Hủy</button><button class="btn btn-primary" id="uploadBtn" onclick="App.TaiLieu.upload()">📤 Upload</button></div>
 </div></div>
-
 <!-- MODAL: Member -->
 <div class="modal-overlay" id="memberModal"><div class="modal">
 <div class="modal-header"><h3 id="memberModalTitle">➕ Thêm Đoàn viên</h3><button class="modal-close" onclick="closeModal('memberModal')">&times;</button></div>
 <div class="modal-body">
-<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
-<div class="form-group"><label>Họ và tên *</label><input type="text" id="mName" required></div>
-<div class="form-group"><label>Ngày sinh</label><input type="date" id="mDob"></div>
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+<div class="form-group"><label>Họ tên *</label><input type="text" id="mName" class="form-input" required><span class="field-error" id="mNameErr"></span></div>
+<div class="form-group"><label>Ngày sinh *</label><input type="date" id="mDob" class="form-input" required><span class="field-error" id="mDobErr"></span></div>
 </div>
-<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
-<div class="form-group"><label>Giới tính</label><select id="mGender"><option>Nam</option><option>Nữ</option></select></div>
-<div class="form-group"><label>Chi đoàn</label><select id="mUnit"><option>K22A</option><option>K22B</option><option>K21C</option><option>K23A</option></select></div>
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+<div class="form-group"><label>Giới tính</label><select id="mGender" class="form-input"><option>Nam</option><option>Nữ</option></select></div>
+<div class="form-group"><label>Chi đoàn</label><select id="mUnit" class="form-input"><option>Chi đoàn K22A</option><option>Chi đoàn K22B</option><option>Chi đoàn K21C</option><option>Chi đoàn K23A</option></select></div>
 </div>
-<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
-<div class="form-group"><label>SĐT</label><input type="tel" id="mPhone"></div>
-<div class="form-group"><label>Email</label><input type="email" id="mEmail"></div>
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+<div class="form-group"><label>SĐT *</label><input type="tel" id="mPhone" class="form-input" required><span class="field-error" id="mPhoneErr"></span></div>
+<div class="form-group"><label>Email *</label><input type="email" id="mEmail" class="form-input" required><span class="field-error" id="mEmailErr"></span></div>
 </div>
-<div class="form-group"><label>Ngày kết nạp</label><input type="date" id="mJoinDate"></div>
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+<div class="form-group"><label>Ngày kết nạp</label><input type="date" id="mJoinDate" class="form-input"></div>
+<div class="form-group"><label>Thi đua</label><select id="mRank" class="form-input"><option>Xuất sắc</option><option>Tiên tiến</option><option>Hoàn thành</option><option>Không HT</option></select></div>
 </div>
-<div class="modal-footer"><button class="btn btn-outline" onclick="closeModal('memberModal')">Hủy</button><button class="btn btn-primary" id="saveMemberBtn" onclick="saveMember()">💾 Lưu</button></div>
+</div>
+<div class="modal-footer"><button class="btn btn-outline" onclick="closeModal('memberModal')">Hủy</button><button class="btn btn-primary" onclick="App.DoanVien.save()">💾 Lưu</button></div>
 </div></div>
-
 <!-- MODAL: Event -->
 <div class="modal-overlay" id="eventModal"><div class="modal">
-<div class="modal-header"><h3>📅 Tạo sự kiện mới</h3><button class="modal-close" onclick="closeModal('eventModal')">&times;</button></div>
+<div class="modal-header"><h3>📅 Tạo sự kiện</h3><button class="modal-close" onclick="closeModal('eventModal')">&times;</button></div>
 <div class="modal-body">
-<div class="form-group"><label>Tên sự kiện *</label><input type="text" id="eName"></div>
-<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
-<div class="form-group"><label>Ngày bắt đầu</label><input type="date" id="eStart"></div>
-<div class="form-group"><label>Ngày kết thúc</label><input type="date" id="eEnd"></div>
+<div class="form-group"><label>Tên sự kiện *</label><input type="text" id="eName" class="form-input" required><span class="field-error" id="eNameErr"></span></div>
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+<div class="form-group"><label>Ngày *</label><input type="date" id="eDate" class="form-input" required><span class="field-error" id="eDateErr"></span></div>
+<div class="form-group"><label>Giờ</label><input type="time" id="eTime" class="form-input" value="08:00"></div>
 </div>
-<div class="form-group"><label>Địa điểm</label><input type="text" id="eLocation"></div>
-<div class="form-group"><label>Mô tả</label><textarea id="eDesc"></textarea></div>
-<div class="form-group"><label>Số lượng tối đa</label><input type="number" id="eMax" value="100"></div>
+<div class="form-group"><label>Địa điểm</label><input type="text" id="eLocation" class="form-input"></div>
+<div class="form-group"><label>Mô tả</label><textarea id="eDesc" class="form-input"></textarea></div>
+<div class="form-group"><label>Số lượng dự kiến</label><input type="number" id="eMax" class="form-input" value="100"></div>
 </div>
-<div class="modal-footer"><button class="btn btn-outline" onclick="closeModal('eventModal')">Hủy</button><button class="btn btn-primary" onclick="addEvent()">💾 Tạo sự kiện</button></div>
+<div class="modal-footer"><button class="btn btn-outline" onclick="closeModal('eventModal')">Hủy</button><button class="btn btn-primary" onclick="App.SuKien.create()">💾 Tạo</button></div>
 </div></div>
-
-<!-- MODAL: Doc Preview -->
-<div class="modal-overlay" id="docPreviewModal"><div class="modal" style="max-width:640px">
-<div class="modal-header"><h3 id="previewTitle">Xem tài liệu</h3><button class="modal-close" onclick="closeModal('docPreviewModal')">&times;</button></div>
+<!-- MODAL: Preview -->
+<div class="modal-overlay" id="previewModal"><div class="modal" style="max-width:600px">
+<div class="modal-header"><h3 id="previewTitle">Chi tiết</h3><button class="modal-close" onclick="closeModal('previewModal')">&times;</button></div>
 <div class="modal-body" id="previewBody"></div>
 </div></div>
-
-<!-- CONFIRM DIALOG -->
-<div class="modal-overlay" id="confirmModal"><div class="modal" style="max-width:400px">
+<!-- CONFIRM -->
+<div class="modal-overlay" id="confirmModal"><div class="modal" style="max-width:380px">
 <div class="modal-header"><h3>⚠️ Xác nhận</h3><button class="modal-close" onclick="closeModal('confirmModal')">&times;</button></div>
-<div class="modal-body"><p id="confirmMsg">Bạn có chắc chắn?</p></div>
-<div class="modal-footer"><button class="btn btn-outline" onclick="closeModal('confirmModal')">Hủy</button><button class="btn btn-primary" id="confirmOk" style="background:#ef4444">Xóa</button></div>
+<div class="modal-body"><p id="confirmMsg"></p></div>
+<div class="modal-footer"><button class="btn btn-outline" onclick="closeModal('confirmModal')">Hủy</button><button class="btn" id="confirmOk" style="background:#ef4444;color:#fff">Xác nhận</button></div>
 </div></div>
-
 <script>
-// ===== DATA =====
+// ===== STORAGE HELPERS =====
+const DB={
+  get(key){try{return JSON.parse(localStorage.getItem(key))||null}catch(e){return null}},
+  set(key,val){try{localStorage.setItem(key,JSON.stringify(val))}catch(e){console.warn('localStorage error',e)}},
+  remove(key){try{localStorage.removeItem(key)}catch(e){}}
+};
 const ACCOUNTS={admin:{pass:'admin123',role:'admin',name:'Admin'},doanvien:{pass:'user123',role:'user',name:'Đoàn viên'}};
 let currentUser=null;
-const COLORS=['#d32f2f','#1e88e5','#10b981','#f59e0b','#8b5cf6','#06b6d4','#ec4899','#f97316','#14b8a6','#6366f1','#ef4444','#84cc16'];
-const MEMBERS=[
-{id:'24ICD001',name:'Nguyễn Văn An',dob:'2004-03-15',gender:'Nam',unit:'K22A',phone:'0901234001',email:'an.nv@email.com',joinDate:'2022-10-15',status:'active',fee:{Q1:'paid',Q2:'paid',Q3:'paid',Q4:'paid'},rank:'Xuất sắc'},
-{id:'24ICD002',name:'Trần Thị Bích',dob:'2004-06-20',gender:'Nữ',unit:'K22B',phone:'0901234002',email:'bich.tt@email.com',joinDate:'2022-10-15',status:'active',fee:{Q1:'paid',Q2:'paid',Q3:'debt',Q4:'debt'},rank:'Khá'},
-{id:'24ICD003',name:'Lê Minh Đức',dob:'2003-01-10',gender:'Nam',unit:'K21C',phone:'0901234003',email:'duc.lm@email.com',joinDate:'2021-10-20',status:'paused',fee:{Q1:'paid',Q2:'debt',Q3:'debt',Q4:'debt'},rank:'TB'},
-{id:'24ICD004',name:'Phạm Thị Hoa',dob:'2005-09-05',gender:'Nữ',unit:'K23A',phone:'0901234004',email:'hoa.pt@email.com',joinDate:'2023-10-15',status:'active',fee:{Q1:'paid',Q2:'paid',Q3:'paid',Q4:'paid'},rank:'Xuất sắc'},
-{id:'24ICD005',name:'Hoàng Văn Khánh',dob:'2004-12-25',gender:'Nam',unit:'K22A',phone:'0901234005',email:'khanh.hv@email.com',joinDate:'2022-10-15',status:'active',fee:{Q1:'paid',Q2:'paid',Q3:'paid',Q4:'debt'},rank:'Khá'},
-{id:'24ICD006',name:'Ngô Thị Lan',dob:'2004-04-18',gender:'Nữ',unit:'K22B',phone:'0901234006',email:'lan.nt@email.com',joinDate:'2022-10-15',status:'active',fee:{Q1:'paid',Q2:'paid',Q3:'paid',Q4:'paid'},rank:'Xuất sắc'},
-{id:'24ICD007',name:'Đỗ Quang Minh',dob:'2003-07-30',gender:'Nam',unit:'K21C',phone:'0901234007',email:'minh.dq@email.com',joinDate:'2021-10-20',status:'active',fee:{Q1:'paid',Q2:'paid',Q3:'paid',Q4:'paid'},rank:'Xuất sắc'},
-{id:'24ICD008',name:'Vũ Thanh Nga',dob:'2005-02-14',gender:'Nữ',unit:'K23A',phone:'0901234008',email:'nga.vt@email.com',joinDate:'2023-10-15',status:'expired',fee:{Q1:'debt',Q2:'debt',Q3:'debt',Q4:'debt'},rank:'TB'},
-{id:'24ICD009',name:'Bùi Văn Phong',dob:'2004-08-22',gender:'Nam',unit:'K22A',phone:'0901234009',email:'phong.bv@email.com',joinDate:'2022-10-15',status:'active',fee:{Q1:'paid',Q2:'paid',Q3:'paid',Q4:'paid'},rank:'Khá'},
-{id:'24ICD010',name:'Lý Thị Quỳnh',dob:'2004-11-08',gender:'Nữ',unit:'K22B',phone:'0901234010',email:'quynh.lt@email.com',joinDate:'2022-10-15',status:'active',fee:{Q1:'paid',Q2:'paid',Q3:'paid',Q4:'paid'},rank:'Xuất sắc'},
-{id:'24ICD011',name:'Nguyễn Hữu Rạng',dob:'2003-05-12',gender:'Nam',unit:'K21C',phone:'0901234011',email:'rang.nh@email.com',joinDate:'2021-10-20',status:'active',fee:{Q1:'paid',Q2:'paid',Q3:'debt',Q4:'debt'},rank:'Khá'},
-{id:'24ICD012',name:'Phan Thị Sương',dob:'2005-10-30',gender:'Nữ',unit:'K23A',phone:'0901234012',email:'suong.pt@email.com',joinDate:'2023-10-15',status:'active',fee:{Q1:'paid',Q2:'paid',Q3:'paid',Q4:'paid'},rank:'Xuất sắc'},
-{id:'24ICD013',name:'Trương Văn Tài',dob:'2004-01-25',gender:'Nam',unit:'K22A',phone:'0901234013',email:'tai.tv@email.com',joinDate:'2022-10-15',status:'active',fee:{Q1:'paid',Q2:'paid',Q3:'paid',Q4:'paid'},rank:'Khá'},
-{id:'24ICD014',name:'Huỳnh Thị Uyên',dob:'2004-07-17',gender:'Nữ',unit:'K22B',phone:'0901234014',email:'uyen.ht@email.com',joinDate:'2022-10-15',status:'paused',fee:{Q1:'paid',Q2:'paid',Q3:'debt',Q4:'debt'},rank:'TB'},
-{id:'24ICD015',name:'Đặng Quốc Việt',dob:'2003-03-03',gender:'Nam',unit:'K21C',phone:'0901234015',email:'viet.dq@email.com',joinDate:'2021-10-20',status:'active',fee:{Q1:'paid',Q2:'paid',Q3:'paid',Q4:'paid'},rank:'Xuất sắc'},
-{id:'24ICD016',name:'Mai Xuân Vy',dob:'2005-12-12',gender:'Nữ',unit:'K23A',phone:'0901234016',email:'vy.mx@email.com',joinDate:'2023-10-15',status:'active',fee:{Q1:'paid',Q2:'paid',Q3:'paid',Q4:'debt'},rank:'Khá'},
-{id:'24ICD017',name:'Cao Thanh Bình',dob:'2004-09-09',gender:'Nam',unit:'K22A',phone:'0901234017',email:'binh.ct@email.com',joinDate:'2022-10-15',status:'active',fee:{Q1:'paid',Q2:'paid',Q3:'paid',Q4:'paid'},rank:'Xuất sắc'},
-{id:'24ICD018',name:'Lương Thị Cẩm',dob:'2004-06-06',gender:'Nữ',unit:'K22B',phone:'0901234018',email:'cam.lt@email.com',joinDate:'2022-10-15',status:'active',fee:{Q1:'paid',Q2:'paid',Q3:'paid',Q4:'paid'},rank:'Khá'},
-{id:'24ICD019',name:'Tô Minh Dũng',dob:'2003-04-04',gender:'Nam',unit:'K21C',phone:'0901234019',email:'dung.tm@email.com',joinDate:'2021-10-20',status:'paused',fee:{Q1:'paid',Q2:'debt',Q3:'debt',Q4:'debt'},rank:'TB'},
-{id:'24ICD020',name:'Hồ Ngọc Giang',dob:'2005-08-28',gender:'Nam',unit:'K23A',phone:'0901234020',email:'giang.hn@email.com',joinDate:'2023-10-15',status:'active',fee:{Q1:'paid',Q2:'paid',Q3:'paid',Q4:'paid'},rank:'Xuất sắc'},
-{id:'24ICD021',name:'Võ Thị Hạnh',dob:'2004-02-19',gender:'Nữ',unit:'K22A',phone:'0901234021',email:'hanh.vt@email.com',joinDate:'2022-10-15',status:'active',fee:{Q1:'paid',Q2:'paid',Q3:'paid',Q4:'paid'},rank:'Khá'},
-{id:'24ICD022',name:'Đinh Văn Khôi',dob:'2004-10-10',gender:'Nam',unit:'K22B',phone:'0901234022',email:'khoi.dv@email.com',joinDate:'2022-10-15',status:'active',fee:{Q1:'paid',Q2:'paid',Q3:'paid',Q4:'paid'},rank:'Xuất sắc'},
-{id:'24ICD023',name:'Châu Thị Linh',dob:'2003-11-11',gender:'Nữ',unit:'K21C',phone:'0901234023',email:'linh.ct@email.com',joinDate:'2021-10-20',status:'expired',fee:{Q1:'debt',Q2:'debt',Q3:'debt',Q4:'debt'},rank:'TB'},
-{id:'24ICD024',name:'Trịnh Quang Nam',dob:'2005-05-25',gender:'Nam',unit:'K23A',phone:'0901234024',email:'nam.tq@email.com',joinDate:'2023-10-15',status:'active',fee:{Q1:'paid',Q2:'paid',Q3:'paid',Q4:'paid'},rank:'Khá'},
-{id:'24ICD025',name:'Lê Thị Phượng',dob:'2004-04-04',gender:'Nữ',unit:'K22A',phone:'0901234025',email:'phuong.lt@email.com',joinDate:'2022-10-15',status:'active',fee:{Q1:'paid',Q2:'paid',Q3:'debt',Q4:'debt'},rank:'Khá'}
-];
-const DOCUMENTS=[
-{id:1,title:'Nghị quyết Đại hội Đoàn toàn quốc lần thứ XII',type:'pdf',size:'2.4MB',date:'2025-01-15',category:'nghi-quyet',views:324,uploader:'Admin',tags:['nghị quyết','đại hội','XII']},
-{id:2,title:'Tài liệu học tập Nghị quyết Đại hội XIV của Đảng',type:'docx',size:'1.1MB',date:'2025-02-22',category:'hoc-tap',views:189,uploader:'Admin',tags:['nghị quyết','đảng','XIV']},
-{id:3,title:'Ảnh hoạt động Mùa hè xanh 2025',type:'img',size:'45MB',date:'2025-03-30',category:'phong-trao',views:567,uploader:'Admin',tags:['tình nguyện','mùa hè xanh']},
-{id:4,title:'Kế hoạch công tác Đoàn năm 2025',type:'pdf',size:'890KB',date:'2025-01-05',category:'hanh-chinh',views:234,uploader:'Admin',tags:['kế hoạch','2025']},
-{id:5,title:'Báo cáo tổng kết công tác Đoàn 2024',type:'pdf',size:'3.2MB',date:'2024-12-28',category:'hanh-chinh',views:412,uploader:'Admin',tags:['báo cáo','tổng kết']},
-{id:6,title:'Slide bồi dưỡng lý luận chính trị',type:'pptx',size:'15MB',date:'2025-02-10',category:'hoc-tap',views:298,uploader:'Admin',tags:['chính trị','lý luận']},
-{id:7,title:'Hướng dẫn tổ chức Đại hội Chi đoàn',type:'docx',size:'520KB',date:'2025-03-18',category:'hanh-chinh',views:156,uploader:'Admin',tags:['đại hội','chi đoàn']},
-{id:8,title:'6 bài học lý luận chính trị dành cho Đoàn viên',type:'pdf',size:'4.7MB',date:'2025-03-01',category:'hoc-tap',views:723,uploader:'Admin',tags:['6 bài','đoàn viên']},
-{id:9,title:'Ảnh Lễ kết nạp Đoàn viên mới K23',type:'img',size:'28MB',date:'2025-03-20',category:'phong-trao',views:445,uploader:'Admin',tags:['kết nạp','K23']},
-{id:10,title:'Nghị quyết Hội nghị BCH TW Đoàn lần thứ 5',type:'pdf',size:'1.8MB',date:'2025-02-12',category:'nghi-quyet',views:267,uploader:'Admin',tags:['BCH','trung ương']},
-{id:11,title:'Phong trào Thanh niên tình nguyện 2025',type:'docx',size:'780KB',date:'2025-03-25',category:'phong-trao',views:198,uploader:'Admin',tags:['tình nguyện','thanh niên']},
-{id:12,title:'Biểu mẫu đánh giá thi đua Chi đoàn',type:'docx',size:'340KB',date:'2025-04-08',category:'hanh-chinh',views:89,uploader:'Admin',tags:['thi đua','biểu mẫu']},
-{id:13,title:'Nghị quyết về chuyển đổi số trong công tác Đoàn',type:'pdf',size:'1.5MB',date:'2025-01-20',category:'nghi-quyet',views:312,uploader:'Admin',tags:['chuyển đổi số']},
-{id:14,title:'Tài liệu tập huấn kỹ năng mềm cho cán bộ Đoàn',type:'pptx',size:'22MB',date:'2025-02-28',category:'hoc-tap',views:445,uploader:'Admin',tags:['kỹ năng mềm','tập huấn']},
-{id:15,title:'Ảnh Giải bóng đá Đoàn viên 2025',type:'img',size:'35MB',date:'2025-04-10',category:'phong-trao',views:332,uploader:'Admin',tags:['bóng đá','thể thao']},
-{id:16,title:'Quy chế hoạt động BCH Chi đoàn',type:'pdf',size:'450KB',date:'2025-01-08',category:'hanh-chinh',views:178,uploader:'Admin',tags:['quy chế','BCH']},
-{id:17,title:'Chương trình hành động thực hiện NQ Đại hội Đoàn',type:'pdf',size:'2.1MB',date:'2025-02-05',category:'nghi-quyet',views:289,uploader:'Admin',tags:['chương trình','hành động']},
-{id:18,title:'Tài liệu sinh hoạt Chi đoàn chủ đề tháng 3',type:'docx',size:'650KB',date:'2025-03-05',category:'hoc-tap',views:534,uploader:'Admin',tags:['sinh hoạt','tháng 3']},
-{id:19,title:'Ảnh Lễ hội Xuân tình nguyện 2025',type:'img',size:'52MB',date:'2025-01-28',category:'phong-trao',views:678,uploader:'Admin',tags:['xuân','tình nguyện']},
-{id:20,title:'Hướng dẫn đóng đoàn phí năm 2025',type:'pdf',size:'280KB',date:'2025-01-02',category:'hanh-chinh',views:892,uploader:'Admin',tags:['đoàn phí','hướng dẫn']}
-];
-const EVENTS=[
-{id:1,title:'Ngày hội Thanh niên tình nguyện',startDate:'2025-05-15',endDate:'2025-05-15',location:'Quảng trường Trung tâm',attendees:120,maxAttendees:150,status:'upcoming',desc:'Hoạt động tình nguyện vì cộng đồng, dọn vệ sinh môi trường'},
-{id:2,title:'Lễ kết nạp Đoàn viên mới đợt 2',startDate:'2025-05-20',endDate:'2025-05-20',location:'Hội trường lớn',attendees:45,maxAttendees:60,status:'upcoming',desc:'Kết nạp 45 thanh niên ưu tú vào tổ chức Đoàn'},
-{id:3,title:'Tập huấn cán bộ Đoàn cơ sở',startDate:'2025-04-28',endDate:'2025-04-29',location:'Phòng họp A3',attendees:30,maxAttendees:30,status:'ongoing',desc:'Bồi dưỡng nghiệp vụ cho cán bộ Đoàn các chi đoàn'},
-{id:4,title:'Hội thi Ánh sáng soi đường',startDate:'2025-04-20',endDate:'2025-04-20',location:'Sân khấu ngoài trời',attendees:200,maxAttendees:200,status:'done',desc:'Cuộc thi tìm hiểu lịch sử Đảng và Đoàn'},
-{id:5,title:'Giải bóng đá Đoàn viên 2025',startDate:'2025-04-10',endDate:'2025-04-12',location:'Sân vận động',attendees:160,maxAttendees:200,status:'done',desc:'Giải đấu thể thao giao lưu giữa các chi đoàn'},
-{id:6,title:'Hiến máu nhân đạo đợt 1/2025',startDate:'2025-04-05',endDate:'2025-04-05',location:'Nhà văn hóa',attendees:301,maxAttendees:300,status:'done',desc:'Chương trình hiến máu tình nguyện'},
-{id:7,title:'Chiến dịch Xuân tình nguyện',startDate:'2025-01-28',endDate:'2025-02-02',location:'Các xã vùng sâu',attendees:80,maxAttendees:100,status:'done',desc:'Tặng quà Tết cho bà con vùng khó khăn'},
-{id:8,title:'Hội nghị BCH Đoàn mở rộng',startDate:'2025-03-15',endDate:'2025-03-15',location:'Hội trường lớn',attendees:55,maxAttendees:60,status:'done',desc:'Đánh giá công tác quý 1 và triển khai kế hoạch quý 2'},
-{id:9,title:'Cuộc thi Ý tưởng sáng tạo trẻ',startDate:'2025-05-25',endDate:'2025-05-27',location:'Trung tâm CNTT',attendees:0,maxAttendees:100,status:'upcoming',desc:'Khuyến khích đoàn viên sáng tạo giải pháp công nghệ'},
-{id:10,title:'Ngày hội việc làm cho thanh niên',startDate:'2025-06-01',endDate:'2025-06-01',location:'Khuôn viên trường',attendees:0,maxAttendees:500,status:'upcoming',desc:'Kết nối sinh viên với doanh nghiệp tuyển dụng'},
-{id:11,title:'Lễ tuyên dương Đoàn viên tiêu biểu',startDate:'2025-03-26',endDate:'2025-03-26',location:'Hội trường lớn',attendees:120,maxAttendees:150,status:'done',desc:'Khen thưởng đoàn viên xuất sắc năm 2024'},
-{id:12,title:'Dọn vệ sinh bãi biển',startDate:'2025-04-22',endDate:'2025-04-22',location:'Bãi biển Mỹ Khê',attendees:95,maxAttendees:100,status:'done',desc:'Hưởng ứng Ngày Trái đất 22/4'}
-];
+const COLORS=['#d32f2f','#1e88e5','#10b981','#f59e0b','#8b5cf6','#06b6d4','#ec4899','#f97316','#14b8a6','#6366f1'];
+
+// ===== SEED DATA =====
+function initSampleData(){
+  if(!DB.get('doanvien')){
+    DB.set('doanvien',[
+      {id:'DV001',hoTen:'Nguyễn Văn An',ngaySinh:'2002-05-15',gioiTinh:'Nam',chiDoan:'Chi đoàn K22A',soDienThoai:'0901234001',email:'an@email.com',ngayKetNap:'2024-09-01',trangThai:'hoat-dong',thiDua:'Xuất sắc',doanPhi:{Q1_2025:true,Q2_2025:true,Q3_2025:false,Q4_2025:false}},
+      {id:'DV002',hoTen:'Trần Thị Bích',ngaySinh:'2003-06-20',gioiTinh:'Nữ',chiDoan:'Chi đoàn K22B',soDienThoai:'0901234002',email:'bich@email.com',ngayKetNap:'2024-10-15',trangThai:'hoat-dong',thiDua:'Tiên tiến',doanPhi:{Q1_2025:true,Q2_2025:false,Q3_2025:false,Q4_2025:false}},
+      {id:'DV003',hoTen:'Lê Minh Đức',ngaySinh:'2001-01-10',gioiTinh:'Nam',chiDoan:'Chi đoàn K21C',soDienThoai:'0901234003',email:'duc@email.com',ngayKetNap:'2024-03-20',trangThai:'tam-hoan',thiDua:'Hoàn thành',doanPhi:{Q1_2025:true,Q2_2025:false,Q3_2025:false,Q4_2025:false}},
+      {id:'DV004',hoTen:'Phạm Thị Hoa',ngaySinh:'2004-09-05',gioiTinh:'Nữ',chiDoan:'Chi đoàn K23A',soDienThoai:'0901234004',email:'hoa@email.com',ngayKetNap:'2025-01-15',trangThai:'hoat-dong',thiDua:'Xuất sắc',doanPhi:{Q1_2025:true,Q2_2025:true,Q3_2025:true,Q4_2025:false}},
+      {id:'DV005',hoTen:'Hoàng Văn Khánh',ngaySinh:'2002-12-25',gioiTinh:'Nam',chiDoan:'Chi đoàn K22A',soDienThoai:'0901234005',email:'khanh@email.com',ngayKetNap:'2024-11-01',trangThai:'hoat-dong',thiDua:'Tiên tiến',doanPhi:{Q1_2025:true,Q2_2025:true,Q3_2025:false,Q4_2025:false}},
+      {id:'DV006',hoTen:'Ngô Thị Lan',ngaySinh:'2003-04-18',gioiTinh:'Nữ',chiDoan:'Chi đoàn K22B',soDienThoai:'0901234006',email:'lan@email.com',ngayKetNap:'2025-02-10',trangThai:'hoat-dong',thiDua:'Xuất sắc',doanPhi:{Q1_2025:true,Q2_2025:true,Q3_2025:true,Q4_2025:true}},
+      {id:'DV007',hoTen:'Đỗ Quang Minh',ngaySinh:'2001-07-30',gioiTinh:'Nam',chiDoan:'Chi đoàn K21C',soDienThoai:'0901234007',email:'minh@email.com',ngayKetNap:'2024-06-15',trangThai:'hoat-dong',thiDua:'Hoàn thành',doanPhi:{Q1_2025:true,Q2_2025:true,Q3_2025:true,Q4_2025:true}},
+      {id:'DV008',hoTen:'Vũ Thanh Nga',ngaySinh:'2004-02-14',gioiTinh:'Nữ',chiDoan:'Chi đoàn K23A',soDienThoai:'0901234008',email:'nga@email.com',ngayKetNap:'2024-12-01',trangThai:'het-han',thiDua:'Không HT',doanPhi:{Q1_2025:false,Q2_2025:false,Q3_2025:false,Q4_2025:false}},
+      {id:'DV009',hoTen:'Bùi Văn Phong',ngaySinh:'2002-08-22',gioiTinh:'Nam',chiDoan:'Chi đoàn K22A',soDienThoai:'0901234009',email:'phong@email.com',ngayKetNap:'2025-03-01',trangThai:'hoat-dong',thiDua:'Tiên tiến',doanPhi:{Q1_2025:true,Q2_2025:true,Q3_2025:true,Q4_2025:false}},
+      {id:'DV010',hoTen:'Lý Thị Quỳnh',ngaySinh:'2003-11-08',gioiTinh:'Nữ',chiDoan:'Chi đoàn K22B',soDienThoai:'0901234010',email:'quynh@email.com',ngayKetNap:'2024-08-20',trangThai:'tam-hoan',thiDua:'Hoàn thành',doanPhi:{Q1_2025:true,Q2_2025:false,Q3_2025:false,Q4_2025:false}}
+    ]);
+  }
+  if(!DB.get('tailieu')){
+    DB.set('tailieu',[
+      {id:'TL001',tieuDe:'Nghị quyết Đại hội Đoàn lần XII',moTa:'Văn kiện chính thức',danhMuc:'Nghị quyết',loaiFile:'PDF',quyenXem:'Công khai',tags:['nghị quyết','đại hội'],ngayUpload:'2025-01-15T10:30:00',nguoiUpload:'Admin',luotXem:324,kichThuoc:'2.4 MB',fileData:null},
+      {id:'TL002',tieuDe:'Tài liệu học tập NQ Đại hội XIV Đảng',moTa:'Tài liệu bồi dưỡng',danhMuc:'Học tập CT',loaiFile:'DOCX',quyenXem:'Nội bộ',tags:['nghị quyết','đảng'],ngayUpload:'2025-02-22T14:00:00',nguoiUpload:'Admin',luotXem:189,kichThuoc:'1.1 MB',fileData:null},
+      {id:'TL003',tieuDe:'Ảnh Mùa hè xanh 2025',moTa:'Album hoạt động tình nguyện',danhMuc:'Phong trào',loaiFile:'Image',quyenXem:'Công khai',tags:['tình nguyện','mùa hè xanh'],ngayUpload:'2025-03-30T09:00:00',nguoiUpload:'Admin',luotXem:567,kichThuoc:'45 MB',fileData:null},
+      {id:'TL004',tieuDe:'Kế hoạch công tác Đoàn 2025',moTa:'Kế hoạch năm',danhMuc:'Hành chính',loaiFile:'PDF',quyenXem:'Nội bộ',tags:['kế hoạch','2025'],ngayUpload:'2025-01-05T08:00:00',nguoiUpload:'Admin',luotXem:234,kichThuoc:'890 KB',fileData:null},
+      {id:'TL005',tieuDe:'Slide bồi dưỡng lý luận chính trị',moTa:'6 bài LLCT',danhMuc:'Học tập CT',loaiFile:'PPTX',quyenXem:'Công khai',tags:['chính trị','lý luận'],ngayUpload:'2025-02-10T11:00:00',nguoiUpload:'Admin',luotXem:298,kichThuoc:'15 MB',fileData:null}
+    ]);
+  }
+  if(!DB.get('sukien')){
+    DB.set('sukien',[
+      {id:'SK001',tenSuKien:'Ngày hội Thanh niên tình nguyện',moTa:'Tình nguyện vì cộng đồng',ngayToChuc:'2025-05-15',thoiGian:'08:00',diaDiem:'Quảng trường',trangThai:'sap-dien-ra',soLuongThamGia:120,danhSachThamGia:['DV001','DV004']},
+      {id:'SK002',tenSuKien:'Lễ kết nạp Đoàn viên đợt 2',moTa:'Kết nạp 45 thanh niên ưu tú',ngayToChuc:'2025-05-20',thoiGian:'14:00',diaDiem:'Hội trường lớn',trangThai:'sap-dien-ra',soLuongThamGia:45,danhSachThamGia:[]},
+      {id:'SK003',tenSuKien:'Hội thi Ánh sáng soi đường',moTa:'Tìm hiểu lịch sử Đảng và Đoàn',ngayToChuc:'2025-04-20',thoiGian:'08:00',diaDiem:'Sân khấu ngoài trời',trangThai:'hoan-thanh',soLuongThamGia:200,danhSachThamGia:['DV001','DV002','DV005']},
+      {id:'SK004',tenSuKien:'Hiến máu nhân đạo đợt 1',moTa:'Hiến máu tình nguyện',ngayToChuc:'2025-04-05',thoiGian:'07:30',diaDiem:'Nhà văn hóa',trangThai:'hoan-thanh',soLuongThamGia:301,danhSachThamGia:['DV001','DV002','DV003','DV006']}
+    ]);
+  }
+  if(!DB.get('thongbao')){
+    DB.set('thongbao',[
+      {id:'TB001',tieuDe:'Nhắc đóng đoàn phí',noiDung:'Bạn chưa đóng đoàn phí Q2/2025. Vui lòng đóng trước 30/06.',loai:'warning',daDoc:false,thoiGian:new Date(Date.now()-1000*60*5).toISOString()},
+      {id:'TB002',tieuDe:'Sự kiện sắp diễn ra',noiDung:'Ngày hội Thanh niên tình nguyện sẽ diễn ra vào 15/05.',loai:'info',daDoc:false,thoiGian:new Date(Date.now()-1000*60*60).toISOString()},
+      {id:'TB003',tieuDe:'Kết nạp thành công',noiDung:'Bạn đã được kết nạp vào Đoàn TNCS HCM.',loai:'success',daDoc:true,thoiGian:new Date(Date.now()-1000*60*60*24).toISOString()}
+    ]);
+  }
+  if(!DB.get('caiDat')){
+    DB.set('caiDat',{thongBaoEmail:true,thongBaoWeb:false,nhacDoanPhi:true,darkMode:false,hieu_ung:true,baoMat2FA:false,tuDongDangXuat:true});
+  }
+}
 // ===== UTILITIES =====
 function $(s){return document.querySelector(s)}
 function $$(s){return document.querySelectorAll(s)}
-function showToast(msg,type='success'){const t=document.createElement('div');t.className='toast '+type;t.textContent=msg;$('#toastContainer').appendChild(t);setTimeout(()=>t.remove(),3000)}
 function openModal(id){$('#'+id).classList.add('show')}
 function closeModal(id){$('#'+id).classList.remove('show')}
-function getCatLabel(c){return{['nghi-quyet']:'Nghị quyết',['hoc-tap']:'Học tập CT',['phong-trao']:'Phong trào',['hanh-chinh']:'Hành chính'}[c]||c}
-const TYPE_ICONS={pdf:'📄',docx:'📘',pptx:'📊',img:'🖼️'};
-const STATUS_MAP={active:{l:'Hoạt động',c:'badge-ok'},paused:{l:'Tạm hoãn',c:'badge-warn'},expired:{l:'Hết hạn',c:'badge-danger'}};
+function showToast(msg,type='success'){const t=document.createElement('div');t.className='toast '+type;t.textContent=msg;$('#toastContainer').appendChild(t);setTimeout(()=>t.remove(),3000)}
+function showLoading(){$('#loadingOverlay').style.display='flex'}
+function hideLoading(){$('#loadingOverlay').style.display='none'}
+function timeAgo(d){const s=Math.floor((Date.now()-new Date(d))/1000);if(s<60)return s+' giây trước';if(s<3600)return Math.floor(s/60)+' phút trước';if(s<86400)return Math.floor(s/3600)+' giờ trước';return Math.floor(s/86400)+' ngày trước'}
+function fmtDate(d){if(!d)return'';const p=d.split('-');return p.length===3?p[2]+'/'+p[1]+'/'+p[0]:d}
+function genId(prefix,arr){const n=arr.length+1;return prefix+String(n).padStart(3,'0')}
+function debounce(fn,ms){let t;return(...a)=>{clearTimeout(t);t=setTimeout(()=>fn(...a),ms)}}
 const MONTHS=['Th1','Th2','Th3','Th4','Th5','Th6','Th7','Th8','Th9','Th10','Th11','Th12'];
-let memberPage=1,memberSort={key:'name',asc:true},editingMemberId=null,charts={};
+const STATUS_MAP={'hoat-dong':{l:'Hoạt động',c:'badge-ok'},'tam-hoan':{l:'Tạm hoãn',c:'badge-warn'},'het-han':{l:'Hết hạn',c:'badge-danger'}};
+const EVT_STATUS={'sap-dien-ra':{l:'Sắp diễn ra',c:'badge-info'},'dang-dien-ra':{l:'Đang diễn ra',c:'badge-warn'},'hoan-thanh':{l:'Hoàn thành',c:'badge-ok'},'huy':{l:'Đã hủy',c:'badge-danger'}};
+const TYPE_ICONS={PDF:'📄',DOCX:'📘',PPTX:'📊',Image:'🖼️',MP4:'🎬'};
+const TYPE_CSS={PDF:'pdf',DOCX:'docx',PPTX:'pptx',Image:'img',MP4:'pdf'};
+let charts={},memberPage=1,memberSort={key:'hoTen',asc:true},editingId=null;
 
-// ===== AUTH =====
-function doLogin(user,pass){
-  const acc=ACCOUNTS[user];
-  if(!acc||acc.pass!==pass)return false;
-  currentUser={username:user,...acc};
-  $('#loginPage').classList.add('hidden');
-  $('#appLayout').style.display='flex';
-  document.body.classList.toggle('role-admin',acc.role==='admin');
-  $('#headerUserName').textContent=acc.name+' ('+acc.role+')';
-  $('#headerAvatar').textContent=acc.name.substring(0,2).toUpperCase();
-  initApp();return true;
+// ===== APP OBJECT =====
+const App={
+state:{currentTab:'dashboard'},
+
+// AUTH
+Auth:{
+  login(u,p){const acc=ACCOUNTS[u];if(!acc||acc.pass!==p)return false;currentUser={username:u,...acc};$('#loginPage').classList.add('hidden');$('#appLayout').style.display='flex';document.body.classList.toggle('role-admin',acc.role==='admin');$('#headerUserName').textContent=acc.name+' ('+acc.role+')';$('#headerAvatar').textContent=acc.name.substring(0,2).toUpperCase();App.init();return true},
+  logout(){currentUser=null;$('#loginPage').classList.remove('hidden');$('#appLayout').style.display='none';document.body.classList.remove('role-admin');Object.values(charts).forEach(c=>{if(c&&c.destroy)c.destroy()});charts={}}
+},
+
+// DASHBOARD
+Dashboard:{
+  render(){
+    const dv=DB.get('doanvien')||[],tl=DB.get('tailieu')||[],sk=DB.get('sukien')||[];
+    const active=dv.filter(m=>m.trangThai==='hoat-dong').length;
+    const now=new Date(),thisMonth=sk.filter(e=>{const d=new Date(e.ngayToChuc);return d.getMonth()===now.getMonth()&&d.getFullYear()===now.getFullYear()}).length;
+    $('#dashGreeting').textContent='Xin chào '+((currentUser&&currentUser.name)||'')+', tổng quan hệ thống';
+    $('#dashStats').innerHTML=[
+      {icon:'👥',val:dv.length,label:'Tổng Đoàn viên',ch:'Chi đoàn: 4'},
+      {icon:'✅',val:active,label:'Đang hoạt động',ch:dv.length?Math.round(active/dv.length*100)+'%':'0%'},
+      {icon:'📅',val:thisMonth,label:'Sự kiện tháng này',ch:sk.filter(e=>e.trangThai==='hoan-thanh').length+' hoàn thành'},
+      {icon:'📄',val:tl.length,label:'Tài liệu số hóa',ch:'Đa dạng danh mục'}
+    ].map(s=>`<div class="stat-card"><div class="stat-icon">${s.icon}</div><div class="stat-value">${s.val}</div><div class="stat-label">${s.label}</div><div class="stat-change up">${s.ch}</div></div>`).join('');
+    // Recent activity
+    const tb=DB.get('thongbao')||[];
+    const recent=tb.sort((a,b)=>new Date(b.thoiGian)-new Date(a.thoiGian)).slice(0,5);
+    const dotMap={warning:'yellow',info:'blue',success:'green',danger:'red'};
+    $('#recentActivity').innerHTML=recent.length?recent.map(n=>`<div class="activity-item"><div class="activity-dot ${dotMap[n.loai]||'blue'}"></div><div><div class="activity-text"><strong>${n.tieuDe}</strong> — ${n.noiDung.substring(0,60)}</div><div class="activity-time">${timeAgo(n.thoiGian)}</div></div></div>`).join(''):'<p style="color:var(--muted);font-size:13px">Chưa có hoạt động</p>';
+  },
+  initCharts(){
+    if(typeof Chart==='undefined')return;
+    if(charts.line)charts.line.destroy();if(charts.pie)charts.pie.destroy();
+    const dv=DB.get('doanvien')||[];
+    // Line chart: 6 months
+    const now=new Date();const labels=[],data=[];
+    for(let i=5;i>=0;i--){const m=new Date(now.getFullYear(),now.getMonth()-i,1);labels.push(MONTHS[m.getMonth()]);data.push(dv.filter(d=>{const j=new Date(d.ngayKetNap);return j.getMonth()===m.getMonth()&&j.getFullYear()===m.getFullYear()}).length)}
+    const ctx1=$('#lineChart');if(ctx1)charts.line=new Chart(ctx1,{type:'line',data:{labels,datasets:[{label:'Kết nạp',data,borderColor:'#d32f2f',backgroundColor:'rgba(211,47,47,.1)',fill:true,tension:.4}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{color:'#94a3b8'}}},scales:{x:{ticks:{color:'#64748b'},grid:{color:'rgba(51,65,85,.3)'}},y:{ticks:{color:'#64748b'},grid:{color:'rgba(51,65,85,.3)'}}}}});
+    // Pie chart
+    const units=['Chi đoàn K22A','Chi đoàn K22B','Chi đoàn K21C','Chi đoàn K23A'];
+    const ctx2=$('#pieChart');if(ctx2)charts.pie=new Chart(ctx2,{type:'doughnut',data:{labels:units,datasets:[{data:units.map(u=>dv.filter(m=>m.chiDoan===u).length),backgroundColor:['#d32f2f','#f9a825','#10b981','#6366f1']}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'bottom',labels:{color:'#94a3b8',padding:10}}}}});
+  }
+},
+
+// DOAN VIEN
+DoanVien:{
+  getFiltered(){
+    let list=[...(DB.get('doanvien')||[])];
+    const s=($('#memberSearch')?.value||'').toLowerCase();
+    const st=$('#memberStatusFilter')?.value||'all';
+    const ut=$('#memberUnitFilter')?.value||'all';
+    if(s)list=list.filter(m=>m.hoTen.toLowerCase().includes(s)||m.id.toLowerCase().includes(s)||m.chiDoan.toLowerCase().includes(s));
+    if(st!=='all')list=list.filter(m=>m.trangThai===st);
+    if(ut!=='all')list=list.filter(m=>m.chiDoan===ut);
+    list.sort((a,b)=>{let va=(a[memberSort.key]||'').toLowerCase(),vb=(b[memberSort.key]||'').toLowerCase();return memberSort.asc?(va>vb?1:-1):(va<vb?1:-1)});
+    return list;
+  },
+  render(){
+    const all=DB.get('doanvien')||[],list=this.getFiltered(),perPage=10,totalPages=Math.max(1,Math.ceil(list.length/perPage));
+    if(memberPage>totalPages)memberPage=totalPages;
+    const start=(memberPage-1)*perPage,slice=list.slice(start,start+perPage);
+    const isAdmin=currentUser&&currentUser.role==='admin';
+    $('#memberCount').textContent=`Hiển thị ${slice.length}/${list.length} đoàn viên`;
+    $('#memberBadge').textContent=all.length;
+    $('#memberTbody').innerHTML=slice.map((m,i)=>{
+      const initials=m.hoTen.split(' ').slice(-2).map(w=>w[0]).join('');
+      const st=STATUS_MAP[m.trangThai]||{l:'?',c:''};
+      const debtQ=Object.entries(m.doanPhi||{}).filter(([,v])=>!v).map(([k])=>k.replace('_','/'));
+      const feeHtml=debtQ.length?`<span class="badge badge-danger">Nợ ${debtQ.join(', ')}</span>`:`<span class="badge badge-ok">Đã đóng đủ</span>`;
+      const rc={'Xuất sắc':'badge-primary','Tiên tiến':'badge-info','Hoàn thành':'badge-warn','Không HT':'badge-danger'};
+      const acts=isAdmin?`<button class="btn-icon" onclick="App.DoanVien.edit('${m.id}')" title="Sửa">✏️</button><button class="btn-icon" onclick="App.DoanVien.confirmDel('${m.id}')" title="Xóa">🗑️</button>`:'';
+      return`<tr><td><div class="member-info"><div class="member-avatar" style="background:${COLORS[i%COLORS.length]}">${initials}</div><div><div class="member-name">${m.hoTen}</div><div class="member-id">${m.id}</div></div></div></td><td>${m.chiDoan}</td><td>${feeHtml}</td><td><span class="badge ${rc[m.thiDua]||''}">${m.thiDua}</span></td><td><span class="badge ${st.c}">${st.l}</span></td><td style="display:flex;gap:4px"><button class="btn-icon" onclick="App.DoanVien.view('${m.id}')" title="Xem">👁️</button>${acts}</td></tr>`
+    }).join('');
+    $('#memberPagination').innerHTML=Array.from({length:totalPages},(_,i)=>`<button class="page-btn ${i+1===memberPage?'active':''}" onclick="memberPage=${i+1};App.DoanVien.render()">${i+1}</button>`).join('');
+  },
+  view(id){const m=(DB.get('doanvien')||[]).find(x=>x.id===id);if(!m)return;$('#previewTitle').textContent=m.hoTen;const debtQ=Object.entries(m.doanPhi||{}).filter(([,v])=>!v).map(([k])=>k.replace('_','/'));$('#previewBody').innerHTML=`<p><b>Mã:</b> ${m.id}</p><p><b>Ngày sinh:</b> ${fmtDate(m.ngaySinh)}</p><p><b>Giới tính:</b> ${m.gioiTinh}</p><p><b>Chi đoàn:</b> ${m.chiDoan}</p><p><b>SĐT:</b> ${m.soDienThoai}</p><p><b>Email:</b> ${m.email}</p><p><b>Kết nạp:</b> ${fmtDate(m.ngayKetNap)}</p><p><b>Thi đua:</b> ${m.thiDua}</p><p><b>Trạng thái:</b> ${(STATUS_MAP[m.trangThai]||{}).l||m.trangThai}</p><p><b>Đoàn phí nợ:</b> ${debtQ.length?debtQ.join(', '):'Không nợ'}</p>`;openModal('previewModal')},
+  openAdd(){editingId=null;$('#memberModalTitle').textContent='➕ Thêm Đoàn viên';['mName','mDob','mPhone','mEmail','mJoinDate'].forEach(id=>$('#'+id).value='');$$('.field-error').forEach(e=>e.textContent='');openModal('memberModal')},
+  edit(id){const m=(DB.get('doanvien')||[]).find(x=>x.id===id);if(!m)return;editingId=id;$('#memberModalTitle').textContent='✏️ Sửa Đoàn viên';$('#mName').value=m.hoTen;$('#mDob').value=m.ngaySinh;$('#mGender').value=m.gioiTinh;$('#mUnit').value=m.chiDoan;$('#mPhone').value=m.soDienThoai;$('#mEmail').value=m.email;$('#mJoinDate').value=m.ngayKetNap;$('#mRank').value=m.thiDua;$$('.field-error').forEach(e=>e.textContent='');openModal('memberModal')},
+  save(){
+    let ok=true;const name=$('#mName').value.trim(),dob=$('#mDob').value,phone=$('#mPhone').value.trim(),email=$('#mEmail').value.trim();
+    $$('.field-error').forEach(e=>e.textContent='');
+    if(!name){$('#mNameErr').textContent='Vui lòng nhập họ tên';ok=false}
+    if(!dob){$('#mDobErr').textContent='Vui lòng chọn ngày sinh';ok=false}else if(new Date(dob)>new Date()){$('#mDobErr').textContent='Ngày sinh không hợp lệ';ok=false}
+    if(!phone){$('#mPhoneErr').textContent='Nhập SĐT';ok=false}else if(!/^0\d{9}$/.test(phone)){$('#mPhoneErr').textContent='SĐT phải 10 số, bắt đầu bằng 0';ok=false}
+    if(!email){$('#mEmailErr').textContent='Nhập email';ok=false}else if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)){$('#mEmailErr').textContent='Email không hợp lệ';ok=false}
+    if(!ok)return;
+    const arr=DB.get('doanvien')||[];
+    if(editingId){const m=arr.find(x=>x.id===editingId);if(m){m.hoTen=name;m.ngaySinh=dob;m.gioiTinh=$('#mGender').value;m.chiDoan=$('#mUnit').value;m.soDienThoai=phone;m.email=email;m.ngayKetNap=$('#mJoinDate').value;m.thiDua=$('#mRank').value}showToast('Đã cập nhật đoàn viên')}
+    else{arr.push({id:genId('DV',arr),hoTen:name,ngaySinh:dob,gioiTinh:$('#mGender').value,chiDoan:$('#mUnit').value,soDienThoai:phone,email,ngayKetNap:$('#mJoinDate').value||new Date().toISOString().slice(0,10),trangThai:'hoat-dong',thiDua:$('#mRank').value,doanPhi:{Q1_2025:false,Q2_2025:false,Q3_2025:false,Q4_2025:false}});showToast('Đã thêm đoàn viên thành công!')}
+    DB.set('doanvien',arr);closeModal('memberModal');this.render();editingId=null;
+  },
+  confirmDel(id){const m=(DB.get('doanvien')||[]).find(x=>x.id===id);$('#confirmMsg').textContent=`Bạn có chắc muốn xóa đoàn viên ${m?m.hoTen:id}? Hành động này không thể hoàn tác.`;$('#confirmOk').onclick=()=>{const arr=(DB.get('doanvien')||[]).filter(x=>x.id!==id);DB.set('doanvien',arr);closeModal('confirmModal');this.render();showToast('Đã xóa đoàn viên')};openModal('confirmModal')}
+},
+// APP continued - TaiLieu, SuKien
+TaiLieu:{
+  renderTabs(){const tl=DB.get('tailieu')||[];const cats=[{k:'all',l:'Tất cả'},{k:'Nghị quyết',l:'Nghị quyết'},{k:'Học tập CT',l:'Học tập CT'},{k:'Phong trào',l:'Phong trào'},{k:'Hành chính',l:'Hành chính'}];$('#docTabs').innerHTML=cats.map(c=>{const n=c.k==='all'?tl.length:tl.filter(d=>d.danhMuc===c.k).length;return`<button class="tab-filter ${c.k==='all'?'active':''}" data-cat="${c.k}">${c.l} <span class="count">(${n})</span></button>`}).join('');$$('#docTabs .tab-filter').forEach(t=>t.addEventListener('click',()=>{$$('#docTabs .tab-filter').forEach(x=>x.classList.remove('active'));t.classList.add('active');App.TaiLieu.render()}))},
+  render(){const tl=DB.get('tailieu')||[];const cat=$('#docTabs .tab-filter.active')?.dataset.cat||'all';const type=$('#docTypeFilter').value;const search=($('#docSearch').value||'').toLowerCase();const sort=$('#docSort').value;let list=tl.filter(d=>{if(cat!=='all'&&d.danhMuc!==cat)return false;if(type!=='all'&&d.loaiFile!==type)return false;if(search&&!d.tieuDe.toLowerCase().includes(search)&&!(d.tags||[]).some(t=>t.includes(search)))return false;return true});if(sort==='newest')list.sort((a,b)=>new Date(b.ngayUpload)-new Date(a.ngayUpload));else if(sort==='views')list.sort((a,b)=>b.luotXem-a.luotXem);else if(sort==='az')list.sort((a,b)=>a.tieuDe.localeCompare(b.tieuDe,'vi'));$('#docGrid').innerHTML=list.map(d=>`<div class="doc-card" onclick="App.TaiLieu.preview('${d.id}')"><div class="doc-card-preview ${TYPE_CSS[d.loaiFile]||'pdf'}">${TYPE_ICONS[d.loaiFile]||'📄'}<span class="doc-category">${d.danhMuc}</span></div><div class="doc-card-body"><h4>${d.tieuDe}</h4><div class="doc-card-meta"><span>${d.loaiFile}</span><span>•</span><span>${d.kichThuoc}</span><span>•</span><span>${fmtDate(d.ngayUpload.slice(0,10))}</span></div></div><div class="doc-card-footer"><span class="badge badge-info">${d.nguoiUpload}</span><span>👁️ ${d.luotXem}</span></div></div>`).join('');$('#docBadge').textContent=tl.length},
+  preview(id){const tl=DB.get('tailieu')||[];const d=tl.find(x=>x.id===id);if(!d)return;d.luotXem=(d.luotXem||0)+1;DB.set('tailieu',tl);$('#previewTitle').textContent=d.tieuDe;$('#previewBody').innerHTML=`<p><b>Mô tả:</b> ${d.moTa||'—'}</p><p><b>Loại:</b> ${d.loaiFile}</p><p><b>Kích thước:</b> ${d.kichThuoc}</p><p><b>Danh mục:</b> ${d.danhMuc}</p><p><b>Quyền xem:</b> ${d.quyenXem}</p><p><b>Ngày upload:</b> ${fmtDate(d.ngayUpload.slice(0,10))}</p><p><b>Người upload:</b> ${d.nguoiUpload}</p><p><b>Lượt xem:</b> ${d.luotXem}</p><p><b>Tags:</b> ${(d.tags||[]).join(', ')}</p>${d.fileData?'<button class="btn btn-primary btn-sm" style="margin-top:10px" onclick="App.TaiLieu.download(\''+d.id+'\')">📥 Tải xuống</button>':'<p style="color:var(--muted);font-size:12px;margin-top:8px">File chưa có sẵn để tải. Đây là dữ liệu mẫu.</p>'}`;openModal('previewModal')},
+  download(id){const d=(DB.get('tailieu')||[]).find(x=>x.id===id);if(!d||!d.fileData){showToast('File chưa có sẵn để tải','warning');return}const a=document.createElement('a');a.href=d.fileData;a.download=d.tieuDe;a.click();showToast('Đang tải xuống...')},
+  upload(){
+    const title=$('#docTitle').value.trim();$('#docTitleErr').textContent='';
+    if(!title){$('#docTitleErr').textContent='Vui lòng nhập tiêu đề';return}
+    const btn=$('#uploadBtn');btn.disabled=true;btn.textContent='Đang xử lý...';
+    const prog=$('#uploadProgress');prog.style.display='block';const fill=$('#progressFill');const ptxt=$('#progressText');let p=0;
+    const iv=setInterval(()=>{p+=5;fill.style.width=p+'%';ptxt.textContent=p+'%';if(p>=100){clearInterval(iv);const tl=DB.get('tailieu')||[];const fi=$('#fileInput').files[0];tl.push({id:genId('TL',tl),tieuDe:title,moTa:$('#docDesc').value,danhMuc:$('#docCat').value,loaiFile:fi?{pdf:'PDF',docx:'DOCX',pptx:'PPTX',jpg:'Image',jpeg:'Image',png:'Image',mp4:'MP4'}[fi.name.split('.').pop().toLowerCase()]||'PDF':$('#docCat').value==='Phong trào'?'Image':'PDF',quyenXem:$('#docAccess').value,tags:$('#docTags').value.split(',').map(s=>s.trim()).filter(Boolean),ngayUpload:new Date().toISOString(),nguoiUpload:currentUser?currentUser.name:'Admin',luotXem:0,kichThuoc:fi?(fi.size/1024/1024).toFixed(1)+' MB':'1.0 MB',fileData:null});DB.set('tailieu',tl);closeModal('uploadModal');btn.disabled=false;btn.textContent='📤 Upload';prog.style.display='none';fill.style.width='0';$('#filePreview').style.display='none';$('#docTitle').value='';$('#docDesc').value='';$('#docTags').value='';this.renderTabs();this.render();showToast('Upload tài liệu thành công!')}},40);
+  }
+},
+SuKien:{
+  renderStats(){const sk=DB.get('sukien')||[];const done=sk.filter(e=>e.trangThai==='hoan-thanh').length;const upcoming=sk.filter(e=>e.trangThai==='sap-dien-ra'||e.trangThai==='dang-dien-ra').length;const att=sk.reduce((s,e)=>s+e.soLuongThamGia,0);$('#eventStats').innerHTML=[{icon:'📅',val:sk.length,label:'Tổng sự kiện'},{icon:'✅',val:done,label:'Đã hoàn thành'},{icon:'⏳',val:upcoming,label:'Sắp/Đang diễn ra'},{icon:'👥',val:att,label:'Lượt tham gia'}].map(s=>`<div class="stat-card"><div class="stat-icon">${s.icon}</div><div class="stat-value">${s.val}</div><div class="stat-label">${s.label}</div></div>`).join('')},
+  render(filter='all'){const sk=DB.get('sukien')||[];const list=sk.filter(e=>filter==='all'||e.trangThai===filter);const isAdmin=currentUser&&currentUser.role==='admin';$('#eventList').innerHTML=list.map(e=>{const d=new Date(e.ngayToChuc);const st=EVT_STATUS[e.trangThai]||{l:'?',c:''};const regBtn=e.trangThai==='sap-dien-ra'&&!isAdmin?`<button class="btn btn-primary btn-sm" style="margin-top:6px" onclick="App.SuKien.register('${e.id}')">Đăng ký</button>`:'';return`<div class="event-card"><div class="event-date"><div class="day">${d.getDate()}</div><div class="month">${MONTHS[d.getMonth()]}</div></div><div class="event-info"><h4>${e.tenSuKien}</h4><p>${e.moTa||''}</p><div class="event-meta"><span>📍 ${e.diaDiem}</span><span>🕐 ${e.thoiGian||''}</span><span>👥 ${e.soLuongThamGia}</span></div></div><div class="event-status"><span class="badge ${st.c}">${st.l}</span>${regBtn}</div></div>`}).join('')||'<p style="color:var(--muted)">Không có sự kiện</p>'},
+  register(id){const sk=DB.get('sukien')||[];const e=sk.find(x=>x.id===id);if(!e)return;e.soLuongThamGia++;if(currentUser)e.danhSachThamGia.push(currentUser.username);DB.set('sukien',sk);this.render();this.renderStats();showToast('Đã đăng ký tham gia!')},
+  create(){
+    let ok=true;$('#eNameErr').textContent='';$('#eDateErr').textContent='';
+    const name=$('#eName').value.trim(),date=$('#eDate').value;
+    if(!name){$('#eNameErr').textContent='Nhập tên sự kiện';ok=false}
+    if(!date){$('#eDateErr').textContent='Chọn ngày';ok=false}else if(new Date(date)<new Date(new Date().toDateString())){$('#eDateErr').textContent='Ngày không được trong quá khứ';ok=false}
+    if(!ok)return;
+    const sk=DB.get('sukien')||[];sk.push({id:genId('SK',sk),tenSuKien:name,moTa:$('#eDesc').value,ngayToChuc:date,thoiGian:$('#eTime').value||'08:00',diaDiem:$('#eLocation').value||'TBD',trangThai:'sap-dien-ra',soLuongThamGia:0,danhSachThamGia:[]});DB.set('sukien',sk);closeModal('eventModal');this.render();this.renderStats();showToast('Đã tạo sự kiện mới!')
+  }
+},
+// APP continued - BaoCao, ThongBao, CaiDat, init
+BaoCao:{
+  initCharts(){
+    if(typeof Chart==='undefined')return;
+    ['r1','r2','r3'].forEach(k=>{if(charts[k])charts[k].destroy()});
+    const dv=DB.get('doanvien')||[],sk=DB.get('sukien')||[],tl=DB.get('tailieu')||[];
+    const units=['Chi đoàn K22A','Chi đoàn K22B','Chi đoàn K21C','Chi đoàn K23A'];
+    const c1=$('#rptChart1');if(c1)charts.r1=new Chart(c1,{type:'bar',data:{labels:units.map(u=>u.replace('Chi đoàn ','')),datasets:[{label:'Số lượng',data:units.map(u=>dv.filter(m=>m.chiDoan===u).length),backgroundColor:['#d32f2f','#f9a825','#10b981','#6366f1']}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{ticks:{color:'#64748b'}},y:{ticks:{color:'#64748b'}}}}});
+    const c2=$('#rptChart2');if(c2)charts.r2=new Chart(c2,{type:'bar',data:{labels:['Hoàn thành','Sắp tới','Đang','Hủy'],datasets:[{data:[sk.filter(e=>e.trangThai==='hoan-thanh').length,sk.filter(e=>e.trangThai==='sap-dien-ra').length,sk.filter(e=>e.trangThai==='dang-dien-ra').length,sk.filter(e=>e.trangThai==='huy').length],backgroundColor:['#10b981','#06b6d4','#f59e0b','#ef4444']}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{ticks:{color:'#64748b'}},y:{ticks:{color:'#64748b'}}}}});
+    const cats=['Nghị quyết','Học tập CT','Phong trào','Hành chính'];
+    const c3=$('#rptChart3');if(c3)charts.r3=new Chart(c3,{type:'doughnut',data:{labels:cats,datasets:[{data:cats.map(c=>tl.filter(d=>d.danhMuc===c).length),backgroundColor:['#d32f2f','#f9a825','#10b981','#6366f1']}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'bottom',labels:{color:'#94a3b8'}}}}});
+  },
+  exportExcel(type){
+    if(typeof XLSX==='undefined'){showToast('Thư viện XLSX chưa tải xong','error');return}
+    showToast('Đang tạo file Excel...','info');
+    const wb=XLSX.utils.book_new();const today=new Date().toISOString().slice(0,10).replace(/-/g,'');
+    if(type==='doanvien'){
+      const dv=DB.get('doanvien')||[];
+      const ws1Data=[['Mã','Họ tên','Ngày sinh','Giới tính','Chi đoàn','SĐT','Email','Kết nạp','Trạng thái','Thi đua']];dv.forEach(m=>ws1Data.push([m.id,m.hoTen,m.ngaySinh,m.gioiTinh,m.chiDoan,m.soDienThoai,m.email,m.ngayKetNap,(STATUS_MAP[m.trangThai]||{}).l||m.trangThai,m.thiDua]));XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet(ws1Data),'Danh sách');
+      const ws2Data=[['Quý','Đã đóng','Chưa đóng']];['Q1_2025','Q2_2025','Q3_2025','Q4_2025'].forEach(q=>{const paid=dv.filter(m=>m.doanPhi&&m.doanPhi[q]).length;ws2Data.push([q.replace('_','/'),paid,dv.length-paid])});XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet(ws2Data),'Đoàn phí');
+      const ws3Data=[['Xếp loại','Số lượng']];['Xuất sắc','Tiên tiến','Hoàn thành','Không HT'].forEach(r=>ws3Data.push([r,dv.filter(m=>m.thiDua===r).length]));XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet(ws3Data),'Thi đua');
+      XLSX.writeFile(wb,'BaoCao_DoanVien_'+today+'.xlsx');
+    }else if(type==='sukien'){
+      const sk=DB.get('sukien')||[];const ws=[['Mã','Tên','Ngày','Giờ','Địa điểm','Trạng thái','Tham gia']];sk.forEach(e=>ws.push([e.id,e.tenSuKien,e.ngayToChuc,e.thoiGian,e.diaDiem,(EVT_STATUS[e.trangThai]||{}).l||'',e.soLuongThamGia]));XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet(ws),'Sự kiện');XLSX.writeFile(wb,'BaoCao_HoatDong_'+today+'.xlsx');
+    }else{
+      const tl=DB.get('tailieu')||[];const ws=[['Mã','Tiêu đề','Danh mục','Loại','Kích thước','Ngày upload','Lượt xem']];tl.forEach(d=>ws.push([d.id,d.tieuDe,d.danhMuc,d.loaiFile,d.kichThuoc,d.ngayUpload.slice(0,10),d.luotXem]));XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet(ws),'Tài liệu');XLSX.writeFile(wb,'BaoCao_TaiLieu_'+today+'.xlsx');
+    }
+    setTimeout(()=>showToast('Tải xuống thành công!'),500);
+  },
+  exportPDF(type){
+    if(typeof jspdf==='undefined'){showToast('Thư viện jsPDF chưa tải xong','error');return}
+    showToast('Đang tạo PDF...','info');
+    const{jsPDF}=jspdf;const doc=new jsPDF();const today=new Date().toISOString().slice(0,10);
+    doc.setFontSize(16);doc.text('DOAN TNCS HO CHI MINH',105,15,{align:'center'});doc.setFontSize(10);doc.text('Ngay xuat: '+today,105,22,{align:'center'});
+    if(type==='doanvien'){
+      const dv=DB.get('doanvien')||[];doc.setFontSize(13);doc.text('BAO CAO DOAN VIEN',105,32,{align:'center'});
+      doc.setFontSize(10);doc.text('Tong: '+dv.length+' | Hoat dong: '+dv.filter(m=>m.trangThai==='hoat-dong').length+' | Tam hoan: '+dv.filter(m=>m.trangThai==='tam-hoan').length,14,40);
+      doc.autoTable({startY:45,head:[['Ma','Ho ten','Chi doan','Trang thai','Thi dua']],body:dv.map(m=>[m.id,m.hoTen,m.chiDoan,(STATUS_MAP[m.trangThai]||{}).l||'',m.thiDua]),styles:{fontSize:8}});
+      doc.save('BaoCao_DoanVien_'+today.replace(/-/g,'')+'.pdf');
+    }else if(type==='sukien'){
+      const sk=DB.get('sukien')||[];doc.setFontSize(13);doc.text('BAO CAO HOAT DONG',105,32,{align:'center'});
+      doc.autoTable({startY:40,head:[['Ten','Ngay','Dia diem','Trang thai','Tham gia']],body:sk.map(e=>[e.tenSuKien,e.ngayToChuc,e.diaDiem,(EVT_STATUS[e.trangThai]||{}).l||'',e.soLuongThamGia]),styles:{fontSize:8}});
+      doc.save('BaoCao_HoatDong_'+today.replace(/-/g,'')+'.pdf');
+    }else{
+      const tl=DB.get('tailieu')||[];doc.setFontSize(13);doc.text('BAO CAO TAI LIEU',105,32,{align:'center'});
+      doc.autoTable({startY:40,head:[['Tieu de','Danh muc','Loai','Luot xem']],body:tl.map(d=>[d.tieuDe,d.danhMuc,d.loaiFile,d.luotXem]),styles:{fontSize:8}});
+      doc.save('BaoCao_TaiLieu_'+today.replace(/-/g,'')+'.pdf');
+    }
+    setTimeout(()=>showToast('Xuất PDF thành công!'),500);
+  }
+},
+ThongBao:{
+  render(){const tb=DB.get('thongbao')||[];const unread=tb.filter(n=>!n.daDoc).length;$('#notifCount').textContent=unread;$('#notifDot').style.display=unread>0?'block':'none';const icons={warning:'⚠️',info:'ℹ️',success:'✅',danger:'❌'};$('#notifList').innerHTML=tb.sort((a,b)=>new Date(b.thoiGian)-new Date(a.thoiGian)).slice(0,10).map(n=>`<div class="notif-item ${n.daDoc?'':'unread'}" onclick="App.ThongBao.markRead('${n.id}')">${icons[n.loai]||'ℹ️'} <strong>${n.tieuDe}</strong><br><span style="color:var(--text2)">${n.noiDung.substring(0,50)}</span><div class="notif-time">${timeAgo(n.thoiGian)}</div></div>`).join('')||'<p style="padding:16px;color:var(--muted);font-size:13px">Không có thông báo</p>'},
+  markRead(id){const tb=DB.get('thongbao')||[];const n=tb.find(x=>x.id===id);if(n)n.daDoc=true;DB.set('thongbao',tb);this.render()},
+  markAllRead(){const tb=DB.get('thongbao')||[];tb.forEach(n=>n.daDoc=true);DB.set('thongbao',tb);this.render();showToast('Đã đánh dấu tất cả đã đọc')},
+  toggle(){const p=$('#notifPanel');p.style.display=p.style.display==='none'?'block':'none'}
+},
+CaiDat:{
+  load(){const cfg=DB.get('caiDat')||{};$$('.toggle[data-key]').forEach(t=>{const v=cfg[t.dataset.key];if(v)t.classList.add('active');else t.classList.remove('active')});if(cfg.darkMode)document.body.classList.add('light');else document.body.classList.remove('light')},
+  save(){const cfg={};$$('.toggle[data-key]').forEach(t=>cfg[t.dataset.key]=t.classList.contains('active'));DB.set('caiDat',cfg);showToast('Đã lưu cài đặt thành công!')},
+  changePassword(){const o=$('#oldPass').value,n=$('#newPass').value;if(!o||!n){showToast('Nhập đầy đủ mật khẩu','error');return}if(currentUser&&ACCOUNTS[currentUser.username]&&ACCOUNTS[currentUser.username].pass===o){ACCOUNTS[currentUser.username].pass=n;showToast('Đã đổi mật khẩu');$('#oldPass').value='';$('#newPass').value=''}else showToast('Mật khẩu cũ không đúng','error')},
+  resetData(){$('#confirmMsg').textContent='Xóa toàn bộ dữ liệu? Trang sẽ tải lại.';$('#confirmOk').onclick=()=>{localStorage.clear();location.reload()};openModal('confirmModal')}
+},
+
+// GLOBAL SEARCH
+GlobalSearch:{
+  init(){const input=$('#globalSearch');const results=$('#searchResults');input.addEventListener('input',debounce(()=>{const q=input.value.trim().toLowerCase();if(!q){results.style.display='none';return}const dv=(DB.get('doanvien')||[]).filter(m=>m.hoTen.toLowerCase().includes(q)).slice(0,3);const tl=(DB.get('tailieu')||[]).filter(d=>d.tieuDe.toLowerCase().includes(q)||(d.tags||[]).some(t=>t.includes(q))).slice(0,3);const sk=(DB.get('sukien')||[]).filter(e=>e.tenSuKien.toLowerCase().includes(q)).slice(0,3);let html='';if(dv.length)html+=`<div class="search-group">Đoàn viên</div>`+dv.map(m=>`<div class="search-item" onclick="App.GlobalSearch.go('members','${m.id}')">👤 ${m.hoTen} — ${m.chiDoan}</div>`).join('');if(tl.length)html+=`<div class="search-group">Tài liệu</div>`+tl.map(d=>`<div class="search-item" onclick="App.GlobalSearch.go('documents','${d.id}')">📄 ${d.tieuDe}</div>`).join('');if(sk.length)html+=`<div class="search-group">Sự kiện</div>`+sk.map(e=>`<div class="search-item" onclick="App.GlobalSearch.go('events','${e.id}')">📅 ${e.tenSuKien}</div>`).join('');if(!html)html='<div class="search-item" style="color:var(--muted)">Không tìm thấy kết quả</div>';results.innerHTML=html;results.style.display='block'},400));document.addEventListener('keydown',e=>{if(e.key==='Escape')results.style.display='none'});document.addEventListener('click',e=>{if(!e.target.closest('.header-search'))results.style.display='none'})},
+  go(page){$$('.nav-item').forEach(n=>n.classList.remove('active'));$$('.nav-item[data-page="'+page+'"]').forEach(n=>n.classList.add('active'));$$('.page').forEach(p=>p.classList.remove('active'));$('#page-'+page).classList.add('active');$('#searchResults').style.display='none';$('#globalSearch').value=''}
+},
+
+// INIT
+init(){
+  App.Dashboard.render();setTimeout(()=>App.Dashboard.initCharts(),300);
+  App.DoanVien.render();App.TaiLieu.renderTabs();App.TaiLieu.render();
+  App.SuKien.renderStats();App.SuKien.render();App.ThongBao.render();App.CaiDat.load();
 }
-function demoLogin(type){
-  if(type==='admin')doLogin('admin','admin123');
-  else doLogin('doanvien','user123');
-}
-function logout(){
-  currentUser=null;
-  $('#loginPage').classList.remove('hidden');
-  $('#appLayout').style.display='none';
-  document.body.classList.remove('role-admin');
-  destroyCharts();
-}
-$('#loginForm').addEventListener('submit',e=>{
-  e.preventDefault();
-  const u=$('#loginUser').value.trim(),p=$('#loginPass').value;
-  if(!u||!p){$('#loginError').textContent='Vui lòng nhập đầy đủ';return}
-  if(!doLogin(u,p))$('#loginError').textContent='Sai tên đăng nhập hoặc mật khẩu';
+};// end App
+
+// ===== EVENT BINDINGS =====
+document.addEventListener('DOMContentLoaded',()=>{
+  initSampleData();
+  // Login
+  $('#loginForm').addEventListener('submit',e=>{e.preventDefault();const u=$('#loginUser').value.trim(),p=$('#loginPass').value;if(!u||!p){$('#loginError').textContent='Vui lòng nhập đầy đủ';return}if(!App.Auth.login(u,p))$('#loginError').textContent='Sai tên đăng nhập hoặc mật khẩu'});
+  $('#logoutBtn').addEventListener('click',()=>App.Auth.logout());
+  // Nav
+  $$('.nav-item[data-page]').forEach(item=>item.addEventListener('click',()=>{showLoading();$$('.nav-item').forEach(n=>n.classList.remove('active'));item.classList.add('active');setTimeout(()=>{$$('.page').forEach(p=>p.classList.remove('active'));$('#page-'+item.dataset.page).classList.add('active');hideLoading();if(item.dataset.page==='dashboard'){App.Dashboard.render();App.Dashboard.initCharts()}if(item.dataset.page==='reports')App.BaoCao.initCharts();$('#sidebar').classList.remove('open');$('#sidebarOverlay').classList.remove('show')},200)}));
+  $('#navUpload').addEventListener('click',()=>openModal('uploadModal'));
+  $('#menuToggle').addEventListener('click',()=>{$('#sidebar').classList.add('open');$('#sidebarOverlay').classList.add('show')});
+  $('#sidebarOverlay').addEventListener('click',()=>{$('#sidebar').classList.remove('open');$('#sidebarOverlay').classList.remove('show')});
+  // Members
+  $('#btnAddMember').addEventListener('click',()=>App.DoanVien.openAdd());
+  const debouncedMember=debounce(()=>{memberPage=1;App.DoanVien.render()},300);
+  $('#memberSearch').addEventListener('input',debouncedMember);
+  $('#memberStatusFilter').addEventListener('change',()=>{memberPage=1;App.DoanVien.render()});
+  $('#memberUnitFilter').addEventListener('change',()=>{memberPage=1;App.DoanVien.render()});
+  $$('.data-table th.sortable').forEach(th=>th.addEventListener('click',()=>{const k=th.dataset.sort;if(memberSort.key===k)memberSort.asc=!memberSort.asc;else{memberSort.key=k;memberSort.asc=true}App.DoanVien.render()}));
+  // Docs
+  $('#btnUploadDoc').addEventListener('click',()=>openModal('uploadModal'));
+  $('#docSearch').addEventListener('input',debounce(()=>App.TaiLieu.render(),300));
+  $('#docTypeFilter').addEventListener('change',()=>App.TaiLieu.render());
+  $('#docSort').addEventListener('change',()=>App.TaiLieu.render());
+  // Upload zone
+  const zone=$('#uploadZone'),fi=$('#fileInput');
+  zone.addEventListener('click',()=>fi.click());
+  zone.addEventListener('dragover',e=>{e.preventDefault();zone.style.borderColor='var(--primary)'});
+  zone.addEventListener('dragleave',()=>zone.style.borderColor='');
+  zone.addEventListener('drop',e=>{e.preventDefault();zone.style.borderColor='';if(e.dataTransfer.files.length)handleFile(e.dataTransfer.files[0])});
+  fi.addEventListener('change',()=>{if(fi.files.length)handleFile(fi.files[0])});
+  // Events
+  $('#btnAddEvent').addEventListener('click',()=>{$('#eName').value='';$('#eDate').value='';$('#eDesc').value='';$('#eLocation').value='';openModal('eventModal')});
+  $$('[data-ef]').forEach(btn=>btn.addEventListener('click',()=>{$$('[data-ef]').forEach(b=>b.classList.remove('active'));btn.classList.add('active');App.SuKien.render(btn.dataset.ef)}));
+  // Notifications
+  $('#notifBtn').addEventListener('click',e=>{e.stopPropagation();App.ThongBao.toggle()});
+  document.addEventListener('click',e=>{if(!e.target.closest('.notif-wrapper'))$('#notifPanel').style.display='none'});
+  // Toggles
+  $$('.toggle[data-key]').forEach(t=>t.addEventListener('click',()=>{t.classList.toggle('active');if(t.dataset.key==='darkMode')document.body.classList.toggle('light',!t.classList.contains('active'));showToast('Đã cập nhật cài đặt')}));
+  // Modal close on Escape
+  document.addEventListener('keydown',e=>{if(e.key==='Escape')$$('.modal-overlay.show').forEach(m=>m.classList.remove('show'))});
+  // Global search
+  App.GlobalSearch.init();
+  // Restore dark mode
+  const cfg=DB.get('caiDat');if(cfg&&!cfg.darkMode)document.body.classList.add('light');
 });
-$('#logoutBtn').addEventListener('click',logout);
-
-// ===== NAVIGATION =====
-$$('.nav-item[data-page]').forEach(item=>{
-  item.addEventListener('click',()=>{
-    $$('.nav-item').forEach(n=>n.classList.remove('active'));
-    item.classList.add('active');
-    $$('.page').forEach(p=>p.classList.remove('active'));
-    $('#page-'+item.dataset.page).classList.add('active');
-    if(item.dataset.page==='dashboard')initDashCharts();
-    if(item.dataset.page==='reports')initReportCharts();
-    closeSidebar();
-  });
-});
-$('#navUpload').addEventListener('click',()=>openModal('uploadModal'));
-$('#menuToggle').addEventListener('click',()=>{$('#sidebar').classList.add('open');$('#sidebarOverlay').classList.add('show')});
-function closeSidebar(){$('#sidebar').classList.remove('open');$('#sidebarOverlay').classList.remove('show')}
-$('#sidebarOverlay').addEventListener('click',closeSidebar);
-document.addEventListener('keydown',e=>{if(e.key==='Escape')$$('.modal-overlay.show').forEach(m=>m.classList.remove('show'))});
-
-// ===== DASHBOARD =====
-function renderDashStats(){
-  const active=MEMBERS.filter(m=>m.status==='active').length;
-  const upcoming=EVENTS.filter(e=>e.status==='upcoming'||e.status==='ongoing').length;
-  $('#dashStats').innerHTML=[
-    {icon:'👥',val:MEMBERS.length,label:'Tổng Đoàn viên',change:'↑ Chi đoàn: 4'},
-    {icon:'✅',val:active,label:'Đang hoạt động',change:Math.round(active/MEMBERS.length*100)+'%'},
-    {icon:'📅',val:upcoming,label:'Sự kiện sắp tới',change:EVENTS.filter(e=>e.status==='done').length+' đã hoàn thành'},
-    {icon:'📄',val:DOCUMENTS.length,label:'Tài liệu số hóa',change:'↑ Đa dạng danh mục'}
-  ].map(s=>`<div class="stat-card"><div class="stat-icon">${s.icon}</div><div class="stat-value">${s.val}</div><div class="stat-label">${s.label}</div><div class="stat-change up">${s.change}</div></div>`).join('');
+function handleFile(f){
+  const allowed=['pdf','docx','pptx','jpg','jpeg','png','mp4'];const ext=f.name.split('.').pop().toLowerCase();
+  if(!allowed.includes(ext)){showToast('Định dạng file không được hỗ trợ','error');return}
+  if(f.size>100*1024*1024){showToast('File vượt quá 100MB','error');return}
+  const prev=$('#filePreview');prev.style.display='block';
+  let html=`<strong>${f.name}</strong> — ${(f.size/1024/1024).toFixed(1)} MB — ${ext.toUpperCase()}`;
+  if(['jpg','jpeg','png'].includes(ext)){const r=new FileReader();r.onload=e=>{prev.innerHTML=html+`<br><img src="${e.target.result}" style="max-width:100%;max-height:120px;margin-top:8px;border-radius:6px">`};r.readAsDataURL(f)}
+  else prev.innerHTML=html;
+  if(!$('#docTitle').value)$('#docTitle').value=f.name.replace('.'+ext,'');
 }
-function renderRecentActivity(){
-  const acts=[
-    {dot:'red',text:'<strong>Nguyễn Văn An</strong> đã đóng đoàn phí Q1/2025',time:'2 phút trước'},
-    {dot:'green',text:'<strong>Admin</strong> upload "Nghị quyết ĐH XII"',time:'15 phút trước'},
-    {dot:'yellow',text:'Sự kiện <strong>"Ngày hội tình nguyện"</strong> được tạo',time:'1 giờ trước'},
-    {dot:'blue',text:'<strong>Trần Thị Bích</strong> đăng ký sự kiện Hiến máu',time:'3 giờ trước'},
-    {dot:'green',text:'<strong>Lê Minh Đức</strong> kết nạp thành công',time:'5 giờ trước'}
-  ];
-  $('#recentActivity').innerHTML=acts.map(a=>`<div class="activity-item"><div class="activity-dot ${a.dot}"></div><div><div class="activity-text">${a.text}</div><div class="activity-time">${a.time}</div></div></div>`).join('');
-}
-function destroyCharts(){Object.values(charts).forEach(c=>{if(c&&c.destroy)c.destroy()});charts={}}
-function initDashCharts(){
-  if(typeof Chart==='undefined')return;
-  if(charts.line)charts.line.destroy();
-  if(charts.pie)charts.pie.destroy();
-  const ctx1=$('#lineChart');const ctx2=$('#pieChart');
-  if(!ctx1||!ctx2)return;
-  charts.line=new Chart(ctx1,{type:'line',data:{labels:['T11','T12','T1','T2','T3','T4'],datasets:[{label:'Kết nạp mới',data:[5,8,12,6,9,4],borderColor:'#d32f2f',backgroundColor:'rgba(211,47,47,.1)',fill:true,tension:.4}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{color:'#94a3b8'}}},scales:{x:{ticks:{color:'#64748b'},grid:{color:'rgba(51,65,85,.3)'}},y:{ticks:{color:'#64748b'},grid:{color:'rgba(51,65,85,.3)'}}}}});
-  const units=['K22A','K22B','K21C','K23A'];
-  const unitCounts=units.map(u=>MEMBERS.filter(m=>m.unit===u).length);
-  charts.pie=new Chart(ctx2,{type:'doughnut',data:{labels:units.map(u=>'Chi đoàn '+u),datasets:[{data:unitCounts,backgroundColor:['#d32f2f','#f9a825','#10b981','#6366f1']}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'bottom',labels:{color:'#94a3b8',padding:12}}}}});
-}
-
-// ===== MEMBERS =====
-function getFilteredMembers(){
-  let list=[...MEMBERS];
-  const search=$('#memberSearch').value.toLowerCase();
-  const status=$('#memberStatusFilter').value;
-  const unit=$('#memberUnitFilter').value;
-  const fee=$('#memberFeeFilter').value;
-  if(search)list=list.filter(m=>m.name.toLowerCase().includes(search)||m.id.toLowerCase().includes(search)||m.unit.toLowerCase().includes(search));
-  if(status!=='all')list=list.filter(m=>m.status===status);
-  if(unit!=='all')list=list.filter(m=>m.unit===unit);
-  if(fee==='paid')list=list.filter(m=>Object.values(m.fee).every(f=>f==='paid'));
-  if(fee==='debt')list=list.filter(m=>Object.values(m.fee).some(f=>f==='debt'));
-  list.sort((a,b)=>{let va=a[memberSort.key]||'',vb=b[memberSort.key]||'';if(typeof va==='string')va=va.toLowerCase();if(typeof vb==='string')vb=vb.toLowerCase();return memberSort.asc?(va>vb?1:-1):(va<vb?1:-1)});
-  return list;
-}
-function renderMembers(){
-  const list=getFilteredMembers();
-  const perPage=10,totalPages=Math.max(1,Math.ceil(list.length/perPage));
-  if(memberPage>totalPages)memberPage=totalPages;
-  const start=(memberPage-1)*perPage,slice=list.slice(start,start+perPage);
-  const isAdmin=currentUser&&currentUser.role==='admin';
-  $('#memberCount').textContent=`Hiển thị ${slice.length}/${list.length} đoàn viên`;
-  $('#memberTbody').innerHTML=slice.map((m,i)=>{
-    const initials=m.name.split(' ').slice(-2).map(w=>w[0]).join('');
-    const color=COLORS[i%COLORS.length];
-    const st=STATUS_MAP[m.status];
-    const feeDebt=Object.entries(m.fee).filter(([,v])=>v==='debt').map(([k])=>k);
-    const feeHtml=feeDebt.length?`<span class="badge badge-danger">Nợ ${feeDebt.join(',')}</span>`:`<span class="badge badge-ok">Đã đóng đủ</span>`;
-    const rankClass=m.rank==='Xuất sắc'?'badge-primary':m.rank==='Khá'?'badge-info':'badge-warn';
-    const actions=isAdmin?`<button class="btn-icon" onclick="editMember('${m.id}')" title="Sửa">✏️</button><button class="btn-icon" onclick="confirmDelete('${m.id}')" title="Xóa">🗑️</button>`:'';
-    return`<tr><td><div class="member-info"><div class="member-avatar" style="background:${color}">${initials}</div><div><div class="member-name">${m.name}</div><div class="member-id">${m.id}</div></div></div></td><td>${m.unit}</td><td>${feeHtml}</td><td><span class="badge ${rankClass}">${m.rank}</span></td><td><span class="badge ${st.c}">${st.l}</span></td><td style="display:flex;gap:4px">${actions}<button class="btn-icon" onclick="viewMember('${m.id}')" title="Xem">👁️</button></td></tr>`;
-  }).join('');
-  $('#memberPagination').innerHTML=Array.from({length:totalPages},(_,i)=>`<button class="page-btn ${i+1===memberPage?'active':''}" onclick="memberPage=${i+1};renderMembers()">${i+1}</button>`).join('');
-  $('#memberBadge').textContent=MEMBERS.length;
-}
-function viewMember(id){const m=MEMBERS.find(x=>x.id===id);if(!m)return;$('#previewTitle').textContent=m.name;$('#previewBody').innerHTML=`<p><strong>MSSV:</strong> ${m.id}</p><p><strong>Ngày sinh:</strong> ${m.dob}</p><p><strong>Giới tính:</strong> ${m.gender}</p><p><strong>Chi đoàn:</strong> ${m.unit}</p><p><strong>SĐT:</strong> ${m.phone}</p><p><strong>Email:</strong> ${m.email}</p><p><strong>Kết nạp:</strong> ${m.joinDate}</p><p><strong>Xếp loại:</strong> ${m.rank}</p>`;openModal('docPreviewModal')}
-function editMember(id){editingMemberId=id;const m=MEMBERS.find(x=>x.id===id);if(!m)return;$('#memberModalTitle').textContent='✏️ Sửa Đoàn viên';$('#mName').value=m.name;$('#mDob').value=m.dob;$('#mGender').value=m.gender;$('#mUnit').value=m.unit;$('#mPhone').value=m.phone;$('#mEmail').value=m.email;$('#mJoinDate').value=m.joinDate;openModal('memberModal')}
-function saveMember(){const name=$('#mName').value.trim();if(!name){showToast('Vui lòng nhập họ tên','error');return}if(editingMemberId){const m=MEMBERS.find(x=>x.id===editingMemberId);if(m){m.name=name;m.dob=$('#mDob').value;m.gender=$('#mGender').value;m.unit=$('#mUnit').value;m.phone=$('#mPhone').value;m.email=$('#mEmail').value;m.joinDate=$('#mJoinDate').value}showToast('Đã cập nhật đoàn viên')}else{MEMBERS.push({id:'24ICD'+String(MEMBERS.length+1).padStart(3,'0'),name,dob:$('#mDob').value,gender:$('#mGender').value,unit:$('#mUnit').value,phone:$('#mPhone').value,email:$('#mEmail').value,joinDate:$('#mJoinDate').value||'2025-04-30',status:'active',fee:{Q1:'paid',Q2:'paid',Q3:'paid',Q4:'paid'},rank:'Khá'});showToast('Đã thêm đoàn viên mới')}closeModal('memberModal');renderMembers();editingMemberId=null}
-function confirmDelete(id){$('#confirmMsg').textContent=`Xóa đoàn viên ${id}?`;$('#confirmOk').onclick=()=>{const idx=MEMBERS.findIndex(m=>m.id===id);if(idx>-1)MEMBERS.splice(idx,1);closeModal('confirmModal');renderMembers();showToast('Đã xóa đoàn viên')};openModal('confirmModal')}
-$('#btnAddMember').addEventListener('click',()=>{editingMemberId=null;$('#memberModalTitle').textContent='➕ Thêm Đoàn viên';$('#mName').value='';$('#mDob').value='';$('#mPhone').value='';$('#mEmail').value='';$('#mJoinDate').value='';openModal('memberModal')});
-$('#memberSearch').addEventListener('input',()=>{memberPage=1;renderMembers()});
-$('#memberStatusFilter').addEventListener('change',()=>{memberPage=1;renderMembers()});
-$('#memberUnitFilter').addEventListener('change',()=>{memberPage=1;renderMembers()});
-$('#memberFeeFilter').addEventListener('change',()=>{memberPage=1;renderMembers()});
-$$('.data-table th.sortable').forEach(th=>{th.addEventListener('click',()=>{const k=th.dataset.sort;if(memberSort.key===k)memberSort.asc=!memberSort.asc;else{memberSort.key=k;memberSort.asc=true}renderMembers()})});
-
-// ===== DOCUMENTS =====
-function renderDocTabs(){
-  const cats=[{key:'all',label:'Tất cả'},{key:'nghi-quyet',label:'Nghị quyết'},{key:'hoc-tap',label:'Học tập CT'},{key:'phong-trao',label:'Phong trào'},{key:'hanh-chinh',label:'Hành chính'}];
-  $('#docTabs').innerHTML=cats.map(c=>{const count=c.key==='all'?DOCUMENTS.length:DOCUMENTS.filter(d=>d.category===c.key).length;return`<button class="tab-filter ${c.key==='all'?'active':''}" data-cat="${c.key}">${c.label} <span class="count">(${count})</span></button>`}).join('');
-  $$('#docTabs .tab-filter').forEach(t=>t.addEventListener('click',()=>{$$('#docTabs .tab-filter').forEach(x=>x.classList.remove('active'));t.classList.add('active');renderDocs()}));
-}
-function renderDocs(){
-  const cat=$('#docTabs .tab-filter.active')?.dataset.cat||'all';
-  const type=$('#docTypeFilter').value;
-  const search=$('#docSearch').value.toLowerCase();
-  const sort=$('#docSort').value;
-  let list=DOCUMENTS.filter(d=>{
-    if(cat!=='all'&&d.category!==cat)return false;
-    if(type!=='all'&&d.type!==type)return false;
-    if(search&&!d.title.toLowerCase().includes(search)&&!d.tags.some(t=>t.includes(search)))return false;
-    return true;
-  });
-  if(sort==='newest')list.sort((a,b)=>new Date(b.date)-new Date(a.date));
-  else if(sort==='views')list.sort((a,b)=>b.views-a.views);
-  else if(sort==='az')list.sort((a,b)=>a.title.localeCompare(b.title,'vi'));
-  $('#docGrid').innerHTML=list.map(d=>`<div class="doc-card" onclick="previewDoc(${d.id})"><div class="doc-card-preview ${d.type}">${TYPE_ICONS[d.type]||'📄'}<span class="doc-category">${getCatLabel(d.category)}</span></div><div class="doc-card-body"><h4>${d.title}</h4><div class="doc-card-meta"><span>${d.type.toUpperCase()}</span><span>•</span><span>${d.size}</span><span>•</span><span>${d.date}</span></div></div><div class="doc-card-footer"><span class="badge badge-info">${d.uploader}</span><span>👁️ ${d.views}</span></div></div>`).join('');
-  $('#docBadge').textContent=DOCUMENTS.length;
-}
-function previewDoc(id){const d=DOCUMENTS.find(x=>x.id===id);if(!d)return;$('#previewTitle').textContent=d.title;$('#previewBody').innerHTML=`<p><strong>Loại:</strong> ${d.type.toUpperCase()}</p><p><strong>Dung lượng:</strong> ${d.size}</p><p><strong>Danh mục:</strong> ${getCatLabel(d.category)}</p><p><strong>Ngày upload:</strong> ${d.date}</p><p><strong>Người upload:</strong> ${d.uploader}</p><p><strong>Lượt xem:</strong> ${d.views}</p><p><strong>Tags:</strong> ${d.tags.join(', ')}</p>`;openModal('docPreviewModal')}
-function addDocument(){const t=$('#docTitle').value.trim();if(!t){showToast('Nhập tiêu đề','error');return}DOCUMENTS.push({id:DOCUMENTS.length+1,title:t,type:$('#docType').value,size:'1.0MB',date:new Date().toISOString().slice(0,10),category:$('#docCat').value,views:0,uploader:currentUser.name,tags:$('#docTags').value.split(',').map(s=>s.trim()).filter(Boolean)});closeModal('uploadModal');renderDocTabs();renderDocs();showToast('Đã upload tài liệu')}
-$('#btnUploadDoc').addEventListener('click',()=>openModal('uploadModal'));
-$('#docSearch').addEventListener('input',renderDocs);
-$('#docTypeFilter').addEventListener('change',renderDocs);
-$('#docSort').addEventListener('change',renderDocs);
-
-// ===== EVENTS =====
-function renderEventStats(){
-  const done=EVENTS.filter(e=>e.status==='done').length;
-  const upcoming=EVENTS.filter(e=>e.status==='upcoming').length;
-  const ongoing=EVENTS.filter(e=>e.status==='ongoing').length;
-  const totalAtt=EVENTS.reduce((s,e)=>s+e.attendees,0);
-  $('#eventStats').innerHTML=[
-    {icon:'📅',val:EVENTS.length,label:'Tổng sự kiện'},
-    {icon:'✅',val:done,label:'Đã hoàn thành'},
-    {icon:'⏳',val:upcoming+ongoing,label:'Sắp/Đang diễn ra'},
-    {icon:'👥',val:totalAtt,label:'Lượt tham gia'}
-  ].map(s=>`<div class="stat-card"><div class="stat-icon">${s.icon}</div><div class="stat-value">${s.val}</div><div class="stat-label">${s.label}</div></div>`).join('');
-}
-function renderEvents(filter='all'){
-  const list=EVENTS.filter(e=>filter==='all'||e.status===filter);
-  const isAdmin=currentUser&&currentUser.role==='admin';
-  $('#eventList').innerHTML=list.map(e=>{
-    const d=new Date(e.startDate);
-    const stMap={upcoming:{l:'Sắp diễn ra',c:'badge-info'},ongoing:{l:'Đang diễn ra',c:'badge-warn'},done:{l:'Đã hoàn thành',c:'badge-ok'}};
-    const st=stMap[e.status];
-    const regBtn=e.status==='upcoming'&&!isAdmin?`<button class="btn btn-primary btn-sm" onclick="registerEvent(${e.id})">Đăng ký</button>`:'';
-    return`<div class="event-card"><div class="event-date"><div class="day">${d.getDate()}</div><div class="month">${MONTHS[d.getMonth()]}</div></div><div class="event-info"><h4>${e.title}</h4><p>${e.desc}</p><div class="event-meta"><span>📍 ${e.location}</span><span>👥 ${e.attendees}/${e.maxAttendees}</span></div></div><div class="event-status"><span class="badge ${st.c}">${st.l}</span>${regBtn}</div></div>`;
-  }).join('');
-}
-function registerEvent(id){const e=EVENTS.find(x=>x.id===id);if(e&&e.attendees<e.maxAttendees){e.attendees++;renderEvents();renderEventStats();showToast('Đã đăng ký thành công!');}else showToast('Sự kiện đã đầy','warning')}
-function addEvent(){const t=$('#eName').value.trim();if(!t){showToast('Nhập tên sự kiện','error');return}EVENTS.push({id:EVENTS.length+1,title:t,startDate:$('#eStart').value||'2025-05-30',endDate:$('#eEnd').value||'2025-05-30',location:$('#eLocation').value||'TBD',attendees:0,maxAttendees:parseInt($('#eMax').value)||100,status:'upcoming',desc:$('#eDesc').value||''});closeModal('eventModal');renderEvents();renderEventStats();showToast('Đã tạo sự kiện')}
-$('#btnAddEvent').addEventListener('click',()=>openModal('eventModal'));
-$$('[data-ef]').forEach(btn=>{btn.addEventListener('click',()=>{$$('[data-ef]').forEach(b=>b.classList.remove('active'));btn.classList.add('active');renderEvents(btn.dataset.ef)})});
-
-// ===== REPORTS =====
-function initReportCharts(){
-  if(typeof Chart==='undefined')return;
-  ['r1','r2','r3'].forEach(k=>{if(charts[k])charts[k].destroy()});
-  const ctx1=$('#reportChart1'),ctx2=$('#reportChart2'),ctx3=$('#reportChart3');
-  if(!ctx1)return;
-  const units=['K22A','K22B','K21C','K23A'];
-  charts.r1=new Chart(ctx1,{type:'bar',data:{labels:units,datasets:[{label:'Số lượng',data:units.map(u=>MEMBERS.filter(m=>m.unit===u).length),backgroundColor:['#d32f2f','#f9a825','#10b981','#6366f1']}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{ticks:{color:'#64748b'}},y:{ticks:{color:'#64748b'}}}}});
-  charts.r2=new Chart(ctx2,{type:'bar',data:{labels:['T1','T2','T3','T4','T5','T6'],datasets:[{label:'Lượt tham gia',data:[80,55,375,556,120,0],backgroundColor:'rgba(211,47,47,.7)'}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{ticks:{color:'#64748b'}},y:{ticks:{color:'#64748b'}}}}});
-  const docCats=['Nghị quyết','Học tập CT','Phong trào','Hành chính'];
-  charts.r3=new Chart(ctx3,{type:'doughnut',data:{labels:docCats,datasets:[{data:[DOCUMENTS.filter(d=>d.category==='nghi-quyet').length,DOCUMENTS.filter(d=>d.category==='hoc-tap').length,DOCUMENTS.filter(d=>d.category==='phong-trao').length,DOCUMENTS.filter(d=>d.category==='hanh-chinh').length],backgroundColor:['#d32f2f','#f9a825','#10b981','#6366f1']}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'bottom',labels:{color:'#94a3b8'}}}}});
-}
-
-// ===== EXPORT =====
-function exportCSV(type){
-  let csv='',filename='';
-  if(type==='members'){csv='MSSV,Họ tên,Chi đoàn,Trạng thái,Xếp loại,Đoàn phí\n'+MEMBERS.map(m=>`${m.id},${m.name},${m.unit},${STATUS_MAP[m.status].l},${m.rank},${Object.values(m.fee).filter(f=>f==='debt').length?'Nợ':'Đủ'}`).join('\n');filename='doanvien.csv'}
-  else if(type==='events'){csv='Tên,Ngày,Địa điểm,Tham gia,Trạng thái\n'+EVENTS.map(e=>`${e.title},${e.startDate},${e.location},${e.attendees},${e.status}`).join('\n');filename='hoatdong.csv'}
-  else{csv='Tiêu đề,Loại,Danh mục,Ngày,Lượt xem\n'+DOCUMENTS.map(d=>`${d.title},${d.type},${getCatLabel(d.category)},${d.date},${d.views}`).join('\n');filename='tailieu.csv'}
-  const blob=new Blob(['\uFEFF'+csv],{type:'text/csv;charset=utf-8;'});
-  const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=filename;a.click();showToast('Đã xuất file CSV');
-}
-function exportPDF(){window.print();showToast('Đang in / xuất PDF')}
-
-// ===== SETTINGS =====
-function initSettings(){
-  $$('.toggle[data-key]').forEach(t=>{
-    const saved=localStorage.getItem('setting_'+t.dataset.key);
-    if(saved!==null)t.classList.toggle('active',saved==='true');
-    t.addEventListener('click',()=>{
-      t.classList.toggle('active');
-      localStorage.setItem('setting_'+t.dataset.key,t.classList.contains('active'));
-      if(t.dataset.key==='darkMode'){document.body.classList.toggle('light',!t.classList.contains('active'))}
-    });
-  });
-  const dm=localStorage.getItem('setting_darkMode');
-  if(dm==='false')document.body.classList.add('light');
-  else $('#darkModeToggle').classList.add('active');
-}
-function changePassword(){
-  const o=$('#oldPass').value,n=$('#newPass').value;
-  if(!o||!n){showToast('Nhập đầy đủ','error');return}
-  if(currentUser&&ACCOUNTS[currentUser.username]&&ACCOUNTS[currentUser.username].pass===o){ACCOUNTS[currentUser.username].pass=n;showToast('Đã đổi mật khẩu');$('#oldPass').value='';$('#newPass').value=''}
-  else showToast('Mật khẩu cũ không đúng','error');
-}
-
-// ===== INIT =====
-function initApp(){
-  renderDashStats();renderRecentActivity();renderMembers();renderDocTabs();renderDocs();renderEventStats();renderEvents();initSettings();
-  setTimeout(initDashCharts,300);
-}
+function demoLogin(type){if(type==='admin')App.Auth.login('admin','admin123');else App.Auth.login('doanvien','user123')}
 </script>
 </body>
 </html>
