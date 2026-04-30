@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<meta name="description" content="Hệ thống quản lý Đoàn TNCS HCM - Số hóa tài liệu, quản lý đoàn viên">
+<title>Đoàn TNCS HCM — Hệ thống Quản lý & Số hóa Tài liệu</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>Đ</text></svg>">
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
+<style>
+__CSS_PLACEHOLDER__
+</style>
+</head>
+<body>
+
+<!-- LOGIN PAGE -->
+<div id="loginPage" class="login-page">
+<div class="login-bg"></div>
+<div class="login-card">
+<div class="login-logo">Đ</div>
+<h1>Đoàn TNCS HCM</h1>
+<p class="login-subtitle">Hệ thống Quản lý & Số hóa Tài liệu</p>
+<form id="loginForm" autocomplete="off">
+<div class="login-field">
+<label>Tên đăng nhập</label>
+<input type="text" id="loginUser" placeholder="Nhập tên đăng nhập" required>
+</div>
+<div class="login-field">
+<label>Mật khẩu</label>
+<input type="password" id="loginPass" placeholder="Nhập mật khẩu" required>
+</div>
+<div id="loginError" class="login-error"></div>
+<label class="login-remember"><input type="checkbox" id="rememberMe"> Ghi nhớ đăng nhập</label>
+<button type="submit" class="login-btn">Đăng nhập</button>
+</form>
+<div class="login-demo">
+<a href="#" onclick="demoLogin('admin')">🔑 Đăng nhập Admin</a>
+<a href="#" onclick="demoLogin('user')">👤 Đăng nhập User</a>
+</div>
+<a href="#" class="login-forgot" onclick="showToast('Vui lòng liên hệ Admin để đặt lại mật khẩu','warning')">Quên mật khẩu?</a>
+</div>
+</div>
+
+<!-- TOAST -->
+<div id="toastContainer" class="toast-container"></div>
+
+<!-- APP LAYOUT -->
+<div class="app-layout" id="appLayout" style="display:none">
+<div class="sidebar-overlay" id="sidebarOverlay"></div>
+<aside class="sidebar" id="sidebar">
+<div class="sidebar-logo"><div class="logo-icon">Đ</div><div><span>Đoàn TNCS HCM</span><small>Hệ thống quản lý</small></div></div>
+<nav class="sidebar-nav">
+<div class="nav-group"><div class="nav-group-title">Chính</div>
+<div class="nav-item active" data-page="dashboard"><span class="icon">📊</span>Dashboard</div>
+<div class="nav-item" data-page="members"><span class="icon">👤</span>Đoàn viên<span class="badge" id="memberBadge">25</span></div>
+<div class="nav-item" data-page="events"><span class="icon">🏅</span>Hoạt động</div>
+</div>
+<div class="nav-group"><div class="nav-group-title">Tài liệu</div>
+<div class="nav-item" data-page="documents"><span class="icon">📂</span>Thư viện<span class="badge" id="docBadge">20</span></div>
+<div class="nav-item admin-only" id="navUpload"><span class="icon">📤</span>Upload mới</div>
+</div>
+<div class="nav-group"><div class="nav-group-title">Hệ thống</div>
+<div class="nav-item" data-page="reports"><span class="icon">📈</span>Báo cáo</div>
+<div class="nav-item" data-page="settings"><span class="icon">⚙️</span>Cài đặt</div>
+</div>
+</nav>
+</aside>
+
+<main class="main-content">
+<header class="header">
+<div class="header-left">
+<button class="menu-toggle" id="menuToggle">☰</button>
+<div class="header-search"><span class="search-icon">🔍</span><input type="text" placeholder="Tìm kiếm..." id="globalSearch"></div>
+</div>
+<div class="header-right">
+<button class="header-btn" title="Thông báo">🔔<span class="notif-dot"></span></button>
+<span id="headerUserName" style="font-size:13px;color:var(--text-secondary)"></span>
+<div class="user-avatar" id="headerAvatar" title="User">AD</div>
+<button class="btn btn-outline btn-sm" id="logoutBtn">Đăng xuất</button>
+</div>
+</header>
+
+<div class="page-content">
+
+<!-- DASHBOARD -->
+<section class="page active" id="page-dashboard">
+<div class="page-header"><h1>Dashboard Tổng quan</h1><p id="dashGreeting">Xin chào, đây là tổng quan hệ thống</p></div>
+<div class="stats-grid" id="dashStats"></div>
+<div class="dashboard-grid">
+<div class="card"><div class="card-header"><h3>📈 Đoàn viên kết nạp 6 tháng</h3></div><div class="card-body"><div class="chart-area"><canvas id="lineChart"></canvas></div></div></div>
+<div class="card"><div class="card-header"><h3>🥧 Phân bố Chi đoàn</h3></div><div class="card-body"><div class="chart-area"><canvas id="pieChart"></canvas></div></div></div>
+</div>
+<div class="card" style="margin-top:20px"><div class="card-header"><h3>🕐 Hoạt động gần đây</h3></div><div class="card-body"><div class="activity-list" id="recentActivity"></div></div></div>
+</section>
+
+<!-- MEMBERS -->
+<section class="page" id="page-members">
+<div class="page-header" style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px">
+<div><h1>Quản lý Đoàn viên</h1><p>Quản lý hồ sơ, thi đua và đoàn phí</p></div>
+<button class="btn btn-primary admin-only" id="btnAddMember">➕ Thêm Đoàn viên</button>
+</div>
+<div class="card"><div class="card-header" style="flex-wrap:wrap;gap:8px">
+<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+<input class="doc-search" placeholder="🔍 Tìm kiếm..." id="memberSearch" style="width:180px">
+<select class="doc-search" id="memberStatusFilter" style="width:140px;padding-left:10px"><option value="all">Trạng thái ▾</option><option value="active">Hoạt động</option><option value="paused">Tạm hoãn</option><option value="expired">Hết hạn</option></select>
+<select class="doc-search" id="memberUnitFilter" style="width:140px;padding-left:10px"><option value="all">Chi đoàn ▾</option><option>K22A</option><option>K22B</option><option>K21C</option><option>K23A</option></select>
+<select class="doc-search" id="memberFeeFilter" style="width:150px;padding-left:10px"><option value="all">Đoàn phí ▾</option><option value="paid">Đã đóng đủ</option><option value="debt">Còn nợ</option></select>
+</div>
+<span style="color:var(--text-muted);font-size:13px" id="memberCount"></span>
+</div>
+<div class="card-body" style="padding:0"><div class="table-wrapper">
+<table class="data-table" id="memberTable"><thead><tr>
+<th class="sortable" data-sort="name">Đoàn viên ⇅</th><th class="sortable" data-sort="unit">Chi đoàn ⇅</th><th>Đoàn phí</th><th class="sortable" data-sort="rank">Thi đua ⇅</th><th>Trạng thái</th><th>Thao tác</th>
+</tr></thead><tbody id="memberTbody"></tbody></table>
+</div></div>
+<div class="card-footer" id="memberPagination"></div>
+</div>
+</section>
+
+<!-- DOCUMENTS -->
+<section class="page" id="page-documents">
+<div class="page-header" style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px">
+<div><h1>Thư viện Tài liệu</h1><p>Tra cứu tài liệu số hóa của tổ chức Đoàn</p></div>
+<button class="btn btn-primary admin-only" id="btnUploadDoc">📤 Upload tài liệu</button>
+</div>
+<div class="tab-filters" id="docTabs"></div>
+<div class="toolbar">
+<input class="doc-search" placeholder="🔍 Tìm theo tiêu đề, tags..." id="docSearch" style="width:260px">
+<div style="display:flex;gap:8px">
+<select class="doc-search" id="docTypeFilter" style="width:130px;padding-left:10px"><option value="all">Loại file ▾</option><option value="pdf">PDF</option><option value="docx">DOCX</option><option value="pptx">PPTX</option><option value="img">Ảnh</option></select>
+<select class="doc-search" id="docSort" style="width:140px;padding-left:10px"><option value="newest">Mới nhất</option><option value="views">Lượt xem ▾</option><option value="az">A → Z</option></select>
+</div>
+</div>
+<div class="doc-grid" id="docGrid"></div>
+</section>
+
+<!-- EVENTS -->
+<section class="page" id="page-events">
+<div class="page-header" style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px">
+<div><h1>Hoạt động & Sự kiện</h1><p>Quản lý sự kiện và điểm danh đoàn viên</p></div>
+<button class="btn btn-primary admin-only" id="btnAddEvent">📅 Tạo sự kiện</button>
+</div>
+<div class="stats-grid" id="eventStats"></div>
+<div class="card"><div class="card-header"><h3>Danh sách sự kiện</h3>
+<div style="display:flex;gap:6px"><button class="filter-btn active" data-ef="all">Tất cả</button><button class="filter-btn" data-ef="upcoming">Sắp tới</button><button class="filter-btn" data-ef="ongoing">Đang diễn ra</button><button class="filter-btn" data-ef="done">Đã xong</button></div>
+</div><div class="card-body"><div class="event-list" id="eventList"></div></div></div>
+</section>
+
+<!-- REPORTS -->
+<section class="page" id="page-reports">
+<div class="page-header"><h1>Báo cáo & Thống kê</h1><p>Tổng hợp báo cáo và xuất file</p></div>
+<div class="report-grid">
+<div class="card"><div class="card-header"><h3>📊 Báo cáo Đoàn viên</h3></div><div class="card-body">
+<div class="chart-area" style="height:200px"><canvas id="reportChart1"></canvas></div>
+<p style="color:var(--text-secondary);font-size:13px;margin:12px 0">Thống kê theo chi đoàn, thi đua, đoàn phí</p>
+<div style="display:flex;gap:8px"><button class="btn btn-primary btn-sm" onclick="exportCSV('members')">📥 Xuất Excel</button><button class="btn btn-outline btn-sm" onclick="exportPDF('members')">📄 Xuất PDF</button></div>
+</div></div>
+<div class="card"><div class="card-header"><h3>📅 Báo cáo Hoạt động</h3></div><div class="card-body">
+<div class="chart-area" style="height:200px"><canvas id="reportChart2"></canvas></div>
+<p style="color:var(--text-secondary);font-size:13px;margin:12px 0">Sự kiện, lượt tham gia theo tháng</p>
+<div style="display:flex;gap:8px"><button class="btn btn-primary btn-sm" onclick="exportCSV('events')">📥 Xuất Excel</button><button class="btn btn-outline btn-sm" onclick="exportPDF('events')">📄 Xuất PDF</button></div>
+</div></div>
+<div class="card"><div class="card-header"><h3>📂 Báo cáo Tài liệu</h3></div><div class="card-body">
+<div class="chart-area" style="height:200px"><canvas id="reportChart3"></canvas></div>
+<p style="color:var(--text-secondary);font-size:13px;margin:12px 0">Upload, lượt xem theo danh mục</p>
+<div style="display:flex;gap:8px"><button class="btn btn-primary btn-sm" onclick="exportCSV('docs')">📥 Xuất Excel</button><button class="btn btn-outline btn-sm" onclick="exportPDF('docs')">📄 Xuất PDF</button></div>
+</div></div>
+</div>
+</section>
+
+<!-- SETTINGS -->
+<section class="page" id="page-settings">
+<div class="page-header"><h1>Cài đặt hệ thống</h1><p>Quản lý cấu hình và tùy chỉnh</p></div>
+<div class="card"><div class="card-body">
+<div class="settings-section"><h3>🔔 Thông báo</h3>
+<div class="setting-row"><div class="setting-label"><h4>Thông báo email</h4><p>Gửi email khi có hoạt động mới</p></div><div class="toggle active" data-key="emailNotif"></div></div>
+<div class="setting-row"><div class="setting-label"><h4>Thông báo web</h4><p>Push notification trên trình duyệt</p></div><div class="toggle active" data-key="webNotif"></div></div>
+<div class="setting-row"><div class="setting-label"><h4>Nhắc đoàn phí</h4><p>Tự động nhắc khi chưa đóng phí</p></div><div class="toggle" data-key="feeRemind"></div></div>
+</div>
+<div class="settings-section"><h3>🎨 Giao diện</h3>
+<div class="setting-row"><div class="setting-label"><h4>Chế độ tối</h4><p>Sử dụng giao diện nền tối</p></div><div class="toggle" id="darkModeToggle" data-key="darkMode"></div></div>
+<div class="setting-row"><div class="setting-label"><h4>Hiệu ứng chuyển động</h4><p>Bật/tắt animation</p></div><div class="toggle active" data-key="animations"></div></div>
+</div>
+<div class="settings-section admin-only"><h3>🔐 Bảo mật</h3>
+<div class="setting-row"><div class="setting-label"><h4>Xác thực 2FA</h4><p>Yêu cầu OTP khi đăng nhập</p></div><div class="toggle" data-key="twoFA"></div></div>
+<div class="setting-row"><div class="setting-label"><h4>Tự động đăng xuất</h4><p>Đăng xuất sau 30 phút</p></div><div class="toggle active" data-key="autoLogout"></div></div>
+</div>
+<div class="settings-section admin-only"><h3>🔑 Đổi mật khẩu</h3>
+<div class="form-group"><label>Mật khẩu hiện tại</label><input type="password" id="oldPass"></div>
+<div class="form-group"><label>Mật khẩu mới</label><input type="password" id="newPass"></div>
+<button class="btn btn-primary btn-sm" onclick="changePassword()">Đổi mật khẩu</button>
+</div>
+<div class="settings-section"><h3>ℹ️ Thông tin hệ thống</h3>
+<div class="setting-row"><div class="setting-label"><h4>Phiên bản</h4><p>v1.0.0 — Build 2025.04.30</p></div></div>
+<div class="setting-row"><div class="setting-label"><h4>Đơn vị</h4><p>Đoàn TNCS Hồ Chí Minh — Khoa CNTT</p></div></div>
+<div class="setting-row"><div class="setting-label"><h4>Cập nhật</h4><p>30/04/2025</p></div></div>
+</div>
+</div></div>
+</section>
+
+</div></main></div>
+
+<!-- MODAL: Upload -->
+<div class="modal-overlay" id="uploadModal"><div class="modal">
+<div class="modal-header"><h3>📤 Upload tài liệu</h3><button class="modal-close" onclick="closeModal('uploadModal')">&times;</button></div>
+<div class="modal-body">
+<div class="upload-zone"><div class="icon">📁</div><p>Kéo thả hoặc <strong>nhấn chọn file</strong></p><small>PDF, DOCX, PPTX, JPG/PNG — Tối đa 100MB</small></div>
+<div class="form-group" style="margin-top:16px"><label>Tiêu đề</label><input type="text" id="docTitle" placeholder="Nhập tiêu đề..."></div>
+<div class="form-group"><label>Mô tả</label><textarea id="docDesc" placeholder="Mô tả ngắn..."></textarea></div>
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+<div class="form-group"><label>Danh mục</label><select id="docCat"><option value="nghi-quyet">Nghị quyết</option><option value="hoc-tap">Học tập CT</option><option value="phong-trao">Phong trào</option><option value="hanh-chinh">Hành chính</option></select></div>
+<div class="form-group"><label>Loại file</label><select id="docType"><option value="pdf">PDF</option><option value="docx">DOCX</option><option value="pptx">PPTX</option><option value="img">Ảnh</option></select></div>
+</div>
+<div class="form-group"><label>Tags</label><input type="text" id="docTags" placeholder="tag1, tag2..."></div>
+</div>
+<div class="modal-footer"><button class="btn btn-outline" onclick="closeModal('uploadModal')">Hủy</button><button class="btn btn-primary" onclick="addDocument()">📤 Upload</button></div>
+</div></div>
+
+<!-- MODAL: Member -->
+<div class="modal-overlay" id="memberModal"><div class="modal">
+<div class="modal-header"><h3 id="memberModalTitle">➕ Thêm Đoàn viên</h3><button class="modal-close" onclick="closeModal('memberModal')">&times;</button></div>
+<div class="modal-body">
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+<div class="form-group"><label>Họ và tên *</label><input type="text" id="mName" required></div>
+<div class="form-group"><label>Ngày sinh</label><input type="date" id="mDob"></div>
+</div>
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+<div class="form-group"><label>Giới tính</label><select id="mGender"><option>Nam</option><option>Nữ</option></select></div>
+<div class="form-group"><label>Chi đoàn</label><select id="mUnit"><option>K22A</option><option>K22B</option><option>K21C</option><option>K23A</option></select></div>
+</div>
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+<div class="form-group"><label>SĐT</label><input type="tel" id="mPhone"></div>
+<div class="form-group"><label>Email</label><input type="email" id="mEmail"></div>
+</div>
+<div class="form-group"><label>Ngày kết nạp</label><input type="date" id="mJoinDate"></div>
+</div>
+<div class="modal-footer"><button class="btn btn-outline" onclick="closeModal('memberModal')">Hủy</button><button class="btn btn-primary" id="saveMemberBtn" onclick="saveMember()">💾 Lưu</button></div>
+</div></div>
+
+<!-- MODAL: Event -->
+<div class="modal-overlay" id="eventModal"><div class="modal">
+<div class="modal-header"><h3>📅 Tạo sự kiện mới</h3><button class="modal-close" onclick="closeModal('eventModal')">&times;</button></div>
+<div class="modal-body">
+<div class="form-group"><label>Tên sự kiện *</label><input type="text" id="eName"></div>
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+<div class="form-group"><label>Ngày bắt đầu</label><input type="date" id="eStart"></div>
+<div class="form-group"><label>Ngày kết thúc</label><input type="date" id="eEnd"></div>
+</div>
+<div class="form-group"><label>Địa điểm</label><input type="text" id="eLocation"></div>
+<div class="form-group"><label>Mô tả</label><textarea id="eDesc"></textarea></div>
+<div class="form-group"><label>Số lượng tối đa</label><input type="number" id="eMax" value="100"></div>
+</div>
+<div class="modal-footer"><button class="btn btn-outline" onclick="closeModal('eventModal')">Hủy</button><button class="btn btn-primary" onclick="addEvent()">💾 Tạo sự kiện</button></div>
+</div></div>
+
+<!-- MODAL: Doc Preview -->
+<div class="modal-overlay" id="docPreviewModal"><div class="modal" style="max-width:640px">
+<div class="modal-header"><h3 id="previewTitle">Xem tài liệu</h3><button class="modal-close" onclick="closeModal('docPreviewModal')">&times;</button></div>
+<div class="modal-body" id="previewBody"></div>
+</div></div>
+
+<!-- CONFIRM DIALOG -->
+<div class="modal-overlay" id="confirmModal"><div class="modal" style="max-width:400px">
+<div class="modal-header"><h3>⚠️ Xác nhận</h3><button class="modal-close" onclick="closeModal('confirmModal')">&times;</button></div>
+<div class="modal-body"><p id="confirmMsg">Bạn có chắc chắn?</p></div>
+<div class="modal-footer"><button class="btn btn-outline" onclick="closeModal('confirmModal')">Hủy</button><button class="btn btn-primary" id="confirmOk" style="background:#ef4444">Xóa</button></div>
+</div></div>
+
+<script>
+__JS_PLACEHOLDER__
+</script>
+</body>
+</html>

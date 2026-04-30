@@ -1,551 +1,784 @@
 <!DOCTYPE html>
 <html lang="vi">
-
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="description"
-    content="Hệ thống quản lý Đoàn TNCS Hồ Chí Minh - Số hóa tài liệu, quản lý đoàn viên, hoạt động và sự kiện">
-  <title>Đoàn TNCS HCM — Hệ thống Quản lý & Số hóa Tài liệu</title>
-  <link rel="stylesheet" href="styles.css">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<meta name="description" content="Hệ thống quản lý Đoàn TNCS HCM - Số hóa tài liệu, quản lý đoàn viên">
+<title>Đoàn TNCS HCM — Hệ thống Quản lý & Số hóa Tài liệu</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>Đ</text></svg>">
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+:root{--primary:#d32f2f;--primary-light:#e53935;--primary-dark:#b71c1c;--accent:#f9a825;--accent-light:#fdd835;--bg:#0f172a;--surface:#1e293b;--card:#1e293b;--hover:#334155;--input:#0f172a;--text:#f1f5f9;--text2:#94a3b8;--muted:#64748b;--border:#334155;--ok:#10b981;--warn:#f59e0b;--danger:#ef4444;--info:#06b6d4;--sidebar-w:250px;--header-h:60px;--radius:12px;--radius-sm:8px;--shadow:0 4px 24px rgba(0,0,0,.3);--tr:all .3s cubic-bezier(.4,0,.2,1)}
+html{font-size:16px;scroll-behavior:smooth}
+body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);line-height:1.6;overflow-x:hidden}
+body.light{--bg:#f1f5f9;--surface:#fff;--card:#fff;--hover:#e2e8f0;--input:#f8fafc;--text:#0f172a;--text2:#475569;--muted:#94a3b8;--border:#cbd5e1}
+a{color:var(--primary-light);text-decoration:none}
+button{cursor:pointer;font-family:inherit;border:none;outline:none}
+input,select,textarea{font-family:inherit;outline:none}
+ul{list-style:none}
+/* LOGIN */
+.login-page{position:fixed;inset:0;z-index:999;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,#b71c1c 0%,#e53935 50%,#f9a825 100%)}
+.login-page.hidden{display:none}
+.login-bg{position:absolute;inset:0;background:url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.05'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")}
+.login-card{position:relative;background:#fff;border-radius:var(--radius);padding:40px 36px;width:90%;max-width:400px;box-shadow:0 20px 60px rgba(0,0,0,.3);text-align:center;color:#1e293b}
+.login-logo{width:72px;height:72px;margin:0 auto 16px;background:linear-gradient(135deg,#d32f2f,#f9a825);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:32px;font-weight:800;color:#fff}
+.login-card h1{font-size:22px;font-weight:700;color:#b71c1c;margin-bottom:4px}
+.login-subtitle{font-size:13px;color:#64748b;margin-bottom:24px}
+.login-field{text-align:left;margin-bottom:16px}
+.login-field label{font-size:13px;font-weight:600;color:#475569;margin-bottom:4px;display:block}
+.login-field input{width:100%;padding:10px 14px;border:1px solid #cbd5e1;border-radius:var(--radius-sm);font-size:14px;background:#f8fafc;color:#1e293b;transition:var(--tr)}
+.login-field input:focus{border-color:var(--primary);box-shadow:0 0 0 3px rgba(211,47,47,.15)}
+.login-error{color:#ef4444;font-size:12px;min-height:18px;margin-bottom:8px}
+.login-remember{display:flex;align-items:center;gap:6px;font-size:13px;color:#64748b;margin-bottom:16px;cursor:pointer}
+.login-btn{width:100%;padding:12px;background:linear-gradient(135deg,#d32f2f,#b71c1c);color:#fff;border-radius:var(--radius-sm);font-size:15px;font-weight:600;transition:var(--tr)}
+.login-btn:hover{box-shadow:0 4px 20px rgba(211,47,47,.4);transform:translateY(-1px)}
+.login-demo{display:flex;gap:12px;justify-content:center;margin:16px 0 8px}
+.login-demo a{font-size:12px;color:#d32f2f;font-weight:600;padding:6px 12px;border:1px solid #fca5a5;border-radius:6px;transition:var(--tr)}
+.login-demo a:hover{background:#fef2f2}
+.login-forgot{font-size:12px;color:#64748b}
+/* TOAST */
+.toast-container{position:fixed;top:20px;right:20px;z-index:9999;display:flex;flex-direction:column;gap:8px}
+.toast{padding:12px 20px;border-radius:var(--radius-sm);font-size:13px;font-weight:500;color:#fff;animation:slideIn .3s ease;box-shadow:var(--shadow)}
+.toast.success{background:#10b981}.toast.error{background:#ef4444}.toast.warning{background:#f59e0b;color:#1e293b}.toast.info{background:#06b6d4}
+@keyframes slideIn{from{opacity:0;transform:translateX(40px)}to{opacity:1;transform:translateX(0)}}
+/* LAYOUT */
+.app-layout{display:flex;min-height:100vh}
+.sidebar{width:var(--sidebar-w);background:linear-gradient(180deg,#1a1025,#1e293b);border-right:1px solid var(--border);display:flex;flex-direction:column;position:fixed;inset:0 auto 0 0;z-index:100;transition:var(--tr)}
+.sidebar-logo{padding:16px 20px;display:flex;align-items:center;gap:10px;border-bottom:1px solid var(--border)}
+.logo-icon{width:38px;height:38px;background:linear-gradient(135deg,#d32f2f,#f9a825);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:800;color:#fff}
+.sidebar-logo span{font-weight:700;font-size:14px;color:var(--text)}.sidebar-logo small{display:block;font-size:10px;color:var(--muted)}
+.sidebar-nav{flex:1;padding:12px 10px;overflow-y:auto}
+.nav-group{margin-bottom:20px}.nav-group-title{font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:1px;color:var(--muted);padding:0 10px;margin-bottom:6px}
+.nav-item{display:flex;align-items:center;gap:10px;padding:9px 10px;border-radius:var(--radius-sm);color:var(--text2);font-size:13px;font-weight:500;cursor:pointer;transition:var(--tr);margin-bottom:1px}
+.nav-item:hover{background:var(--hover);color:var(--text)}
+.nav-item.active{background:linear-gradient(135deg,rgba(211,47,47,.2),rgba(249,168,37,.1));color:#f9a825;border-left:3px solid var(--primary)}
+.nav-item .icon{font-size:16px;width:22px;text-align:center}
+.nav-item .badge{margin-left:auto;background:var(--primary);color:#fff;font-size:10px;padding:2px 7px;border-radius:10px;font-weight:600}
+.main-content{flex:1;margin-left:var(--sidebar-w);display:flex;flex-direction:column;min-height:100vh}
+.header{height:var(--header-h);background:rgba(15,23,42,.85);backdrop-filter:blur(10px);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;padding:0 24px;position:sticky;top:0;z-index:50}
+body.light .header{background:rgba(255,255,255,.9)}
+.header-left{display:flex;align-items:center;gap:12px}
+.menu-toggle{display:none;background:none;color:var(--text);font-size:22px;cursor:pointer}
+.header-search{position:relative;width:260px}
+.header-search input{width:100%;padding:8px 14px 8px 34px;background:var(--input);border:1px solid var(--border);border-radius:var(--radius-sm);color:var(--text);font-size:13px;transition:var(--tr)}
+.header-search input:focus{border-color:var(--primary)}
+.header-search .search-icon{position:absolute;left:10px;top:50%;transform:translateY(-50%);color:var(--muted);font-size:14px}
+.header-right{display:flex;align-items:center;gap:12px}
+.header-btn{width:36px;height:36px;border-radius:var(--radius-sm);background:var(--surface);border:1px solid var(--border);color:var(--text2);display:flex;align-items:center;justify-content:center;font-size:16px;transition:var(--tr);position:relative}
+.header-btn:hover{background:var(--hover)}
+.notif-dot{position:absolute;top:6px;right:6px;width:7px;height:7px;background:var(--danger);border-radius:50%}
+.user-avatar{width:34px;height:34px;border-radius:50%;background:linear-gradient(135deg,var(--primary),var(--accent));display:flex;align-items:center;justify-content:center;font-weight:700;font-size:12px;color:#fff}
+.page-content{padding:24px;flex:1}
+.page{display:none;animation:fadeIn .3s ease}.page.active{display:block}
+@keyframes fadeIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+.page-header{margin-bottom:24px}.page-header h1{font-size:24px;font-weight:700}.page-header p{color:var(--text2);font-size:13px}
+/* STATS */
+.stats-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:16px;margin-bottom:24px}
+.stat-card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:20px;transition:var(--tr);position:relative;overflow:hidden}
+.stat-card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px}
+.stat-card:nth-child(1)::before{background:linear-gradient(90deg,var(--primary),var(--accent))}
+.stat-card:nth-child(2)::before{background:linear-gradient(90deg,var(--ok),#34d399)}
+.stat-card:nth-child(3)::before{background:linear-gradient(90deg,var(--accent),#fbbf24)}
+.stat-card:nth-child(4)::before{background:linear-gradient(90deg,#8b5cf6,#a78bfa)}
+.stat-card:hover{transform:translateY(-3px);box-shadow:var(--shadow)}
+.stat-card .stat-icon{width:44px;height:44px;border-radius:var(--radius-sm);display:flex;align-items:center;justify-content:center;font-size:20px;margin-bottom:12px}
+.stat-card:nth-child(1) .stat-icon{background:rgba(211,47,47,.15);color:var(--primary-light)}
+.stat-card:nth-child(2) .stat-icon{background:rgba(16,185,129,.15);color:var(--ok)}
+.stat-card:nth-child(3) .stat-icon{background:rgba(249,168,37,.15);color:var(--accent)}
+.stat-card:nth-child(4) .stat-icon{background:rgba(139,92,246,.15);color:#a78bfa}
+.stat-value{font-size:28px;font-weight:800}.stat-label{color:var(--text2);font-size:12px;font-weight:500}
+.stat-change{display:inline-flex;align-items:center;gap:3px;font-size:11px;font-weight:600;margin-top:6px;padding:2px 6px;border-radius:6px}
+.stat-change.up{color:var(--ok);background:rgba(16,185,129,.1)}
+/* DASHBOARD */
+.dashboard-grid{display:grid;grid-template-columns:1.5fr 1fr;gap:16px}
+.card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden}
+.card-header{padding:16px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between}
+.card-header h3{font-size:15px;font-weight:600}.card-body{padding:20px}
+.card-footer{padding:12px 20px;border-top:1px solid var(--border);display:flex;justify-content:center;gap:4px}
+.chart-area{height:260px;border-radius:var(--radius-sm);display:flex;align-items:center;justify-content:center;position:relative;overflow:hidden}
+.chart-area canvas{width:100%!important;height:100%!important}
+.activity-list{display:flex;flex-direction:column;gap:12px}
+.activity-item{display:flex;align-items:flex-start;gap:10px;padding-bottom:12px;border-bottom:1px solid var(--border)}
+.activity-item:last-child{border:none;padding:0}
+.activity-dot{width:8px;height:8px;border-radius:50%;margin-top:6px;flex-shrink:0}
+.activity-dot.red{background:var(--primary)}.activity-dot.green{background:var(--ok)}.activity-dot.yellow{background:var(--accent)}.activity-dot.blue{background:var(--info)}
+.activity-text{font-size:12px;color:var(--text2)}.activity-text strong{color:var(--text)}
+.activity-time{font-size:10px;color:var(--muted);margin-top:2px}
+/* TABLE */
+.table-wrapper{overflow-x:auto}
+.data-table{width:100%;border-collapse:collapse}
+.data-table th{text-align:left;padding:10px 14px;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.5px;color:var(--muted);background:var(--bg);border-bottom:1px solid var(--border);cursor:pointer;white-space:nowrap}
+.data-table th.sortable:hover{color:var(--text)}
+.data-table td{padding:12px 14px;font-size:13px;border-bottom:1px solid var(--border);vertical-align:middle}
+.data-table tbody tr{transition:var(--tr)}.data-table tbody tr:hover{background:var(--hover)}
+.member-info{display:flex;align-items:center;gap:10px}
+.member-avatar{width:34px;height:34px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:12px;color:#fff;flex-shrink:0}
+.member-name{font-weight:600;font-size:13px}.member-id{font-size:11px;color:var(--muted)}
+.badge{display:inline-flex;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:600}
+.badge-ok{background:rgba(16,185,129,.15);color:var(--ok)}
+.badge-warn{background:rgba(245,158,11,.15);color:var(--warn)}
+.badge-danger{background:rgba(239,68,68,.15);color:var(--danger)}
+.badge-info{background:rgba(6,182,212,.15);color:var(--info)}
+.badge-primary{background:rgba(211,47,47,.15);color:var(--primary-light)}
+/* PAGINATION */
+.page-btn{width:32px;height:32px;border-radius:var(--radius-sm);background:var(--surface);border:1px solid var(--border);color:var(--text2);font-size:12px;font-weight:600;transition:var(--tr);display:inline-flex;align-items:center;justify-content:center}
+.page-btn:hover,.page-btn.active{background:var(--primary);color:#fff;border-color:var(--primary)}
+/* DOC GRID */
+.toolbar{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;margin-bottom:20px}
+.doc-search{padding:8px 12px;border-radius:var(--radius-sm);background:var(--surface);border:1px solid var(--border);color:var(--text);font-size:13px;transition:var(--tr)}
+.doc-search:focus{border-color:var(--primary)}
+.filter-btn{padding:7px 14px;border-radius:var(--radius-sm);background:var(--surface);border:1px solid var(--border);color:var(--text2);font-size:12px;font-weight:500;transition:var(--tr)}
+.filter-btn:hover,.filter-btn.active{background:var(--primary);color:#fff;border-color:var(--primary)}
+.tab-filters{display:flex;gap:4px;flex-wrap:wrap;margin-bottom:16px}
+.tab-filter{padding:7px 16px;border-radius:20px;background:transparent;color:var(--text2);font-size:12px;font-weight:500;border:1px solid transparent;transition:var(--tr);cursor:pointer}
+.tab-filter:hover{background:var(--hover)}.tab-filter.active{background:var(--primary);color:#fff}
+.tab-filter .count{margin-left:3px;opacity:.7}
+.doc-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:16px}
+.doc-card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;transition:var(--tr);cursor:pointer}
+.doc-card:hover{transform:translateY(-3px);box-shadow:var(--shadow);border-color:var(--primary)}
+.doc-card-preview{height:140px;display:flex;align-items:center;justify-content:center;font-size:42px;position:relative}
+.doc-card-preview.pdf{background:linear-gradient(135deg,#dc2626,#991b1b)}
+.doc-card-preview.docx{background:linear-gradient(135deg,#2563eb,#1d4ed8)}
+.doc-card-preview.img{background:linear-gradient(135deg,#059669,#047857)}
+.doc-card-preview.pptx{background:linear-gradient(135deg,#d97706,#b45309)}
+.doc-card-body{padding:14px}
+.doc-card-body h4{font-size:13px;font-weight:600;margin-bottom:4px;line-height:1.4}
+.doc-card-meta{display:flex;gap:8px;font-size:11px;color:var(--muted);flex-wrap:wrap}
+.doc-card-footer{padding:10px 14px;border-top:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;font-size:11px;color:var(--muted)}
+.doc-category{position:absolute;top:10px;right:10px;padding:3px 8px;border-radius:6px;font-size:10px;font-weight:600;background:rgba(0,0,0,.5);color:#fff}
+/* EVENTS */
+.event-list{display:flex;flex-direction:column;gap:12px}
+.event-card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:16px 20px;display:flex;gap:16px;align-items:center;transition:var(--tr)}
+.event-card:hover{border-color:var(--primary);box-shadow:0 2px 12px rgba(0,0,0,.15)}
+.event-date{text-align:center;padding:10px 14px;border-radius:var(--radius-sm);background:linear-gradient(135deg,rgba(211,47,47,.15),rgba(249,168,37,.1));min-width:60px}
+.event-date .day{font-size:24px;font-weight:800;color:var(--primary-light)}.event-date .month{font-size:11px;color:var(--muted);font-weight:600;text-transform:uppercase}
+.event-info{flex:1}.event-info h4{font-size:14px;font-weight:600;margin-bottom:3px}.event-info p{font-size:12px;color:var(--text2)}
+.event-meta{display:flex;gap:14px;margin-top:6px;font-size:11px;color:var(--muted)}.event-meta span{display:flex;align-items:center;gap:3px}
+.event-status{flex-shrink:0}
+/* BUTTONS */
+.btn{display:inline-flex;align-items:center;gap:6px;padding:8px 16px;border-radius:var(--radius-sm);font-size:13px;font-weight:600;transition:var(--tr)}
+.btn-primary{background:linear-gradient(135deg,var(--primary),var(--primary-dark));color:#fff}
+.btn-primary:hover{box-shadow:0 4px 16px rgba(211,47,47,.3)}
+.btn-outline{background:transparent;border:1px solid var(--border);color:var(--text2)}
+.btn-outline:hover{border-color:var(--primary);color:var(--primary-light)}
+.btn-sm{padding:5px 10px;font-size:11px}
+.btn-icon{width:32px;height:32px;border-radius:var(--radius-sm);background:var(--surface);border:1px solid var(--border);color:var(--text2);display:flex;align-items:center;justify-content:center;transition:var(--tr)}
+.btn-icon:hover{background:var(--hover);color:var(--text)}
+/* MODAL */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.6);backdrop-filter:blur(4px);z-index:200;display:none;align-items:center;justify-content:center}
+.modal-overlay.show{display:flex}
+.modal{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);width:90%;max-width:520px;max-height:90vh;overflow-y:auto;animation:slideUp .3s ease}
+body.light .modal{background:#fff}
+@keyframes slideUp{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
+.modal-header{padding:16px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between}
+.modal-header h3{font-size:16px;font-weight:700}
+.modal-close{background:none;color:var(--muted);font-size:22px;cursor:pointer;transition:var(--tr)}.modal-close:hover{color:var(--text)}
+.modal-body{padding:20px}.modal-footer{padding:14px 20px;border-top:1px solid var(--border);display:flex;justify-content:flex-end;gap:8px}
+.form-group{margin-bottom:14px}.form-group label{display:block;font-size:12px;font-weight:600;color:var(--text2);margin-bottom:4px}
+.form-group input,.form-group select,.form-group textarea{width:100%;padding:9px 12px;background:var(--input);border:1px solid var(--border);border-radius:var(--radius-sm);color:var(--text);font-size:13px;transition:var(--tr)}
+body.light .form-group input,body.light .form-group select,body.light .form-group textarea{background:#f8fafc;color:#1e293b}
+.form-group input:focus,.form-group select:focus,.form-group textarea:focus{border-color:var(--primary)}
+.form-group textarea{min-height:60px;resize:vertical}
+.upload-zone{border:2px dashed var(--border);border-radius:var(--radius);padding:30px;text-align:center;cursor:pointer;transition:var(--tr)}
+.upload-zone:hover{border-color:var(--primary)}
+.upload-zone .icon{font-size:36px;margin-bottom:8px}.upload-zone p{color:var(--text2);font-size:13px}.upload-zone small{color:var(--muted);font-size:11px}
+/* REPORT */
+.report-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:16px}
+/* SETTINGS */
+.settings-section{margin-bottom:28px}
+.settings-section h3{font-size:15px;font-weight:600;margin-bottom:12px;padding-bottom:6px;border-bottom:1px solid var(--border)}
+.setting-row{display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:1px solid rgba(51,65,85,.4)}
+.setting-row .setting-label h4{font-size:13px;font-weight:500}.setting-row .setting-label p{font-size:11px;color:var(--muted)}
+.toggle{width:42px;height:22px;border-radius:11px;background:var(--hover);position:relative;cursor:pointer;transition:var(--tr)}
+.toggle.active{background:var(--primary)}
+.toggle::after{content:'';position:absolute;top:2px;left:2px;width:18px;height:18px;border-radius:50%;background:#fff;transition:var(--tr)}
+.toggle.active::after{left:22px}
+.admin-only{display:none}
+.role-admin .admin-only{display:flex}
+/* RESPONSIVE */
+.sidebar-overlay{position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:99;display:none}.sidebar-overlay.show{display:block}
+@media(max-width:1024px){.dashboard-grid{grid-template-columns:1fr}.header-search{width:180px}}
+@media(max-width:768px){.sidebar{transform:translateX(-100%)}.sidebar.open{transform:translateX(0);box-shadow:var(--shadow)}.main-content{margin-left:0}.menu-toggle{display:block}.page-content{padding:16px}.header{padding:0 12px}.header-search{display:none}.stats-grid{grid-template-columns:1fr 1fr}.doc-grid{grid-template-columns:1fr}.event-card{flex-direction:column;align-items:flex-start}}
+@media(max-width:480px){.stats-grid{grid-template-columns:1fr}.login-card{padding:28px 20px}}
+::-webkit-scrollbar{width:5px}::-webkit-scrollbar-track{background:transparent}::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px}
+</style>
 </head>
-
 <body>
 
-  <div class="app-layout">
-    <!-- Sidebar Overlay (mobile) -->
-    <div class="sidebar-overlay" id="sidebarOverlay"></div>
+<!-- LOGIN PAGE -->
+<div id="loginPage" class="login-page">
+<div class="login-bg"></div>
+<div class="login-card">
+<div class="login-logo">Đ</div>
+<h1>Đoàn TNCS HCM</h1>
+<p class="login-subtitle">Hệ thống Quản lý & Số hóa Tài liệu</p>
+<form id="loginForm" autocomplete="off">
+<div class="login-field">
+<label>Tên đăng nhập</label>
+<input type="text" id="loginUser" placeholder="Nhập tên đăng nhập" required>
+</div>
+<div class="login-field">
+<label>Mật khẩu</label>
+<input type="password" id="loginPass" placeholder="Nhập mật khẩu" required>
+</div>
+<div id="loginError" class="login-error"></div>
+<label class="login-remember"><input type="checkbox" id="rememberMe"> Ghi nhớ đăng nhập</label>
+<button type="submit" class="login-btn">Đăng nhập</button>
+</form>
+<div class="login-demo">
+<a href="#" onclick="demoLogin('admin')">🔑 Đăng nhập Admin</a>
+<a href="#" onclick="demoLogin('user')">👤 Đăng nhập User</a>
+</div>
+<a href="#" class="login-forgot" onclick="showToast('Vui lòng liên hệ Admin để đặt lại mật khẩu','warning')">Quên mật khẩu?</a>
+</div>
+</div>
 
-    <!-- ========== SIDEBAR ========== -->
-    <aside class="sidebar" id="sidebar">
-      <div class="sidebar-logo">
-        <div class="logo-icon">Đ</div>
-        <div>
-          <span>Đoàn TNCS HCM</span>
-          <small>Hệ thống quản lý</small>
-        </div>
-      </div>
-      <nav class="sidebar-nav">
-        <div class="nav-group">
-          <div class="nav-group-title">Chính</div>
-          <div class="nav-item active" data-page="dashboard">
-            <span class="icon">📊</span> Dashboard
-          </div>
-          <div class="nav-item" data-page="members">
-            <span class="icon">👤</span> Đoàn viên
-            <span class="badge">1,248</span>
-          </div>
-          <div class="nav-item" data-page="events">
-            <span class="icon">🏅</span> Hoạt động
-          </div>
-        </div>
-        <div class="nav-group">
-          <div class="nav-group-title">Tài liệu</div>
-          <div class="nav-item" data-page="documents">
-            <span class="icon">📂</span> Thư viện
-            <span class="badge">342</span>
-          </div>
-          <div class="nav-item" id="navUpload">
-            <span class="icon">📤</span> Upload mới
-          </div>
-        </div>
-        <div class="nav-group">
-          <div class="nav-group-title">Hệ thống</div>
-          <div class="nav-item" data-page="reports">
-            <span class="icon">📈</span> Báo cáo
-          </div>
-          <div class="nav-item" data-page="settings">
-            <span class="icon">⚙️</span> Cài đặt
-          </div>
-        </div>
-      </nav>
-    </aside>
+<!-- TOAST -->
+<div id="toastContainer" class="toast-container"></div>
 
-    <!-- ========== MAIN CONTENT ========== -->
-    <main class="main-content">
-      <!-- Header -->
-      <header class="header">
-        <div class="header-left">
-          <button class="menu-toggle" id="menuToggle">☰</button>
-          <div class="header-search">
-            <span class="search-icon">🔍</span>
-            <input type="text" placeholder="Tìm kiếm tài liệu, đoàn viên..." id="globalSearch">
-          </div>
-        </div>
-        <div class="header-right">
-          <button class="header-btn" title="Thông báo" id="notifBtn">
-            🔔 <span class="notif-dot"></span>
-          </button>
-          <button class="header-btn" title="Tin nhắn">✉️</button>
-          <div class="user-avatar" title="Admin">AD</div>
-        </div>
-      </header>
+<!-- APP LAYOUT -->
+<div class="app-layout" id="appLayout" style="display:none">
+<div class="sidebar-overlay" id="sidebarOverlay"></div>
+<aside class="sidebar" id="sidebar">
+<div class="sidebar-logo"><div class="logo-icon">Đ</div><div><span>Đoàn TNCS HCM</span><small>Hệ thống quản lý</small></div></div>
+<nav class="sidebar-nav">
+<div class="nav-group"><div class="nav-group-title">Chính</div>
+<div class="nav-item active" data-page="dashboard"><span class="icon">📊</span>Dashboard</div>
+<div class="nav-item" data-page="members"><span class="icon">👤</span>Đoàn viên<span class="badge" id="memberBadge">25</span></div>
+<div class="nav-item" data-page="events"><span class="icon">🏅</span>Hoạt động</div>
+</div>
+<div class="nav-group"><div class="nav-group-title">Tài liệu</div>
+<div class="nav-item" data-page="documents"><span class="icon">📂</span>Thư viện<span class="badge" id="docBadge">20</span></div>
+<div class="nav-item admin-only" id="navUpload"><span class="icon">📤</span>Upload mới</div>
+</div>
+<div class="nav-group"><div class="nav-group-title">Hệ thống</div>
+<div class="nav-item" data-page="reports"><span class="icon">📈</span>Báo cáo</div>
+<div class="nav-item" data-page="settings"><span class="icon">⚙️</span>Cài đặt</div>
+</div>
+</nav>
+</aside>
 
-      <div class="page-content">
+<main class="main-content">
+<header class="header">
+<div class="header-left">
+<button class="menu-toggle" id="menuToggle">☰</button>
+<div class="header-search"><span class="search-icon">🔍</span><input type="text" placeholder="Tìm kiếm..." id="globalSearch"></div>
+</div>
+<div class="header-right">
+<button class="header-btn" title="Thông báo">🔔<span class="notif-dot"></span></button>
+<span id="headerUserName" style="font-size:13px;color:var(--text-secondary)"></span>
+<div class="user-avatar" id="headerAvatar" title="User">AD</div>
+<button class="btn btn-outline btn-sm" id="logoutBtn">Đăng xuất</button>
+</div>
+</header>
 
-        <!-- ==================== DASHBOARD ==================== -->
-        <section class="page active" id="page-dashboard">
-          <div class="page-header">
-            <h1>Dashboard Tổng quan</h1>
-            <p>Xin chào Admin, đây là tổng quan hệ thống hôm nay</p>
-          </div>
+<div class="page-content">
 
-          <div class="stats-grid">
-            <div class="stat-card">
-              <div class="stat-icon">👥</div>
-              <div class="stat-value" data-count="1248">0</div>
-              <div class="stat-label">Tổng Đoàn viên</div>
-              <div class="stat-change up">↑ +12 tháng này</div>
-            </div>
-            <div class="stat-card">
-              <div class="stat-icon">✅</div>
-              <div class="stat-value" data-count="1091">0</div>
-              <div class="stat-label">Đang hoạt động</div>
-              <div class="stat-change up">↑ 87.4%</div>
-            </div>
-            <div class="stat-card">
-              <div class="stat-icon">📅</div>
-              <div class="stat-value" data-count="6">0</div>
-              <div class="stat-label">Hoạt động tháng</div>
-              <div class="stat-change up">2 sắp diễn ra</div>
-            </div>
-            <div class="stat-card">
-              <div class="stat-icon">📄</div>
-              <div class="stat-value" data-count="342">0</div>
-              <div class="stat-label">Tài liệu số hóa</div>
-              <div class="stat-change up">↑ +28 tháng này</div>
-            </div>
-          </div>
+<!-- DASHBOARD -->
+<section class="page active" id="page-dashboard">
+<div class="page-header"><h1>Dashboard Tổng quan</h1><p id="dashGreeting">Xin chào, đây là tổng quan hệ thống</p></div>
+<div class="stats-grid" id="dashStats"></div>
+<div class="dashboard-grid">
+<div class="card"><div class="card-header"><h3>📈 Đoàn viên kết nạp 6 tháng</h3></div><div class="card-body"><div class="chart-area"><canvas id="lineChart"></canvas></div></div></div>
+<div class="card"><div class="card-header"><h3>🥧 Phân bố Chi đoàn</h3></div><div class="card-body"><div class="chart-area"><canvas id="pieChart"></canvas></div></div></div>
+</div>
+<div class="card" style="margin-top:20px"><div class="card-header"><h3>🕐 Hoạt động gần đây</h3></div><div class="card-body"><div class="activity-list" id="recentActivity"></div></div></div>
+</section>
 
-          <div class="dashboard-grid">
-            <div class="card">
-              <div class="card-header">
-                <h3>📈 Thống kê Đoàn viên theo tháng</h3>
-                <button class="btn btn-outline btn-sm">Xem tất cả</button>
-              </div>
-              <div class="card-body">
-                <div class="chart-area"><canvas id="memberChart"></canvas></div>
-              </div>
-            </div>
-            <div class="card">
-              <div class="card-header">
-                <h3>🕐 Hoạt động gần đây</h3>
-              </div>
-              <div class="card-body">
-                <div class="activity-list">
-                  <div class="activity-item">
-                    <div class="activity-dot blue"></div>
-                    <div>
-                      <div class="activity-text"><strong>Nguyễn Văn An</strong> đã đóng đoàn phí Q1/2025</div>
-                      <div class="activity-time">2 phút trước</div>
-                    </div>
-                  </div>
-                  <div class="activity-item">
-                    <div class="activity-dot green"></div>
-                    <div>
-                      <div class="activity-text"><strong>Admin</strong> upload tài liệu "Nghị quyết ĐH XII"</div>
-                      <div class="activity-time">15 phút trước</div>
-                    </div>
-                  </div>
-                  <div class="activity-item">
-                    <div class="activity-dot yellow"></div>
-                    <div>
-                      <div class="activity-text">Sự kiện <strong>"Ngày hội tình nguyện"</strong> đã được tạo</div>
-                      <div class="activity-time">1 giờ trước</div>
-                    </div>
-                  </div>
-                  <div class="activity-item">
-                    <div class="activity-dot red"></div>
-                    <div>
-                      <div class="activity-text"><strong>Trần Thị Bích</strong> nợ đoàn phí Q3</div>
-                      <div class="activity-time">3 giờ trước</div>
-                    </div>
-                  </div>
-                  <div class="activity-item">
-                    <div class="activity-dot green"></div>
-                    <div>
-                      <div class="activity-text"><strong>Lê Minh Đức</strong> đã kết nạp thành công</div>
-                      <div class="activity-time">5 giờ trước</div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </section>
+<!-- MEMBERS -->
+<section class="page" id="page-members">
+<div class="page-header" style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px">
+<div><h1>Quản lý Đoàn viên</h1><p>Quản lý hồ sơ, thi đua và đoàn phí</p></div>
+<button class="btn btn-primary admin-only" id="btnAddMember">➕ Thêm Đoàn viên</button>
+</div>
+<div class="card"><div class="card-header" style="flex-wrap:wrap;gap:8px">
+<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+<input class="doc-search" placeholder="🔍 Tìm kiếm..." id="memberSearch" style="width:180px">
+<select class="doc-search" id="memberStatusFilter" style="width:140px;padding-left:10px"><option value="all">Trạng thái ▾</option><option value="active">Hoạt động</option><option value="paused">Tạm hoãn</option><option value="expired">Hết hạn</option></select>
+<select class="doc-search" id="memberUnitFilter" style="width:140px;padding-left:10px"><option value="all">Chi đoàn ▾</option><option>K22A</option><option>K22B</option><option>K21C</option><option>K23A</option></select>
+<select class="doc-search" id="memberFeeFilter" style="width:150px;padding-left:10px"><option value="all">Đoàn phí ▾</option><option value="paid">Đã đóng đủ</option><option value="debt">Còn nợ</option></select>
+</div>
+<span style="color:var(--text-muted);font-size:13px" id="memberCount"></span>
+</div>
+<div class="card-body" style="padding:0"><div class="table-wrapper">
+<table class="data-table" id="memberTable"><thead><tr>
+<th class="sortable" data-sort="name">Đoàn viên ⇅</th><th class="sortable" data-sort="unit">Chi đoàn ⇅</th><th>Đoàn phí</th><th class="sortable" data-sort="rank">Thi đua ⇅</th><th>Trạng thái</th><th>Thao tác</th>
+</tr></thead><tbody id="memberTbody"></tbody></table>
+</div></div>
+<div class="card-footer" id="memberPagination"></div>
+</div>
+</section>
 
-        <!-- ==================== ĐOÀN VIÊN ==================== -->
-        <section class="page" id="page-members">
-          <div class="page-header"
-            style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;">
-            <div>
-              <h1>Quản lý Đoàn viên</h1>
-              <p>Quản lý hồ sơ, thi đua và đoàn phí đoàn viên</p>
-            </div>
-            <button class="btn btn-primary" id="btnAddMember">➕ Thêm Đoàn viên</button>
-          </div>
+<!-- DOCUMENTS -->
+<section class="page" id="page-documents">
+<div class="page-header" style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px">
+<div><h1>Thư viện Tài liệu</h1><p>Tra cứu tài liệu số hóa của tổ chức Đoàn</p></div>
+<button class="btn btn-primary admin-only" id="btnUploadDoc">📤 Upload tài liệu</button>
+</div>
+<div class="tab-filters" id="docTabs"></div>
+<div class="toolbar">
+<input class="doc-search" placeholder="🔍 Tìm theo tiêu đề, tags..." id="docSearch" style="width:260px">
+<div style="display:flex;gap:8px">
+<select class="doc-search" id="docTypeFilter" style="width:130px;padding-left:10px"><option value="all">Loại file ▾</option><option value="pdf">PDF</option><option value="docx">DOCX</option><option value="pptx">PPTX</option><option value="img">Ảnh</option></select>
+<select class="doc-search" id="docSort" style="width:140px;padding-left:10px"><option value="newest">Mới nhất</option><option value="views">Lượt xem ▾</option><option value="az">A → Z</option></select>
+</div>
+</div>
+<div class="doc-grid" id="docGrid"></div>
+</section>
 
-          <div class="card">
-            <div class="card-header">
-              <div style="display:flex;align-items:center;gap:12px;">
-                <input type="text" class="doc-search" placeholder="🔍 Tìm đoàn viên..." id="memberSearch"
-                  style="width:220px;">
-                <select class="doc-search" id="memberFilter" style="width:160px;padding-left:12px;">
-                  <option value="all">Tất cả trạng thái</option>
-                  <option value="active">Hoạt động</option>
-                  <option value="paused">Tạm hoãn</option>
-                  <option value="expired">Hết hạn</option>
-                </select>
-              </div>
-              <span style="color:var(--text-muted);font-size:13px;" id="memberCount">Hiển thị 0 đoàn viên</span>
-            </div>
-            <div class="card-body" style="padding:0;">
-              <div class="table-wrapper">
-                <table class="data-table" id="memberTable">
-                  <thead>
-                    <tr>
-                      <th>Đoàn viên</th>
-                      <th>Chi đoàn</th>
-                      <th>Đoàn phí</th>
-                      <th>Thi đua</th>
-                      <th>Trạng thái</th>
-                      <th>Thao tác</th>
-                    </tr>
-                  </thead>
-                  <tbody id="memberTableBody"></tbody>
-                </table>
-              </div>
-            </div>
-          </div>
-        </section>
+<!-- EVENTS -->
+<section class="page" id="page-events">
+<div class="page-header" style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px">
+<div><h1>Hoạt động & Sự kiện</h1><p>Quản lý sự kiện và điểm danh đoàn viên</p></div>
+<button class="btn btn-primary admin-only" id="btnAddEvent">📅 Tạo sự kiện</button>
+</div>
+<div class="stats-grid" id="eventStats"></div>
+<div class="card"><div class="card-header"><h3>Danh sách sự kiện</h3>
+<div style="display:flex;gap:6px"><button class="filter-btn active" data-ef="all">Tất cả</button><button class="filter-btn" data-ef="upcoming">Sắp tới</button><button class="filter-btn" data-ef="ongoing">Đang diễn ra</button><button class="filter-btn" data-ef="done">Đã xong</button></div>
+</div><div class="card-body"><div class="event-list" id="eventList"></div></div></div>
+</section>
 
-        <!-- ==================== TÀI LIỆU ==================== -->
-        <section class="page" id="page-documents">
-          <div class="page-header"
-            style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;">
-            <div>
-              <h1>Thư viện Tài liệu</h1>
-              <p>Quản lý và tra cứu tài liệu số hóa của tổ chức Đoàn</p>
-            </div>
-            <button class="btn btn-primary" id="btnUploadDoc">📤 Upload tài liệu</button>
-          </div>
+<!-- REPORTS -->
+<section class="page" id="page-reports">
+<div class="page-header"><h1>Báo cáo & Thống kê</h1><p>Tổng hợp báo cáo và xuất file</p></div>
+<div class="report-grid">
+<div class="card"><div class="card-header"><h3>📊 Báo cáo Đoàn viên</h3></div><div class="card-body">
+<div class="chart-area" style="height:200px"><canvas id="reportChart1"></canvas></div>
+<p style="color:var(--text-secondary);font-size:13px;margin:12px 0">Thống kê theo chi đoàn, thi đua, đoàn phí</p>
+<div style="display:flex;gap:8px"><button class="btn btn-primary btn-sm" onclick="exportCSV('members')">📥 Xuất Excel</button><button class="btn btn-outline btn-sm" onclick="exportPDF('members')">📄 Xuất PDF</button></div>
+</div></div>
+<div class="card"><div class="card-header"><h3>📅 Báo cáo Hoạt động</h3></div><div class="card-body">
+<div class="chart-area" style="height:200px"><canvas id="reportChart2"></canvas></div>
+<p style="color:var(--text-secondary);font-size:13px;margin:12px 0">Sự kiện, lượt tham gia theo tháng</p>
+<div style="display:flex;gap:8px"><button class="btn btn-primary btn-sm" onclick="exportCSV('events')">📥 Xuất Excel</button><button class="btn btn-outline btn-sm" onclick="exportPDF('events')">📄 Xuất PDF</button></div>
+</div></div>
+<div class="card"><div class="card-header"><h3>📂 Báo cáo Tài liệu</h3></div><div class="card-body">
+<div class="chart-area" style="height:200px"><canvas id="reportChart3"></canvas></div>
+<p style="color:var(--text-secondary);font-size:13px;margin:12px 0">Upload, lượt xem theo danh mục</p>
+<div style="display:flex;gap:8px"><button class="btn btn-primary btn-sm" onclick="exportCSV('docs')">📥 Xuất Excel</button><button class="btn btn-outline btn-sm" onclick="exportPDF('docs')">📄 Xuất PDF</button></div>
+</div></div>
+</div>
+</section>
 
-          <div class="tab-filters" id="docTabs">
-            <button class="tab-filter active" data-category="all">Tất cả <span class="count">(342)</span></button>
-            <button class="tab-filter" data-category="nghi-quyet">Nghị quyết <span class="count">(48)</span></button>
-            <button class="tab-filter" data-category="hoc-tap">Học tập CT <span class="count">(91)</span></button>
-            <button class="tab-filter" data-category="phong-trao">Phong trào <span class="count">(124)</span></button>
-            <button class="tab-filter" data-category="hanh-chinh">Hành chính <span class="count">(79)</span></button>
-          </div>
+<!-- SETTINGS -->
+<section class="page" id="page-settings">
+<div class="page-header"><h1>Cài đặt hệ thống</h1><p>Quản lý cấu hình và tùy chỉnh</p></div>
+<div class="card"><div class="card-body">
+<div class="settings-section"><h3>🔔 Thông báo</h3>
+<div class="setting-row"><div class="setting-label"><h4>Thông báo email</h4><p>Gửi email khi có hoạt động mới</p></div><div class="toggle active" data-key="emailNotif"></div></div>
+<div class="setting-row"><div class="setting-label"><h4>Thông báo web</h4><p>Push notification trên trình duyệt</p></div><div class="toggle active" data-key="webNotif"></div></div>
+<div class="setting-row"><div class="setting-label"><h4>Nhắc đoàn phí</h4><p>Tự động nhắc khi chưa đóng phí</p></div><div class="toggle" data-key="feeRemind"></div></div>
+</div>
+<div class="settings-section"><h3>🎨 Giao diện</h3>
+<div class="setting-row"><div class="setting-label"><h4>Chế độ tối</h4><p>Sử dụng giao diện nền tối</p></div><div class="toggle" id="darkModeToggle" data-key="darkMode"></div></div>
+<div class="setting-row"><div class="setting-label"><h4>Hiệu ứng chuyển động</h4><p>Bật/tắt animation</p></div><div class="toggle active" data-key="animations"></div></div>
+</div>
+<div class="settings-section admin-only"><h3>🔐 Bảo mật</h3>
+<div class="setting-row"><div class="setting-label"><h4>Xác thực 2FA</h4><p>Yêu cầu OTP khi đăng nhập</p></div><div class="toggle" data-key="twoFA"></div></div>
+<div class="setting-row"><div class="setting-label"><h4>Tự động đăng xuất</h4><p>Đăng xuất sau 30 phút</p></div><div class="toggle active" data-key="autoLogout"></div></div>
+</div>
+<div class="settings-section admin-only"><h3>🔑 Đổi mật khẩu</h3>
+<div class="form-group"><label>Mật khẩu hiện tại</label><input type="password" id="oldPass"></div>
+<div class="form-group"><label>Mật khẩu mới</label><input type="password" id="newPass"></div>
+<button class="btn btn-primary btn-sm" onclick="changePassword()">Đổi mật khẩu</button>
+</div>
+<div class="settings-section"><h3>ℹ️ Thông tin hệ thống</h3>
+<div class="setting-row"><div class="setting-label"><h4>Phiên bản</h4><p>v1.0.0 — Build 2025.04.30</p></div></div>
+<div class="setting-row"><div class="setting-label"><h4>Đơn vị</h4><p>Đoàn TNCS Hồ Chí Minh — Khoa CNTT</p></div></div>
+<div class="setting-row"><div class="setting-label"><h4>Cập nhật</h4><p>30/04/2025</p></div></div>
+</div>
+</div></div>
+</section>
 
-          <div class="toolbar">
-            <div class="toolbar-left">
-              <input type="text" class="doc-search" placeholder="🔍 Tìm tài liệu theo tên, mô tả..."
-                id="docSearchInput">
-            </div>
-            <div style="display:flex;gap:8px;">
-              <select class="doc-search" id="docTypeFilter" style="width:140px;padding-left:12px;">
-                <option value="all">Loại file ▾</option>
-                <option value="pdf">PDF</option>
-                <option value="docx">DOCX</option>
-                <option value="img">Ảnh</option>
-                <option value="pptx">PPTX</option>
-              </select>
-              <select class="doc-search" id="docSortFilter" style="width:150px;padding-left:12px;">
-                <option value="newest">Mới nhất</option>
-                <option value="views">Nhiều lượt xem</option>
-                <option value="az">A → Z</option>
-              </select>
-            </div>
-          </div>
+</div></main></div>
 
-          <div class="doc-grid" id="docGrid"></div>
-        </section>
+<!-- MODAL: Upload -->
+<div class="modal-overlay" id="uploadModal"><div class="modal">
+<div class="modal-header"><h3>📤 Upload tài liệu</h3><button class="modal-close" onclick="closeModal('uploadModal')">&times;</button></div>
+<div class="modal-body">
+<div class="upload-zone"><div class="icon">📁</div><p>Kéo thả hoặc <strong>nhấn chọn file</strong></p><small>PDF, DOCX, PPTX, JPG/PNG — Tối đa 100MB</small></div>
+<div class="form-group" style="margin-top:16px"><label>Tiêu đề</label><input type="text" id="docTitle" placeholder="Nhập tiêu đề..."></div>
+<div class="form-group"><label>Mô tả</label><textarea id="docDesc" placeholder="Mô tả ngắn..."></textarea></div>
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+<div class="form-group"><label>Danh mục</label><select id="docCat"><option value="nghi-quyet">Nghị quyết</option><option value="hoc-tap">Học tập CT</option><option value="phong-trao">Phong trào</option><option value="hanh-chinh">Hành chính</option></select></div>
+<div class="form-group"><label>Loại file</label><select id="docType"><option value="pdf">PDF</option><option value="docx">DOCX</option><option value="pptx">PPTX</option><option value="img">Ảnh</option></select></div>
+</div>
+<div class="form-group"><label>Tags</label><input type="text" id="docTags" placeholder="tag1, tag2..."></div>
+</div>
+<div class="modal-footer"><button class="btn btn-outline" onclick="closeModal('uploadModal')">Hủy</button><button class="btn btn-primary" onclick="addDocument()">📤 Upload</button></div>
+</div></div>
 
-        <!-- ==================== HOẠT ĐỘNG ==================== -->
-        <section class="page" id="page-events">
-          <div class="page-header"
-            style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;">
-            <div>
-              <h1>Hoạt động & Sự kiện</h1>
-              <p>Lập kế hoạch, quản lý sự kiện và điểm danh đoàn viên</p>
-            </div>
-            <button class="btn btn-primary" id="btnAddEvent">📅 Tạo sự kiện mới</button>
-          </div>
+<!-- MODAL: Member -->
+<div class="modal-overlay" id="memberModal"><div class="modal">
+<div class="modal-header"><h3 id="memberModalTitle">➕ Thêm Đoàn viên</h3><button class="modal-close" onclick="closeModal('memberModal')">&times;</button></div>
+<div class="modal-body">
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+<div class="form-group"><label>Họ và tên *</label><input type="text" id="mName" required></div>
+<div class="form-group"><label>Ngày sinh</label><input type="date" id="mDob"></div>
+</div>
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+<div class="form-group"><label>Giới tính</label><select id="mGender"><option>Nam</option><option>Nữ</option></select></div>
+<div class="form-group"><label>Chi đoàn</label><select id="mUnit"><option>K22A</option><option>K22B</option><option>K21C</option><option>K23A</option></select></div>
+</div>
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+<div class="form-group"><label>SĐT</label><input type="tel" id="mPhone"></div>
+<div class="form-group"><label>Email</label><input type="email" id="mEmail"></div>
+</div>
+<div class="form-group"><label>Ngày kết nạp</label><input type="date" id="mJoinDate"></div>
+</div>
+<div class="modal-footer"><button class="btn btn-outline" onclick="closeModal('memberModal')">Hủy</button><button class="btn btn-primary" id="saveMemberBtn" onclick="saveMember()">💾 Lưu</button></div>
+</div></div>
 
-          <div class="stats-grid" style="margin-bottom:24px;">
-            <div class="stat-card">
-              <div class="stat-icon">📅</div>
-              <div class="stat-value">6</div>
-              <div class="stat-label">Sự kiện tháng này</div>
-            </div>
-            <div class="stat-card">
-              <div class="stat-icon">✅</div>
-              <div class="stat-value">4</div>
-              <div class="stat-label">Đã hoàn thành</div>
-            </div>
-            <div class="stat-card">
-              <div class="stat-icon">⏳</div>
-              <div class="stat-value">2</div>
-              <div class="stat-label">Sắp diễn ra</div>
-            </div>
-            <div class="stat-card">
-              <div class="stat-icon">👥</div>
-              <div class="stat-value">856</div>
-              <div class="stat-label">Lượt tham gia</div>
-            </div>
-          </div>
+<!-- MODAL: Event -->
+<div class="modal-overlay" id="eventModal"><div class="modal">
+<div class="modal-header"><h3>📅 Tạo sự kiện mới</h3><button class="modal-close" onclick="closeModal('eventModal')">&times;</button></div>
+<div class="modal-body">
+<div class="form-group"><label>Tên sự kiện *</label><input type="text" id="eName"></div>
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+<div class="form-group"><label>Ngày bắt đầu</label><input type="date" id="eStart"></div>
+<div class="form-group"><label>Ngày kết thúc</label><input type="date" id="eEnd"></div>
+</div>
+<div class="form-group"><label>Địa điểm</label><input type="text" id="eLocation"></div>
+<div class="form-group"><label>Mô tả</label><textarea id="eDesc"></textarea></div>
+<div class="form-group"><label>Số lượng tối đa</label><input type="number" id="eMax" value="100"></div>
+</div>
+<div class="modal-footer"><button class="btn btn-outline" onclick="closeModal('eventModal')">Hủy</button><button class="btn btn-primary" onclick="addEvent()">💾 Tạo sự kiện</button></div>
+</div></div>
 
-          <div class="card">
-            <div class="card-header">
-              <h3>Danh sách sự kiện</h3>
-              <div style="display:flex;gap:8px;">
-                <button class="filter-btn active" data-event-filter="all">Tất cả</button>
-                <button class="filter-btn" data-event-filter="upcoming">Sắp tới</button>
-                <button class="filter-btn" data-event-filter="done">Đã xong</button>
-              </div>
-            </div>
-            <div class="card-body">
-              <div class="event-list" id="eventList"></div>
-            </div>
-          </div>
-        </section>
+<!-- MODAL: Doc Preview -->
+<div class="modal-overlay" id="docPreviewModal"><div class="modal" style="max-width:640px">
+<div class="modal-header"><h3 id="previewTitle">Xem tài liệu</h3><button class="modal-close" onclick="closeModal('docPreviewModal')">&times;</button></div>
+<div class="modal-body" id="previewBody"></div>
+</div></div>
 
-        <!-- ==================== BÁO CÁO ==================== -->
-        <section class="page" id="page-reports">
-          <div class="page-header">
-            <h1>Báo cáo & Thống kê</h1>
-            <p>Tổng hợp báo cáo định kỳ và xuất file tự động</p>
-          </div>
-          <div class="report-grid">
-            <div class="card">
-              <div class="card-header">
-                <h3>📊 Báo cáo Đoàn viên</h3>
-              </div>
-              <div class="card-body">
-                <p style="color:var(--text-secondary);font-size:14px;margin-bottom:16px;">Thống kê số lượng, thi đua,
-                  đoàn phí theo đơn vị</p>
-                <div style="display:flex;gap:12px;">
-                  <button class="btn btn-primary btn-sm">📥 Xuất Excel</button>
-                  <button class="btn btn-outline btn-sm">📄 Xuất PDF</button>
-                </div>
-              </div>
-            </div>
-            <div class="card">
-              <div class="card-header">
-                <h3>📅 Báo cáo Hoạt động</h3>
-              </div>
-              <div class="card-body">
-                <p style="color:var(--text-secondary);font-size:14px;margin-bottom:16px;">Tổng kết sự kiện, điểm danh và
-                  tham gia theo tháng/quý</p>
-                <div style="display:flex;gap:12px;">
-                  <button class="btn btn-primary btn-sm">📥 Xuất Excel</button>
-                  <button class="btn btn-outline btn-sm">📄 Xuất PDF</button>
-                </div>
-              </div>
-            </div>
-            <div class="card">
-              <div class="card-header">
-                <h3>📂 Báo cáo Tài liệu</h3>
-              </div>
-              <div class="card-body">
-                <p style="color:var(--text-secondary);font-size:14px;margin-bottom:16px;">Thống kê upload, lượt xem,
-                  phân loại tài liệu</p>
-                <div style="display:flex;gap:12px;">
-                  <button class="btn btn-primary btn-sm">📥 Xuất Excel</button>
-                  <button class="btn btn-outline btn-sm">📄 Xuất PDF</button>
-                </div>
-              </div>
-            </div>
-          </div>
-        </section>
+<!-- CONFIRM DIALOG -->
+<div class="modal-overlay" id="confirmModal"><div class="modal" style="max-width:400px">
+<div class="modal-header"><h3>⚠️ Xác nhận</h3><button class="modal-close" onclick="closeModal('confirmModal')">&times;</button></div>
+<div class="modal-body"><p id="confirmMsg">Bạn có chắc chắn?</p></div>
+<div class="modal-footer"><button class="btn btn-outline" onclick="closeModal('confirmModal')">Hủy</button><button class="btn btn-primary" id="confirmOk" style="background:#ef4444">Xóa</button></div>
+</div></div>
 
-        <!-- ==================== CÀI ĐẶT ==================== -->
-        <section class="page" id="page-settings">
-          <div class="page-header">
-            <h1>Cài đặt hệ thống</h1>
-            <p>Quản lý cấu hình và tùy chỉnh hệ thống</p>
-          </div>
-          <div class="card">
-            <div class="card-body">
-              <div class="settings-section">
-                <h3>🔔 Thông báo</h3>
-                <div class="setting-row">
-                  <div class="setting-label">
-                    <h4>Thông báo email</h4>
-                    <p>Gửi email khi có hoạt động mới</p>
-                  </div>
-                  <div class="toggle active" data-toggle="email-notif"></div>
-                </div>
-                <div class="setting-row">
-                  <div class="setting-label">
-                    <h4>Thông báo trên web</h4>
-                    <p>Hiện thông báo push trên trình duyệt</p>
-                  </div>
-                  <div class="toggle active" data-toggle="web-notif"></div>
-                </div>
-                <div class="setting-row">
-                  <div class="setting-label">
-                    <h4>Nhắc nhở đoàn phí</h4>
-                    <p>Tự động nhắc khi đoàn viên chưa đóng phí</p>
-                  </div>
-                  <div class="toggle" data-toggle="fee-remind"></div>
-                </div>
-              </div>
-              <div class="settings-section">
-                <h3>🎨 Giao diện</h3>
-                <div class="setting-row">
-                  <div class="setting-label">
-                    <h4>Chế độ tối</h4>
-                    <p>Sử dụng giao diện nền tối</p>
-                  </div>
-                  <div class="toggle active" data-toggle="dark-mode"></div>
-                </div>
-                <div class="setting-row">
-                  <div class="setting-label">
-                    <h4>Hiệu ứng chuyển động</h4>
-                    <p>Bật/tắt animation trên giao diện</p>
-                  </div>
-                  <div class="toggle active" data-toggle="animations"></div>
-                </div>
-              </div>
-              <div class="settings-section">
-                <h3>🔐 Bảo mật</h3>
-                <div class="setting-row">
-                  <div class="setting-label">
-                    <h4>Xác thực hai lớp (2FA)</h4>
-                    <p>Yêu cầu OTP khi đăng nhập</p>
-                  </div>
-                  <div class="toggle" data-toggle="2fa"></div>
-                </div>
-                <div class="setting-row">
-                  <div class="setting-label">
-                    <h4>Tự động đăng xuất</h4>
-                    <p>Đăng xuất sau 30 phút không hoạt động</p>
-                  </div>
-                  <div class="toggle active" data-toggle="auto-logout"></div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </section>
+<script>
+// ===== DATA =====
+const ACCOUNTS={admin:{pass:'admin123',role:'admin',name:'Admin'},doanvien:{pass:'user123',role:'user',name:'Đoàn viên'}};
+let currentUser=null;
+const COLORS=['#d32f2f','#1e88e5','#10b981','#f59e0b','#8b5cf6','#06b6d4','#ec4899','#f97316','#14b8a6','#6366f1','#ef4444','#84cc16'];
+const MEMBERS=[
+{id:'24ICD001',name:'Nguyễn Văn An',dob:'2004-03-15',gender:'Nam',unit:'K22A',phone:'0901234001',email:'an.nv@email.com',joinDate:'2022-10-15',status:'active',fee:{Q1:'paid',Q2:'paid',Q3:'paid',Q4:'paid'},rank:'Xuất sắc'},
+{id:'24ICD002',name:'Trần Thị Bích',dob:'2004-06-20',gender:'Nữ',unit:'K22B',phone:'0901234002',email:'bich.tt@email.com',joinDate:'2022-10-15',status:'active',fee:{Q1:'paid',Q2:'paid',Q3:'debt',Q4:'debt'},rank:'Khá'},
+{id:'24ICD003',name:'Lê Minh Đức',dob:'2003-01-10',gender:'Nam',unit:'K21C',phone:'0901234003',email:'duc.lm@email.com',joinDate:'2021-10-20',status:'paused',fee:{Q1:'paid',Q2:'debt',Q3:'debt',Q4:'debt'},rank:'TB'},
+{id:'24ICD004',name:'Phạm Thị Hoa',dob:'2005-09-05',gender:'Nữ',unit:'K23A',phone:'0901234004',email:'hoa.pt@email.com',joinDate:'2023-10-15',status:'active',fee:{Q1:'paid',Q2:'paid',Q3:'paid',Q4:'paid'},rank:'Xuất sắc'},
+{id:'24ICD005',name:'Hoàng Văn Khánh',dob:'2004-12-25',gender:'Nam',unit:'K22A',phone:'0901234005',email:'khanh.hv@email.com',joinDate:'2022-10-15',status:'active',fee:{Q1:'paid',Q2:'paid',Q3:'paid',Q4:'debt'},rank:'Khá'},
+{id:'24ICD006',name:'Ngô Thị Lan',dob:'2004-04-18',gender:'Nữ',unit:'K22B',phone:'0901234006',email:'lan.nt@email.com',joinDate:'2022-10-15',status:'active',fee:{Q1:'paid',Q2:'paid',Q3:'paid',Q4:'paid'},rank:'Xuất sắc'},
+{id:'24ICD007',name:'Đỗ Quang Minh',dob:'2003-07-30',gender:'Nam',unit:'K21C',phone:'0901234007',email:'minh.dq@email.com',joinDate:'2021-10-20',status:'active',fee:{Q1:'paid',Q2:'paid',Q3:'paid',Q4:'paid'},rank:'Xuất sắc'},
+{id:'24ICD008',name:'Vũ Thanh Nga',dob:'2005-02-14',gender:'Nữ',unit:'K23A',phone:'0901234008',email:'nga.vt@email.com',joinDate:'2023-10-15',status:'expired',fee:{Q1:'debt',Q2:'debt',Q3:'debt',Q4:'debt'},rank:'TB'},
+{id:'24ICD009',name:'Bùi Văn Phong',dob:'2004-08-22',gender:'Nam',unit:'K22A',phone:'0901234009',email:'phong.bv@email.com',joinDate:'2022-10-15',status:'active',fee:{Q1:'paid',Q2:'paid',Q3:'paid',Q4:'paid'},rank:'Khá'},
+{id:'24ICD010',name:'Lý Thị Quỳnh',dob:'2004-11-08',gender:'Nữ',unit:'K22B',phone:'0901234010',email:'quynh.lt@email.com',joinDate:'2022-10-15',status:'active',fee:{Q1:'paid',Q2:'paid',Q3:'paid',Q4:'paid'},rank:'Xuất sắc'},
+{id:'24ICD011',name:'Nguyễn Hữu Rạng',dob:'2003-05-12',gender:'Nam',unit:'K21C',phone:'0901234011',email:'rang.nh@email.com',joinDate:'2021-10-20',status:'active',fee:{Q1:'paid',Q2:'paid',Q3:'debt',Q4:'debt'},rank:'Khá'},
+{id:'24ICD012',name:'Phan Thị Sương',dob:'2005-10-30',gender:'Nữ',unit:'K23A',phone:'0901234012',email:'suong.pt@email.com',joinDate:'2023-10-15',status:'active',fee:{Q1:'paid',Q2:'paid',Q3:'paid',Q4:'paid'},rank:'Xuất sắc'},
+{id:'24ICD013',name:'Trương Văn Tài',dob:'2004-01-25',gender:'Nam',unit:'K22A',phone:'0901234013',email:'tai.tv@email.com',joinDate:'2022-10-15',status:'active',fee:{Q1:'paid',Q2:'paid',Q3:'paid',Q4:'paid'},rank:'Khá'},
+{id:'24ICD014',name:'Huỳnh Thị Uyên',dob:'2004-07-17',gender:'Nữ',unit:'K22B',phone:'0901234014',email:'uyen.ht@email.com',joinDate:'2022-10-15',status:'paused',fee:{Q1:'paid',Q2:'paid',Q3:'debt',Q4:'debt'},rank:'TB'},
+{id:'24ICD015',name:'Đặng Quốc Việt',dob:'2003-03-03',gender:'Nam',unit:'K21C',phone:'0901234015',email:'viet.dq@email.com',joinDate:'2021-10-20',status:'active',fee:{Q1:'paid',Q2:'paid',Q3:'paid',Q4:'paid'},rank:'Xuất sắc'},
+{id:'24ICD016',name:'Mai Xuân Vy',dob:'2005-12-12',gender:'Nữ',unit:'K23A',phone:'0901234016',email:'vy.mx@email.com',joinDate:'2023-10-15',status:'active',fee:{Q1:'paid',Q2:'paid',Q3:'paid',Q4:'debt'},rank:'Khá'},
+{id:'24ICD017',name:'Cao Thanh Bình',dob:'2004-09-09',gender:'Nam',unit:'K22A',phone:'0901234017',email:'binh.ct@email.com',joinDate:'2022-10-15',status:'active',fee:{Q1:'paid',Q2:'paid',Q3:'paid',Q4:'paid'},rank:'Xuất sắc'},
+{id:'24ICD018',name:'Lương Thị Cẩm',dob:'2004-06-06',gender:'Nữ',unit:'K22B',phone:'0901234018',email:'cam.lt@email.com',joinDate:'2022-10-15',status:'active',fee:{Q1:'paid',Q2:'paid',Q3:'paid',Q4:'paid'},rank:'Khá'},
+{id:'24ICD019',name:'Tô Minh Dũng',dob:'2003-04-04',gender:'Nam',unit:'K21C',phone:'0901234019',email:'dung.tm@email.com',joinDate:'2021-10-20',status:'paused',fee:{Q1:'paid',Q2:'debt',Q3:'debt',Q4:'debt'},rank:'TB'},
+{id:'24ICD020',name:'Hồ Ngọc Giang',dob:'2005-08-28',gender:'Nam',unit:'K23A',phone:'0901234020',email:'giang.hn@email.com',joinDate:'2023-10-15',status:'active',fee:{Q1:'paid',Q2:'paid',Q3:'paid',Q4:'paid'},rank:'Xuất sắc'},
+{id:'24ICD021',name:'Võ Thị Hạnh',dob:'2004-02-19',gender:'Nữ',unit:'K22A',phone:'0901234021',email:'hanh.vt@email.com',joinDate:'2022-10-15',status:'active',fee:{Q1:'paid',Q2:'paid',Q3:'paid',Q4:'paid'},rank:'Khá'},
+{id:'24ICD022',name:'Đinh Văn Khôi',dob:'2004-10-10',gender:'Nam',unit:'K22B',phone:'0901234022',email:'khoi.dv@email.com',joinDate:'2022-10-15',status:'active',fee:{Q1:'paid',Q2:'paid',Q3:'paid',Q4:'paid'},rank:'Xuất sắc'},
+{id:'24ICD023',name:'Châu Thị Linh',dob:'2003-11-11',gender:'Nữ',unit:'K21C',phone:'0901234023',email:'linh.ct@email.com',joinDate:'2021-10-20',status:'expired',fee:{Q1:'debt',Q2:'debt',Q3:'debt',Q4:'debt'},rank:'TB'},
+{id:'24ICD024',name:'Trịnh Quang Nam',dob:'2005-05-25',gender:'Nam',unit:'K23A',phone:'0901234024',email:'nam.tq@email.com',joinDate:'2023-10-15',status:'active',fee:{Q1:'paid',Q2:'paid',Q3:'paid',Q4:'paid'},rank:'Khá'},
+{id:'24ICD025',name:'Lê Thị Phượng',dob:'2004-04-04',gender:'Nữ',unit:'K22A',phone:'0901234025',email:'phuong.lt@email.com',joinDate:'2022-10-15',status:'active',fee:{Q1:'paid',Q2:'paid',Q3:'debt',Q4:'debt'},rank:'Khá'}
+];
+const DOCUMENTS=[
+{id:1,title:'Nghị quyết Đại hội Đoàn toàn quốc lần thứ XII',type:'pdf',size:'2.4MB',date:'2025-01-15',category:'nghi-quyet',views:324,uploader:'Admin',tags:['nghị quyết','đại hội','XII']},
+{id:2,title:'Tài liệu học tập Nghị quyết Đại hội XIV của Đảng',type:'docx',size:'1.1MB',date:'2025-02-22',category:'hoc-tap',views:189,uploader:'Admin',tags:['nghị quyết','đảng','XIV']},
+{id:3,title:'Ảnh hoạt động Mùa hè xanh 2025',type:'img',size:'45MB',date:'2025-03-30',category:'phong-trao',views:567,uploader:'Admin',tags:['tình nguyện','mùa hè xanh']},
+{id:4,title:'Kế hoạch công tác Đoàn năm 2025',type:'pdf',size:'890KB',date:'2025-01-05',category:'hanh-chinh',views:234,uploader:'Admin',tags:['kế hoạch','2025']},
+{id:5,title:'Báo cáo tổng kết công tác Đoàn 2024',type:'pdf',size:'3.2MB',date:'2024-12-28',category:'hanh-chinh',views:412,uploader:'Admin',tags:['báo cáo','tổng kết']},
+{id:6,title:'Slide bồi dưỡng lý luận chính trị',type:'pptx',size:'15MB',date:'2025-02-10',category:'hoc-tap',views:298,uploader:'Admin',tags:['chính trị','lý luận']},
+{id:7,title:'Hướng dẫn tổ chức Đại hội Chi đoàn',type:'docx',size:'520KB',date:'2025-03-18',category:'hanh-chinh',views:156,uploader:'Admin',tags:['đại hội','chi đoàn']},
+{id:8,title:'6 bài học lý luận chính trị dành cho Đoàn viên',type:'pdf',size:'4.7MB',date:'2025-03-01',category:'hoc-tap',views:723,uploader:'Admin',tags:['6 bài','đoàn viên']},
+{id:9,title:'Ảnh Lễ kết nạp Đoàn viên mới K23',type:'img',size:'28MB',date:'2025-03-20',category:'phong-trao',views:445,uploader:'Admin',tags:['kết nạp','K23']},
+{id:10,title:'Nghị quyết Hội nghị BCH TW Đoàn lần thứ 5',type:'pdf',size:'1.8MB',date:'2025-02-12',category:'nghi-quyet',views:267,uploader:'Admin',tags:['BCH','trung ương']},
+{id:11,title:'Phong trào Thanh niên tình nguyện 2025',type:'docx',size:'780KB',date:'2025-03-25',category:'phong-trao',views:198,uploader:'Admin',tags:['tình nguyện','thanh niên']},
+{id:12,title:'Biểu mẫu đánh giá thi đua Chi đoàn',type:'docx',size:'340KB',date:'2025-04-08',category:'hanh-chinh',views:89,uploader:'Admin',tags:['thi đua','biểu mẫu']},
+{id:13,title:'Nghị quyết về chuyển đổi số trong công tác Đoàn',type:'pdf',size:'1.5MB',date:'2025-01-20',category:'nghi-quyet',views:312,uploader:'Admin',tags:['chuyển đổi số']},
+{id:14,title:'Tài liệu tập huấn kỹ năng mềm cho cán bộ Đoàn',type:'pptx',size:'22MB',date:'2025-02-28',category:'hoc-tap',views:445,uploader:'Admin',tags:['kỹ năng mềm','tập huấn']},
+{id:15,title:'Ảnh Giải bóng đá Đoàn viên 2025',type:'img',size:'35MB',date:'2025-04-10',category:'phong-trao',views:332,uploader:'Admin',tags:['bóng đá','thể thao']},
+{id:16,title:'Quy chế hoạt động BCH Chi đoàn',type:'pdf',size:'450KB',date:'2025-01-08',category:'hanh-chinh',views:178,uploader:'Admin',tags:['quy chế','BCH']},
+{id:17,title:'Chương trình hành động thực hiện NQ Đại hội Đoàn',type:'pdf',size:'2.1MB',date:'2025-02-05',category:'nghi-quyet',views:289,uploader:'Admin',tags:['chương trình','hành động']},
+{id:18,title:'Tài liệu sinh hoạt Chi đoàn chủ đề tháng 3',type:'docx',size:'650KB',date:'2025-03-05',category:'hoc-tap',views:534,uploader:'Admin',tags:['sinh hoạt','tháng 3']},
+{id:19,title:'Ảnh Lễ hội Xuân tình nguyện 2025',type:'img',size:'52MB',date:'2025-01-28',category:'phong-trao',views:678,uploader:'Admin',tags:['xuân','tình nguyện']},
+{id:20,title:'Hướng dẫn đóng đoàn phí năm 2025',type:'pdf',size:'280KB',date:'2025-01-02',category:'hanh-chinh',views:892,uploader:'Admin',tags:['đoàn phí','hướng dẫn']}
+];
+const EVENTS=[
+{id:1,title:'Ngày hội Thanh niên tình nguyện',startDate:'2025-05-15',endDate:'2025-05-15',location:'Quảng trường Trung tâm',attendees:120,maxAttendees:150,status:'upcoming',desc:'Hoạt động tình nguyện vì cộng đồng, dọn vệ sinh môi trường'},
+{id:2,title:'Lễ kết nạp Đoàn viên mới đợt 2',startDate:'2025-05-20',endDate:'2025-05-20',location:'Hội trường lớn',attendees:45,maxAttendees:60,status:'upcoming',desc:'Kết nạp 45 thanh niên ưu tú vào tổ chức Đoàn'},
+{id:3,title:'Tập huấn cán bộ Đoàn cơ sở',startDate:'2025-04-28',endDate:'2025-04-29',location:'Phòng họp A3',attendees:30,maxAttendees:30,status:'ongoing',desc:'Bồi dưỡng nghiệp vụ cho cán bộ Đoàn các chi đoàn'},
+{id:4,title:'Hội thi Ánh sáng soi đường',startDate:'2025-04-20',endDate:'2025-04-20',location:'Sân khấu ngoài trời',attendees:200,maxAttendees:200,status:'done',desc:'Cuộc thi tìm hiểu lịch sử Đảng và Đoàn'},
+{id:5,title:'Giải bóng đá Đoàn viên 2025',startDate:'2025-04-10',endDate:'2025-04-12',location:'Sân vận động',attendees:160,maxAttendees:200,status:'done',desc:'Giải đấu thể thao giao lưu giữa các chi đoàn'},
+{id:6,title:'Hiến máu nhân đạo đợt 1/2025',startDate:'2025-04-05',endDate:'2025-04-05',location:'Nhà văn hóa',attendees:301,maxAttendees:300,status:'done',desc:'Chương trình hiến máu tình nguyện'},
+{id:7,title:'Chiến dịch Xuân tình nguyện',startDate:'2025-01-28',endDate:'2025-02-02',location:'Các xã vùng sâu',attendees:80,maxAttendees:100,status:'done',desc:'Tặng quà Tết cho bà con vùng khó khăn'},
+{id:8,title:'Hội nghị BCH Đoàn mở rộng',startDate:'2025-03-15',endDate:'2025-03-15',location:'Hội trường lớn',attendees:55,maxAttendees:60,status:'done',desc:'Đánh giá công tác quý 1 và triển khai kế hoạch quý 2'},
+{id:9,title:'Cuộc thi Ý tưởng sáng tạo trẻ',startDate:'2025-05-25',endDate:'2025-05-27',location:'Trung tâm CNTT',attendees:0,maxAttendees:100,status:'upcoming',desc:'Khuyến khích đoàn viên sáng tạo giải pháp công nghệ'},
+{id:10,title:'Ngày hội việc làm cho thanh niên',startDate:'2025-06-01',endDate:'2025-06-01',location:'Khuôn viên trường',attendees:0,maxAttendees:500,status:'upcoming',desc:'Kết nối sinh viên với doanh nghiệp tuyển dụng'},
+{id:11,title:'Lễ tuyên dương Đoàn viên tiêu biểu',startDate:'2025-03-26',endDate:'2025-03-26',location:'Hội trường lớn',attendees:120,maxAttendees:150,status:'done',desc:'Khen thưởng đoàn viên xuất sắc năm 2024'},
+{id:12,title:'Dọn vệ sinh bãi biển',startDate:'2025-04-22',endDate:'2025-04-22',location:'Bãi biển Mỹ Khê',attendees:95,maxAttendees:100,status:'done',desc:'Hưởng ứng Ngày Trái đất 22/4'}
+];
+// ===== UTILITIES =====
+function $(s){return document.querySelector(s)}
+function $$(s){return document.querySelectorAll(s)}
+function showToast(msg,type='success'){const t=document.createElement('div');t.className='toast '+type;t.textContent=msg;$('#toastContainer').appendChild(t);setTimeout(()=>t.remove(),3000)}
+function openModal(id){$('#'+id).classList.add('show')}
+function closeModal(id){$('#'+id).classList.remove('show')}
+function getCatLabel(c){return{['nghi-quyet']:'Nghị quyết',['hoc-tap']:'Học tập CT',['phong-trao']:'Phong trào',['hanh-chinh']:'Hành chính'}[c]||c}
+const TYPE_ICONS={pdf:'📄',docx:'📘',pptx:'📊',img:'🖼️'};
+const STATUS_MAP={active:{l:'Hoạt động',c:'badge-ok'},paused:{l:'Tạm hoãn',c:'badge-warn'},expired:{l:'Hết hạn',c:'badge-danger'}};
+const MONTHS=['Th1','Th2','Th3','Th4','Th5','Th6','Th7','Th8','Th9','Th10','Th11','Th12'];
+let memberPage=1,memberSort={key:'name',asc:true},editingMemberId=null,charts={};
 
-      </div>
-    </main>
-  </div>
+// ===== AUTH =====
+function doLogin(user,pass){
+  const acc=ACCOUNTS[user];
+  if(!acc||acc.pass!==pass)return false;
+  currentUser={username:user,...acc};
+  $('#loginPage').classList.add('hidden');
+  $('#appLayout').style.display='flex';
+  document.body.classList.toggle('role-admin',acc.role==='admin');
+  $('#headerUserName').textContent=acc.name+' ('+acc.role+')';
+  $('#headerAvatar').textContent=acc.name.substring(0,2).toUpperCase();
+  initApp();return true;
+}
+function demoLogin(type){
+  if(type==='admin')doLogin('admin','admin123');
+  else doLogin('doanvien','user123');
+}
+function logout(){
+  currentUser=null;
+  $('#loginPage').classList.remove('hidden');
+  $('#appLayout').style.display='none';
+  document.body.classList.remove('role-admin');
+  destroyCharts();
+}
+$('#loginForm').addEventListener('submit',e=>{
+  e.preventDefault();
+  const u=$('#loginUser').value.trim(),p=$('#loginPass').value;
+  if(!u||!p){$('#loginError').textContent='Vui lòng nhập đầy đủ';return}
+  if(!doLogin(u,p))$('#loginError').textContent='Sai tên đăng nhập hoặc mật khẩu';
+});
+$('#logoutBtn').addEventListener('click',logout);
 
-  <!-- ========== MODAL UPLOAD ========== -->
-  <div class="modal-overlay" id="uploadModal">
-    <div class="modal">
-      <div class="modal-header">
-        <h3>📤 Upload tài liệu mới</h3>
-        <button class="modal-close" id="closeUploadModal">&times;</button>
-      </div>
-      <div class="modal-body">
-        <div class="upload-zone" id="uploadZone">
-          <div class="icon">📁</div>
-          <p>Kéo thả file vào đây hoặc <strong>nhấn để chọn</strong></p>
-          <small>Hỗ trợ: PDF, DOCX, PPTX, JPG/PNG, MP4 — Tối đa 100MB</small>
-        </div>
-        <div class="form-group" style="margin-top:18px;">
-          <label>Tiêu đề tài liệu</label>
-          <input type="text" placeholder="Nhập tiêu đề...">
-        </div>
-        <div class="form-group">
-          <label>Mô tả</label>
-          <textarea placeholder="Nhập mô tả ngắn về tài liệu..."></textarea>
-        </div>
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
-          <div class="form-group">
-            <label>Danh mục</label>
-            <select>
-              <option>Nghị quyết</option>
-              <option>Học tập chính trị</option>
-              <option>Phong trào</option>
-              <option>Hành chính</option>
-              <option>Khác</option>
-            </select>
-          </div>
-          <div class="form-group">
-            <label>Quyền xem</label>
-            <select>
-              <option>Công khai</option>
-              <option>Nội bộ</option>
-              <option>Giới hạn</option>
-            </select>
-          </div>
-        </div>
-        <div class="form-group">
-          <label>Tags</label>
-          <input type="text" placeholder="Nhập tags, cách nhau bằng dấu phẩy...">
-        </div>
-      </div>
-      <div class="modal-footer">
-        <button class="btn btn-outline" id="cancelUpload">Hủy</button>
-        <button class="btn btn-primary">📤 Upload</button>
-      </div>
-    </div>
-  </div>
+// ===== NAVIGATION =====
+$$('.nav-item[data-page]').forEach(item=>{
+  item.addEventListener('click',()=>{
+    $$('.nav-item').forEach(n=>n.classList.remove('active'));
+    item.classList.add('active');
+    $$('.page').forEach(p=>p.classList.remove('active'));
+    $('#page-'+item.dataset.page).classList.add('active');
+    if(item.dataset.page==='dashboard')initDashCharts();
+    if(item.dataset.page==='reports')initReportCharts();
+    closeSidebar();
+  });
+});
+$('#navUpload').addEventListener('click',()=>openModal('uploadModal'));
+$('#menuToggle').addEventListener('click',()=>{$('#sidebar').classList.add('open');$('#sidebarOverlay').classList.add('show')});
+function closeSidebar(){$('#sidebar').classList.remove('open');$('#sidebarOverlay').classList.remove('show')}
+$('#sidebarOverlay').addEventListener('click',closeSidebar);
+document.addEventListener('keydown',e=>{if(e.key==='Escape')$$('.modal-overlay.show').forEach(m=>m.classList.remove('show'))});
 
-  <!-- ========== MODAL ADD MEMBER ========== -->
-  <div class="modal-overlay" id="memberModal">
-    <div class="modal">
-      <div class="modal-header">
-        <h3>➕ Thêm Đoàn viên mới</h3>
-        <button class="modal-close" id="closeMemberModal">&times;</button>
-      </div>
-      <div class="modal-body">
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
-          <div class="form-group">
-            <label>Họ và tên</label>
-            <input type="text" placeholder="Nhập họ tên...">
-          </div>
-          <div class="form-group">
-            <label>Ngày sinh</label>
-            <input type="date">
-          </div>
-        </div>
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
-          <div class="form-group">
-            <label>Giới tính</label>
-            <select>
-              <option>Nam</option>
-              <option>Nữ</option>
-            </select>
-          </div>
-          <div class="form-group">
-            <label>Chi đoàn</label>
-            <select>
-              <option>Chi đoàn K22A</option>
-              <option>Chi đoàn K22B</option>
-              <option>Chi đoàn K21C</option>
-              <option>Chi đoàn K23A</option>
-            </select>
-          </div>
-        </div>
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
-          <div class="form-group">
-            <label>Số điện thoại</label>
-            <input type="tel" placeholder="0xxx xxx xxx">
-          </div>
-          <div class="form-group">
-            <label>Email</label>
-            <input type="email" placeholder="email@example.com">
-          </div>
-        </div>
-        <div class="form-group">
-          <label>Ngày kết nạp</label>
-          <input type="date">
-        </div>
-      </div>
-      <div class="modal-footer">
-        <button class="btn btn-outline" id="cancelMember">Hủy</button>
-        <button class="btn btn-primary">💾 Lưu hồ sơ</button>
-      </div>
-    </div>
-  </div>
+// ===== DASHBOARD =====
+function renderDashStats(){
+  const active=MEMBERS.filter(m=>m.status==='active').length;
+  const upcoming=EVENTS.filter(e=>e.status==='upcoming'||e.status==='ongoing').length;
+  $('#dashStats').innerHTML=[
+    {icon:'👥',val:MEMBERS.length,label:'Tổng Đoàn viên',change:'↑ Chi đoàn: 4'},
+    {icon:'✅',val:active,label:'Đang hoạt động',change:Math.round(active/MEMBERS.length*100)+'%'},
+    {icon:'📅',val:upcoming,label:'Sự kiện sắp tới',change:EVENTS.filter(e=>e.status==='done').length+' đã hoàn thành'},
+    {icon:'📄',val:DOCUMENTS.length,label:'Tài liệu số hóa',change:'↑ Đa dạng danh mục'}
+  ].map(s=>`<div class="stat-card"><div class="stat-icon">${s.icon}</div><div class="stat-value">${s.val}</div><div class="stat-label">${s.label}</div><div class="stat-change up">${s.change}</div></div>`).join('');
+}
+function renderRecentActivity(){
+  const acts=[
+    {dot:'red',text:'<strong>Nguyễn Văn An</strong> đã đóng đoàn phí Q1/2025',time:'2 phút trước'},
+    {dot:'green',text:'<strong>Admin</strong> upload "Nghị quyết ĐH XII"',time:'15 phút trước'},
+    {dot:'yellow',text:'Sự kiện <strong>"Ngày hội tình nguyện"</strong> được tạo',time:'1 giờ trước'},
+    {dot:'blue',text:'<strong>Trần Thị Bích</strong> đăng ký sự kiện Hiến máu',time:'3 giờ trước'},
+    {dot:'green',text:'<strong>Lê Minh Đức</strong> kết nạp thành công',time:'5 giờ trước'}
+  ];
+  $('#recentActivity').innerHTML=acts.map(a=>`<div class="activity-item"><div class="activity-dot ${a.dot}"></div><div><div class="activity-text">${a.text}</div><div class="activity-time">${a.time}</div></div></div>`).join('');
+}
+function destroyCharts(){Object.values(charts).forEach(c=>{if(c&&c.destroy)c.destroy()});charts={}}
+function initDashCharts(){
+  if(typeof Chart==='undefined')return;
+  if(charts.line)charts.line.destroy();
+  if(charts.pie)charts.pie.destroy();
+  const ctx1=$('#lineChart');const ctx2=$('#pieChart');
+  if(!ctx1||!ctx2)return;
+  charts.line=new Chart(ctx1,{type:'line',data:{labels:['T11','T12','T1','T2','T3','T4'],datasets:[{label:'Kết nạp mới',data:[5,8,12,6,9,4],borderColor:'#d32f2f',backgroundColor:'rgba(211,47,47,.1)',fill:true,tension:.4}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{color:'#94a3b8'}}},scales:{x:{ticks:{color:'#64748b'},grid:{color:'rgba(51,65,85,.3)'}},y:{ticks:{color:'#64748b'},grid:{color:'rgba(51,65,85,.3)'}}}}});
+  const units=['K22A','K22B','K21C','K23A'];
+  const unitCounts=units.map(u=>MEMBERS.filter(m=>m.unit===u).length);
+  charts.pie=new Chart(ctx2,{type:'doughnut',data:{labels:units.map(u=>'Chi đoàn '+u),datasets:[{data:unitCounts,backgroundColor:['#d32f2f','#f9a825','#10b981','#6366f1']}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'bottom',labels:{color:'#94a3b8',padding:12}}}}});
+}
 
-  <script src="script.js"></script>
+// ===== MEMBERS =====
+function getFilteredMembers(){
+  let list=[...MEMBERS];
+  const search=$('#memberSearch').value.toLowerCase();
+  const status=$('#memberStatusFilter').value;
+  const unit=$('#memberUnitFilter').value;
+  const fee=$('#memberFeeFilter').value;
+  if(search)list=list.filter(m=>m.name.toLowerCase().includes(search)||m.id.toLowerCase().includes(search)||m.unit.toLowerCase().includes(search));
+  if(status!=='all')list=list.filter(m=>m.status===status);
+  if(unit!=='all')list=list.filter(m=>m.unit===unit);
+  if(fee==='paid')list=list.filter(m=>Object.values(m.fee).every(f=>f==='paid'));
+  if(fee==='debt')list=list.filter(m=>Object.values(m.fee).some(f=>f==='debt'));
+  list.sort((a,b)=>{let va=a[memberSort.key]||'',vb=b[memberSort.key]||'';if(typeof va==='string')va=va.toLowerCase();if(typeof vb==='string')vb=vb.toLowerCase();return memberSort.asc?(va>vb?1:-1):(va<vb?1:-1)});
+  return list;
+}
+function renderMembers(){
+  const list=getFilteredMembers();
+  const perPage=10,totalPages=Math.max(1,Math.ceil(list.length/perPage));
+  if(memberPage>totalPages)memberPage=totalPages;
+  const start=(memberPage-1)*perPage,slice=list.slice(start,start+perPage);
+  const isAdmin=currentUser&&currentUser.role==='admin';
+  $('#memberCount').textContent=`Hiển thị ${slice.length}/${list.length} đoàn viên`;
+  $('#memberTbody').innerHTML=slice.map((m,i)=>{
+    const initials=m.name.split(' ').slice(-2).map(w=>w[0]).join('');
+    const color=COLORS[i%COLORS.length];
+    const st=STATUS_MAP[m.status];
+    const feeDebt=Object.entries(m.fee).filter(([,v])=>v==='debt').map(([k])=>k);
+    const feeHtml=feeDebt.length?`<span class="badge badge-danger">Nợ ${feeDebt.join(',')}</span>`:`<span class="badge badge-ok">Đã đóng đủ</span>`;
+    const rankClass=m.rank==='Xuất sắc'?'badge-primary':m.rank==='Khá'?'badge-info':'badge-warn';
+    const actions=isAdmin?`<button class="btn-icon" onclick="editMember('${m.id}')" title="Sửa">✏️</button><button class="btn-icon" onclick="confirmDelete('${m.id}')" title="Xóa">🗑️</button>`:'';
+    return`<tr><td><div class="member-info"><div class="member-avatar" style="background:${color}">${initials}</div><div><div class="member-name">${m.name}</div><div class="member-id">${m.id}</div></div></div></td><td>${m.unit}</td><td>${feeHtml}</td><td><span class="badge ${rankClass}">${m.rank}</span></td><td><span class="badge ${st.c}">${st.l}</span></td><td style="display:flex;gap:4px">${actions}<button class="btn-icon" onclick="viewMember('${m.id}')" title="Xem">👁️</button></td></tr>`;
+  }).join('');
+  $('#memberPagination').innerHTML=Array.from({length:totalPages},(_,i)=>`<button class="page-btn ${i+1===memberPage?'active':''}" onclick="memberPage=${i+1};renderMembers()">${i+1}</button>`).join('');
+  $('#memberBadge').textContent=MEMBERS.length;
+}
+function viewMember(id){const m=MEMBERS.find(x=>x.id===id);if(!m)return;$('#previewTitle').textContent=m.name;$('#previewBody').innerHTML=`<p><strong>MSSV:</strong> ${m.id}</p><p><strong>Ngày sinh:</strong> ${m.dob}</p><p><strong>Giới tính:</strong> ${m.gender}</p><p><strong>Chi đoàn:</strong> ${m.unit}</p><p><strong>SĐT:</strong> ${m.phone}</p><p><strong>Email:</strong> ${m.email}</p><p><strong>Kết nạp:</strong> ${m.joinDate}</p><p><strong>Xếp loại:</strong> ${m.rank}</p>`;openModal('docPreviewModal')}
+function editMember(id){editingMemberId=id;const m=MEMBERS.find(x=>x.id===id);if(!m)return;$('#memberModalTitle').textContent='✏️ Sửa Đoàn viên';$('#mName').value=m.name;$('#mDob').value=m.dob;$('#mGender').value=m.gender;$('#mUnit').value=m.unit;$('#mPhone').value=m.phone;$('#mEmail').value=m.email;$('#mJoinDate').value=m.joinDate;openModal('memberModal')}
+function saveMember(){const name=$('#mName').value.trim();if(!name){showToast('Vui lòng nhập họ tên','error');return}if(editingMemberId){const m=MEMBERS.find(x=>x.id===editingMemberId);if(m){m.name=name;m.dob=$('#mDob').value;m.gender=$('#mGender').value;m.unit=$('#mUnit').value;m.phone=$('#mPhone').value;m.email=$('#mEmail').value;m.joinDate=$('#mJoinDate').value}showToast('Đã cập nhật đoàn viên')}else{MEMBERS.push({id:'24ICD'+String(MEMBERS.length+1).padStart(3,'0'),name,dob:$('#mDob').value,gender:$('#mGender').value,unit:$('#mUnit').value,phone:$('#mPhone').value,email:$('#mEmail').value,joinDate:$('#mJoinDate').value||'2025-04-30',status:'active',fee:{Q1:'paid',Q2:'paid',Q3:'paid',Q4:'paid'},rank:'Khá'});showToast('Đã thêm đoàn viên mới')}closeModal('memberModal');renderMembers();editingMemberId=null}
+function confirmDelete(id){$('#confirmMsg').textContent=`Xóa đoàn viên ${id}?`;$('#confirmOk').onclick=()=>{const idx=MEMBERS.findIndex(m=>m.id===id);if(idx>-1)MEMBERS.splice(idx,1);closeModal('confirmModal');renderMembers();showToast('Đã xóa đoàn viên')};openModal('confirmModal')}
+$('#btnAddMember').addEventListener('click',()=>{editingMemberId=null;$('#memberModalTitle').textContent='➕ Thêm Đoàn viên';$('#mName').value='';$('#mDob').value='';$('#mPhone').value='';$('#mEmail').value='';$('#mJoinDate').value='';openModal('memberModal')});
+$('#memberSearch').addEventListener('input',()=>{memberPage=1;renderMembers()});
+$('#memberStatusFilter').addEventListener('change',()=>{memberPage=1;renderMembers()});
+$('#memberUnitFilter').addEventListener('change',()=>{memberPage=1;renderMembers()});
+$('#memberFeeFilter').addEventListener('change',()=>{memberPage=1;renderMembers()});
+$$('.data-table th.sortable').forEach(th=>{th.addEventListener('click',()=>{const k=th.dataset.sort;if(memberSort.key===k)memberSort.asc=!memberSort.asc;else{memberSort.key=k;memberSort.asc=true}renderMembers()})});
+
+// ===== DOCUMENTS =====
+function renderDocTabs(){
+  const cats=[{key:'all',label:'Tất cả'},{key:'nghi-quyet',label:'Nghị quyết'},{key:'hoc-tap',label:'Học tập CT'},{key:'phong-trao',label:'Phong trào'},{key:'hanh-chinh',label:'Hành chính'}];
+  $('#docTabs').innerHTML=cats.map(c=>{const count=c.key==='all'?DOCUMENTS.length:DOCUMENTS.filter(d=>d.category===c.key).length;return`<button class="tab-filter ${c.key==='all'?'active':''}" data-cat="${c.key}">${c.label} <span class="count">(${count})</span></button>`}).join('');
+  $$('#docTabs .tab-filter').forEach(t=>t.addEventListener('click',()=>{$$('#docTabs .tab-filter').forEach(x=>x.classList.remove('active'));t.classList.add('active');renderDocs()}));
+}
+function renderDocs(){
+  const cat=$('#docTabs .tab-filter.active')?.dataset.cat||'all';
+  const type=$('#docTypeFilter').value;
+  const search=$('#docSearch').value.toLowerCase();
+  const sort=$('#docSort').value;
+  let list=DOCUMENTS.filter(d=>{
+    if(cat!=='all'&&d.category!==cat)return false;
+    if(type!=='all'&&d.type!==type)return false;
+    if(search&&!d.title.toLowerCase().includes(search)&&!d.tags.some(t=>t.includes(search)))return false;
+    return true;
+  });
+  if(sort==='newest')list.sort((a,b)=>new Date(b.date)-new Date(a.date));
+  else if(sort==='views')list.sort((a,b)=>b.views-a.views);
+  else if(sort==='az')list.sort((a,b)=>a.title.localeCompare(b.title,'vi'));
+  $('#docGrid').innerHTML=list.map(d=>`<div class="doc-card" onclick="previewDoc(${d.id})"><div class="doc-card-preview ${d.type}">${TYPE_ICONS[d.type]||'📄'}<span class="doc-category">${getCatLabel(d.category)}</span></div><div class="doc-card-body"><h4>${d.title}</h4><div class="doc-card-meta"><span>${d.type.toUpperCase()}</span><span>•</span><span>${d.size}</span><span>•</span><span>${d.date}</span></div></div><div class="doc-card-footer"><span class="badge badge-info">${d.uploader}</span><span>👁️ ${d.views}</span></div></div>`).join('');
+  $('#docBadge').textContent=DOCUMENTS.length;
+}
+function previewDoc(id){const d=DOCUMENTS.find(x=>x.id===id);if(!d)return;$('#previewTitle').textContent=d.title;$('#previewBody').innerHTML=`<p><strong>Loại:</strong> ${d.type.toUpperCase()}</p><p><strong>Dung lượng:</strong> ${d.size}</p><p><strong>Danh mục:</strong> ${getCatLabel(d.category)}</p><p><strong>Ngày upload:</strong> ${d.date}</p><p><strong>Người upload:</strong> ${d.uploader}</p><p><strong>Lượt xem:</strong> ${d.views}</p><p><strong>Tags:</strong> ${d.tags.join(', ')}</p>`;openModal('docPreviewModal')}
+function addDocument(){const t=$('#docTitle').value.trim();if(!t){showToast('Nhập tiêu đề','error');return}DOCUMENTS.push({id:DOCUMENTS.length+1,title:t,type:$('#docType').value,size:'1.0MB',date:new Date().toISOString().slice(0,10),category:$('#docCat').value,views:0,uploader:currentUser.name,tags:$('#docTags').value.split(',').map(s=>s.trim()).filter(Boolean)});closeModal('uploadModal');renderDocTabs();renderDocs();showToast('Đã upload tài liệu')}
+$('#btnUploadDoc').addEventListener('click',()=>openModal('uploadModal'));
+$('#docSearch').addEventListener('input',renderDocs);
+$('#docTypeFilter').addEventListener('change',renderDocs);
+$('#docSort').addEventListener('change',renderDocs);
+
+// ===== EVENTS =====
+function renderEventStats(){
+  const done=EVENTS.filter(e=>e.status==='done').length;
+  const upcoming=EVENTS.filter(e=>e.status==='upcoming').length;
+  const ongoing=EVENTS.filter(e=>e.status==='ongoing').length;
+  const totalAtt=EVENTS.reduce((s,e)=>s+e.attendees,0);
+  $('#eventStats').innerHTML=[
+    {icon:'📅',val:EVENTS.length,label:'Tổng sự kiện'},
+    {icon:'✅',val:done,label:'Đã hoàn thành'},
+    {icon:'⏳',val:upcoming+ongoing,label:'Sắp/Đang diễn ra'},
+    {icon:'👥',val:totalAtt,label:'Lượt tham gia'}
+  ].map(s=>`<div class="stat-card"><div class="stat-icon">${s.icon}</div><div class="stat-value">${s.val}</div><div class="stat-label">${s.label}</div></div>`).join('');
+}
+function renderEvents(filter='all'){
+  const list=EVENTS.filter(e=>filter==='all'||e.status===filter);
+  const isAdmin=currentUser&&currentUser.role==='admin';
+  $('#eventList').innerHTML=list.map(e=>{
+    const d=new Date(e.startDate);
+    const stMap={upcoming:{l:'Sắp diễn ra',c:'badge-info'},ongoing:{l:'Đang diễn ra',c:'badge-warn'},done:{l:'Đã hoàn thành',c:'badge-ok'}};
+    const st=stMap[e.status];
+    const regBtn=e.status==='upcoming'&&!isAdmin?`<button class="btn btn-primary btn-sm" onclick="registerEvent(${e.id})">Đăng ký</button>`:'';
+    return`<div class="event-card"><div class="event-date"><div class="day">${d.getDate()}</div><div class="month">${MONTHS[d.getMonth()]}</div></div><div class="event-info"><h4>${e.title}</h4><p>${e.desc}</p><div class="event-meta"><span>📍 ${e.location}</span><span>👥 ${e.attendees}/${e.maxAttendees}</span></div></div><div class="event-status"><span class="badge ${st.c}">${st.l}</span>${regBtn}</div></div>`;
+  }).join('');
+}
+function registerEvent(id){const e=EVENTS.find(x=>x.id===id);if(e&&e.attendees<e.maxAttendees){e.attendees++;renderEvents();renderEventStats();showToast('Đã đăng ký thành công!');}else showToast('Sự kiện đã đầy','warning')}
+function addEvent(){const t=$('#eName').value.trim();if(!t){showToast('Nhập tên sự kiện','error');return}EVENTS.push({id:EVENTS.length+1,title:t,startDate:$('#eStart').value||'2025-05-30',endDate:$('#eEnd').value||'2025-05-30',location:$('#eLocation').value||'TBD',attendees:0,maxAttendees:parseInt($('#eMax').value)||100,status:'upcoming',desc:$('#eDesc').value||''});closeModal('eventModal');renderEvents();renderEventStats();showToast('Đã tạo sự kiện')}
+$('#btnAddEvent').addEventListener('click',()=>openModal('eventModal'));
+$$('[data-ef]').forEach(btn=>{btn.addEventListener('click',()=>{$$('[data-ef]').forEach(b=>b.classList.remove('active'));btn.classList.add('active');renderEvents(btn.dataset.ef)})});
+
+// ===== REPORTS =====
+function initReportCharts(){
+  if(typeof Chart==='undefined')return;
+  ['r1','r2','r3'].forEach(k=>{if(charts[k])charts[k].destroy()});
+  const ctx1=$('#reportChart1'),ctx2=$('#reportChart2'),ctx3=$('#reportChart3');
+  if(!ctx1)return;
+  const units=['K22A','K22B','K21C','K23A'];
+  charts.r1=new Chart(ctx1,{type:'bar',data:{labels:units,datasets:[{label:'Số lượng',data:units.map(u=>MEMBERS.filter(m=>m.unit===u).length),backgroundColor:['#d32f2f','#f9a825','#10b981','#6366f1']}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{ticks:{color:'#64748b'}},y:{ticks:{color:'#64748b'}}}}});
+  charts.r2=new Chart(ctx2,{type:'bar',data:{labels:['T1','T2','T3','T4','T5','T6'],datasets:[{label:'Lượt tham gia',data:[80,55,375,556,120,0],backgroundColor:'rgba(211,47,47,.7)'}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{ticks:{color:'#64748b'}},y:{ticks:{color:'#64748b'}}}}});
+  const docCats=['Nghị quyết','Học tập CT','Phong trào','Hành chính'];
+  charts.r3=new Chart(ctx3,{type:'doughnut',data:{labels:docCats,datasets:[{data:[DOCUMENTS.filter(d=>d.category==='nghi-quyet').length,DOCUMENTS.filter(d=>d.category==='hoc-tap').length,DOCUMENTS.filter(d=>d.category==='phong-trao').length,DOCUMENTS.filter(d=>d.category==='hanh-chinh').length],backgroundColor:['#d32f2f','#f9a825','#10b981','#6366f1']}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'bottom',labels:{color:'#94a3b8'}}}}});
+}
+
+// ===== EXPORT =====
+function exportCSV(type){
+  let csv='',filename='';
+  if(type==='members'){csv='MSSV,Họ tên,Chi đoàn,Trạng thái,Xếp loại,Đoàn phí\n'+MEMBERS.map(m=>`${m.id},${m.name},${m.unit},${STATUS_MAP[m.status].l},${m.rank},${Object.values(m.fee).filter(f=>f==='debt').length?'Nợ':'Đủ'}`).join('\n');filename='doanvien.csv'}
+  else if(type==='events'){csv='Tên,Ngày,Địa điểm,Tham gia,Trạng thái\n'+EVENTS.map(e=>`${e.title},${e.startDate},${e.location},${e.attendees},${e.status}`).join('\n');filename='hoatdong.csv'}
+  else{csv='Tiêu đề,Loại,Danh mục,Ngày,Lượt xem\n'+DOCUMENTS.map(d=>`${d.title},${d.type},${getCatLabel(d.category)},${d.date},${d.views}`).join('\n');filename='tailieu.csv'}
+  const blob=new Blob(['\uFEFF'+csv],{type:'text/csv;charset=utf-8;'});
+  const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=filename;a.click();showToast('Đã xuất file CSV');
+}
+function exportPDF(){window.print();showToast('Đang in / xuất PDF')}
+
+// ===== SETTINGS =====
+function initSettings(){
+  $$('.toggle[data-key]').forEach(t=>{
+    const saved=localStorage.getItem('setting_'+t.dataset.key);
+    if(saved!==null)t.classList.toggle('active',saved==='true');
+    t.addEventListener('click',()=>{
+      t.classList.toggle('active');
+      localStorage.setItem('setting_'+t.dataset.key,t.classList.contains('active'));
+      if(t.dataset.key==='darkMode'){document.body.classList.toggle('light',!t.classList.contains('active'))}
+    });
+  });
+  const dm=localStorage.getItem('setting_darkMode');
+  if(dm==='false')document.body.classList.add('light');
+  else $('#darkModeToggle').classList.add('active');
+}
+function changePassword(){
+  const o=$('#oldPass').value,n=$('#newPass').value;
+  if(!o||!n){showToast('Nhập đầy đủ','error');return}
+  if(currentUser&&ACCOUNTS[currentUser.username]&&ACCOUNTS[currentUser.username].pass===o){ACCOUNTS[currentUser.username].pass=n;showToast('Đã đổi mật khẩu');$('#oldPass').value='';$('#newPass').value=''}
+  else showToast('Mật khẩu cũ không đúng','error');
+}
+
+// ===== INIT =====
+function initApp(){
+  renderDashStats();renderRecentActivity();renderMembers();renderDocTabs();renderDocs();renderEventStats();renderEvents();initSettings();
+  setTimeout(initDashCharts,300);
+}
+</script>
 </body>
-
 </html>
