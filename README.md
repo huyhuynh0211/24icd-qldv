@@ -1,0 +1,2 @@
+Youth Union Member Management & Document Digitization System.
+A comprehensive platform serving the Ho Chi Minh Communist Youth Union — managing member records, organizing youth activities, and digitizing learning materials according to modern standards.
