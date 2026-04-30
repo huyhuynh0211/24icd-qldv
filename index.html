@@ -1,0 +1,551 @@
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description"
+    content="Hệ thống quản lý Đoàn TNCS Hồ Chí Minh - Số hóa tài liệu, quản lý đoàn viên, hoạt động và sự kiện">
+  <title>Đoàn TNCS HCM — Hệ thống Quản lý & Số hóa Tài liệu</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+
+<body>
+
+  <div class="app-layout">
+    <!-- Sidebar Overlay (mobile) -->
+    <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+    <!-- ========== SIDEBAR ========== -->
+    <aside class="sidebar" id="sidebar">
+      <div class="sidebar-logo">
+        <div class="logo-icon">Đ</div>
+        <div>
+          <span>Đoàn TNCS HCM</span>
+          <small>Hệ thống quản lý</small>
+        </div>
+      </div>
+      <nav class="sidebar-nav">
+        <div class="nav-group">
+          <div class="nav-group-title">Chính</div>
+          <div class="nav-item active" data-page="dashboard">
+            <span class="icon">📊</span> Dashboard
+          </div>
+          <div class="nav-item" data-page="members">
+            <span class="icon">👤</span> Đoàn viên
+            <span class="badge">1,248</span>
+          </div>
+          <div class="nav-item" data-page="events">
+            <span class="icon">🏅</span> Hoạt động
+          </div>
+        </div>
+        <div class="nav-group">
+          <div class="nav-group-title">Tài liệu</div>
+          <div class="nav-item" data-page="documents">
+            <span class="icon">📂</span> Thư viện
+            <span class="badge">342</span>
+          </div>
+          <div class="nav-item" id="navUpload">
+            <span class="icon">📤</span> Upload mới
+          </div>
+        </div>
+        <div class="nav-group">
+          <div class="nav-group-title">Hệ thống</div>
+          <div class="nav-item" data-page="reports">
+            <span class="icon">📈</span> Báo cáo
+          </div>
+          <div class="nav-item" data-page="settings">
+            <span class="icon">⚙️</span> Cài đặt
+          </div>
+        </div>
+      </nav>
+    </aside>
+
+    <!-- ========== MAIN CONTENT ========== -->
+    <main class="main-content">
+      <!-- Header -->
+      <header class="header">
+        <div class="header-left">
+          <button class="menu-toggle" id="menuToggle">☰</button>
+          <div class="header-search">
+            <span class="search-icon">🔍</span>
+            <input type="text" placeholder="Tìm kiếm tài liệu, đoàn viên..." id="globalSearch">
+          </div>
+        </div>
+        <div class="header-right">
+          <button class="header-btn" title="Thông báo" id="notifBtn">
+            🔔 <span class="notif-dot"></span>
+          </button>
+          <button class="header-btn" title="Tin nhắn">✉️</button>
+          <div class="user-avatar" title="Admin">AD</div>
+        </div>
+      </header>
+
+      <div class="page-content">
+
+        <!-- ==================== DASHBOARD ==================== -->
+        <section class="page active" id="page-dashboard">
+          <div class="page-header">
+            <h1>Dashboard Tổng quan</h1>
+            <p>Xin chào Admin, đây là tổng quan hệ thống hôm nay</p>
+          </div>
+
+          <div class="stats-grid">
+            <div class="stat-card">
+              <div class="stat-icon">👥</div>
+              <div class="stat-value" data-count="1248">0</div>
+              <div class="stat-label">Tổng Đoàn viên</div>
+              <div class="stat-change up">↑ +12 tháng này</div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-icon">✅</div>
+              <div class="stat-value" data-count="1091">0</div>
+              <div class="stat-label">Đang hoạt động</div>
+              <div class="stat-change up">↑ 87.4%</div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-icon">📅</div>
+              <div class="stat-value" data-count="6">0</div>
+              <div class="stat-label">Hoạt động tháng</div>
+              <div class="stat-change up">2 sắp diễn ra</div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-icon">📄</div>
+              <div class="stat-value" data-count="342">0</div>
+              <div class="stat-label">Tài liệu số hóa</div>
+              <div class="stat-change up">↑ +28 tháng này</div>
+            </div>
+          </div>
+
+          <div class="dashboard-grid">
+            <div class="card">
+              <div class="card-header">
+                <h3>📈 Thống kê Đoàn viên theo tháng</h3>
+                <button class="btn btn-outline btn-sm">Xem tất cả</button>
+              </div>
+              <div class="card-body">
+                <div class="chart-area"><canvas id="memberChart"></canvas></div>
+              </div>
+            </div>
+            <div class="card">
+              <div class="card-header">
+                <h3>🕐 Hoạt động gần đây</h3>
+              </div>
+              <div class="card-body">
+                <div class="activity-list">
+                  <div class="activity-item">
+                    <div class="activity-dot blue"></div>
+                    <div>
+                      <div class="activity-text"><strong>Nguyễn Văn An</strong> đã đóng đoàn phí Q1/2025</div>
+                      <div class="activity-time">2 phút trước</div>
+                    </div>
+                  </div>
+                  <div class="activity-item">
+                    <div class="activity-dot green"></div>
+                    <div>
+                      <div class="activity-text"><strong>Admin</strong> upload tài liệu "Nghị quyết ĐH XII"</div>
+                      <div class="activity-time">15 phút trước</div>
+                    </div>
+                  </div>
+                  <div class="activity-item">
+                    <div class="activity-dot yellow"></div>
+                    <div>
+                      <div class="activity-text">Sự kiện <strong>"Ngày hội tình nguyện"</strong> đã được tạo</div>
+                      <div class="activity-time">1 giờ trước</div>
+                    </div>
+                  </div>
+                  <div class="activity-item">
+                    <div class="activity-dot red"></div>
+                    <div>
+                      <div class="activity-text"><strong>Trần Thị Bích</strong> nợ đoàn phí Q3</div>
+                      <div class="activity-time">3 giờ trước</div>
+                    </div>
+                  </div>
+                  <div class="activity-item">
+                    <div class="activity-dot green"></div>
+                    <div>
+                      <div class="activity-text"><strong>Lê Minh Đức</strong> đã kết nạp thành công</div>
+                      <div class="activity-time">5 giờ trước</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- ==================== ĐOÀN VIÊN ==================== -->
+        <section class="page" id="page-members">
+          <div class="page-header"
+            style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;">
+            <div>
+              <h1>Quản lý Đoàn viên</h1>
+              <p>Quản lý hồ sơ, thi đua và đoàn phí đoàn viên</p>
+            </div>
+            <button class="btn btn-primary" id="btnAddMember">➕ Thêm Đoàn viên</button>
+          </div>
+
+          <div class="card">
+            <div class="card-header">
+              <div style="display:flex;align-items:center;gap:12px;">
+                <input type="text" class="doc-search" placeholder="🔍 Tìm đoàn viên..." id="memberSearch"
+                  style="width:220px;">
+                <select class="doc-search" id="memberFilter" style="width:160px;padding-left:12px;">
+                  <option value="all">Tất cả trạng thái</option>
+                  <option value="active">Hoạt động</option>
+                  <option value="paused">Tạm hoãn</option>
+                  <option value="expired">Hết hạn</option>
+                </select>
+              </div>
+              <span style="color:var(--text-muted);font-size:13px;" id="memberCount">Hiển thị 0 đoàn viên</span>
+            </div>
+            <div class="card-body" style="padding:0;">
+              <div class="table-wrapper">
+                <table class="data-table" id="memberTable">
+                  <thead>
+                    <tr>
+                      <th>Đoàn viên</th>
+                      <th>Chi đoàn</th>
+                      <th>Đoàn phí</th>
+                      <th>Thi đua</th>
+                      <th>Trạng thái</th>
+                      <th>Thao tác</th>
+                    </tr>
+                  </thead>
+                  <tbody id="memberTableBody"></tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- ==================== TÀI LIỆU ==================== -->
+        <section class="page" id="page-documents">
+          <div class="page-header"
+            style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;">
+            <div>
+              <h1>Thư viện Tài liệu</h1>
+              <p>Quản lý và tra cứu tài liệu số hóa của tổ chức Đoàn</p>
+            </div>
+            <button class="btn btn-primary" id="btnUploadDoc">📤 Upload tài liệu</button>
+          </div>
+
+          <div class="tab-filters" id="docTabs">
+            <button class="tab-filter active" data-category="all">Tất cả <span class="count">(342)</span></button>
+            <button class="tab-filter" data-category="nghi-quyet">Nghị quyết <span class="count">(48)</span></button>
+            <button class="tab-filter" data-category="hoc-tap">Học tập CT <span class="count">(91)</span></button>
+            <button class="tab-filter" data-category="phong-trao">Phong trào <span class="count">(124)</span></button>
+            <button class="tab-filter" data-category="hanh-chinh">Hành chính <span class="count">(79)</span></button>
+          </div>
+
+          <div class="toolbar">
+            <div class="toolbar-left">
+              <input type="text" class="doc-search" placeholder="🔍 Tìm tài liệu theo tên, mô tả..."
+                id="docSearchInput">
+            </div>
+            <div style="display:flex;gap:8px;">
+              <select class="doc-search" id="docTypeFilter" style="width:140px;padding-left:12px;">
+                <option value="all">Loại file ▾</option>
+                <option value="pdf">PDF</option>
+                <option value="docx">DOCX</option>
+                <option value="img">Ảnh</option>
+                <option value="pptx">PPTX</option>
+              </select>
+              <select class="doc-search" id="docSortFilter" style="width:150px;padding-left:12px;">
+                <option value="newest">Mới nhất</option>
+                <option value="views">Nhiều lượt xem</option>
+                <option value="az">A → Z</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="doc-grid" id="docGrid"></div>
+        </section>
+
+        <!-- ==================== HOẠT ĐỘNG ==================== -->
+        <section class="page" id="page-events">
+          <div class="page-header"
+            style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;">
+            <div>
+              <h1>Hoạt động & Sự kiện</h1>
+              <p>Lập kế hoạch, quản lý sự kiện và điểm danh đoàn viên</p>
+            </div>
+            <button class="btn btn-primary" id="btnAddEvent">📅 Tạo sự kiện mới</button>
+          </div>
+
+          <div class="stats-grid" style="margin-bottom:24px;">
+            <div class="stat-card">
+              <div class="stat-icon">📅</div>
+              <div class="stat-value">6</div>
+              <div class="stat-label">Sự kiện tháng này</div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-icon">✅</div>
+              <div class="stat-value">4</div>
+              <div class="stat-label">Đã hoàn thành</div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-icon">⏳</div>
+              <div class="stat-value">2</div>
+              <div class="stat-label">Sắp diễn ra</div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-icon">👥</div>
+              <div class="stat-value">856</div>
+              <div class="stat-label">Lượt tham gia</div>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-header">
+              <h3>Danh sách sự kiện</h3>
+              <div style="display:flex;gap:8px;">
+                <button class="filter-btn active" data-event-filter="all">Tất cả</button>
+                <button class="filter-btn" data-event-filter="upcoming">Sắp tới</button>
+                <button class="filter-btn" data-event-filter="done">Đã xong</button>
+              </div>
+            </div>
+            <div class="card-body">
+              <div class="event-list" id="eventList"></div>
+            </div>
+          </div>
+        </section>
+
+        <!-- ==================== BÁO CÁO ==================== -->
+        <section class="page" id="page-reports">
+          <div class="page-header">
+            <h1>Báo cáo & Thống kê</h1>
+            <p>Tổng hợp báo cáo định kỳ và xuất file tự động</p>
+          </div>
+          <div class="report-grid">
+            <div class="card">
+              <div class="card-header">
+                <h3>📊 Báo cáo Đoàn viên</h3>
+              </div>
+              <div class="card-body">
+                <p style="color:var(--text-secondary);font-size:14px;margin-bottom:16px;">Thống kê số lượng, thi đua,
+                  đoàn phí theo đơn vị</p>
+                <div style="display:flex;gap:12px;">
+                  <button class="btn btn-primary btn-sm">📥 Xuất Excel</button>
+                  <button class="btn btn-outline btn-sm">📄 Xuất PDF</button>
+                </div>
+              </div>
+            </div>
+            <div class="card">
+              <div class="card-header">
+                <h3>📅 Báo cáo Hoạt động</h3>
+              </div>
+              <div class="card-body">
+                <p style="color:var(--text-secondary);font-size:14px;margin-bottom:16px;">Tổng kết sự kiện, điểm danh và
+                  tham gia theo tháng/quý</p>
+                <div style="display:flex;gap:12px;">
+                  <button class="btn btn-primary btn-sm">📥 Xuất Excel</button>
+                  <button class="btn btn-outline btn-sm">📄 Xuất PDF</button>
+                </div>
+              </div>
+            </div>
+            <div class="card">
+              <div class="card-header">
+                <h3>📂 Báo cáo Tài liệu</h3>
+              </div>
+              <div class="card-body">
+                <p style="color:var(--text-secondary);font-size:14px;margin-bottom:16px;">Thống kê upload, lượt xem,
+                  phân loại tài liệu</p>
+                <div style="display:flex;gap:12px;">
+                  <button class="btn btn-primary btn-sm">📥 Xuất Excel</button>
+                  <button class="btn btn-outline btn-sm">📄 Xuất PDF</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- ==================== CÀI ĐẶT ==================== -->
+        <section class="page" id="page-settings">
+          <div class="page-header">
+            <h1>Cài đặt hệ thống</h1>
+            <p>Quản lý cấu hình và tùy chỉnh hệ thống</p>
+          </div>
+          <div class="card">
+            <div class="card-body">
+              <div class="settings-section">
+                <h3>🔔 Thông báo</h3>
+                <div class="setting-row">
+                  <div class="setting-label">
+                    <h4>Thông báo email</h4>
+                    <p>Gửi email khi có hoạt động mới</p>
+                  </div>
+                  <div class="toggle active" data-toggle="email-notif"></div>
+                </div>
+                <div class="setting-row">
+                  <div class="setting-label">
+                    <h4>Thông báo trên web</h4>
+                    <p>Hiện thông báo push trên trình duyệt</p>
+                  </div>
+                  <div class="toggle active" data-toggle="web-notif"></div>
+                </div>
+                <div class="setting-row">
+                  <div class="setting-label">
+                    <h4>Nhắc nhở đoàn phí</h4>
+                    <p>Tự động nhắc khi đoàn viên chưa đóng phí</p>
+                  </div>
+                  <div class="toggle" data-toggle="fee-remind"></div>
+                </div>
+              </div>
+              <div class="settings-section">
+                <h3>🎨 Giao diện</h3>
+                <div class="setting-row">
+                  <div class="setting-label">
+                    <h4>Chế độ tối</h4>
+                    <p>Sử dụng giao diện nền tối</p>
+                  </div>
+                  <div class="toggle active" data-toggle="dark-mode"></div>
+                </div>
+                <div class="setting-row">
+                  <div class="setting-label">
+                    <h4>Hiệu ứng chuyển động</h4>
+                    <p>Bật/tắt animation trên giao diện</p>
+                  </div>
+                  <div class="toggle active" data-toggle="animations"></div>
+                </div>
+              </div>
+              <div class="settings-section">
+                <h3>🔐 Bảo mật</h3>
+                <div class="setting-row">
+                  <div class="setting-label">
+                    <h4>Xác thực hai lớp (2FA)</h4>
+                    <p>Yêu cầu OTP khi đăng nhập</p>
+                  </div>
+                  <div class="toggle" data-toggle="2fa"></div>
+                </div>
+                <div class="setting-row">
+                  <div class="setting-label">
+                    <h4>Tự động đăng xuất</h4>
+                    <p>Đăng xuất sau 30 phút không hoạt động</p>
+                  </div>
+                  <div class="toggle active" data-toggle="auto-logout"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+      </div>
+    </main>
+  </div>
+
+  <!-- ========== MODAL UPLOAD ========== -->
+  <div class="modal-overlay" id="uploadModal">
+    <div class="modal">
+      <div class="modal-header">
+        <h3>📤 Upload tài liệu mới</h3>
+        <button class="modal-close" id="closeUploadModal">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div class="upload-zone" id="uploadZone">
+          <div class="icon">📁</div>
+          <p>Kéo thả file vào đây hoặc <strong>nhấn để chọn</strong></p>
+          <small>Hỗ trợ: PDF, DOCX, PPTX, JPG/PNG, MP4 — Tối đa 100MB</small>
+        </div>
+        <div class="form-group" style="margin-top:18px;">
+          <label>Tiêu đề tài liệu</label>
+          <input type="text" placeholder="Nhập tiêu đề...">
+        </div>
+        <div class="form-group">
+          <label>Mô tả</label>
+          <textarea placeholder="Nhập mô tả ngắn về tài liệu..."></textarea>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+          <div class="form-group">
+            <label>Danh mục</label>
+            <select>
+              <option>Nghị quyết</option>
+              <option>Học tập chính trị</option>
+              <option>Phong trào</option>
+              <option>Hành chính</option>
+              <option>Khác</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Quyền xem</label>
+            <select>
+              <option>Công khai</option>
+              <option>Nội bộ</option>
+              <option>Giới hạn</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Tags</label>
+          <input type="text" placeholder="Nhập tags, cách nhau bằng dấu phẩy...">
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-outline" id="cancelUpload">Hủy</button>
+        <button class="btn btn-primary">📤 Upload</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========== MODAL ADD MEMBER ========== -->
+  <div class="modal-overlay" id="memberModal">
+    <div class="modal">
+      <div class="modal-header">
+        <h3>➕ Thêm Đoàn viên mới</h3>
+        <button class="modal-close" id="closeMemberModal">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+          <div class="form-group">
+            <label>Họ và tên</label>
+            <input type="text" placeholder="Nhập họ tên...">
+          </div>
+          <div class="form-group">
+            <label>Ngày sinh</label>
+            <input type="date">
+          </div>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+          <div class="form-group">
+            <label>Giới tính</label>
+            <select>
+              <option>Nam</option>
+              <option>Nữ</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Chi đoàn</label>
+            <select>
+              <option>Chi đoàn K22A</option>
+              <option>Chi đoàn K22B</option>
+              <option>Chi đoàn K21C</option>
+              <option>Chi đoàn K23A</option>
+            </select>
+          </div>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+          <div class="form-group">
+            <label>Số điện thoại</label>
+            <input type="tel" placeholder="0xxx xxx xxx">
+          </div>
+          <div class="form-group">
+            <label>Email</label>
+            <input type="email" placeholder="email@example.com">
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Ngày kết nạp</label>
+          <input type="date">
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-outline" id="cancelMember">Hủy</button>
+        <button class="btn btn-primary">💾 Lưu hồ sơ</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+
+</html>
