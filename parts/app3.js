@@ -50,9 +50,11 @@ BaoCao:{
   }
 },
 ThongBao:{
-  render(){const tb=DB.get('thongbao')||[];const unread=tb.filter(n=>!n.daDoc).length;$('#notifCount').textContent=unread;$('#notifDot').style.display=unread>0?'block':'none';const icons={warning:'⚠️',info:'ℹ️',success:'✅',danger:'❌'};$('#notifList').innerHTML=tb.sort((a,b)=>new Date(b.thoiGian)-new Date(a.thoiGian)).slice(0,10).map(n=>`<div class="notif-item ${n.daDoc?'':'unread'}" onclick="App.ThongBao.markRead('${n.id}')">${icons[n.loai]||'ℹ️'} <strong>${n.tieuDe}</strong><br><span style="color:var(--text2)">${n.noiDung.substring(0,50)}</span><div class="notif-time">${timeAgo(n.thoiGian)}</div></div>`).join('')||'<p style="padding:16px;color:var(--muted);font-size:13px">Không có thông báo</p>'},
+  render(){const tb=DB.get('thongbao')||[];const unread=tb.filter(n=>!n.daDoc).length;$('#notifCount').textContent=unread;$('#notifDot').style.display=unread>0?'block':'none';const icons={warning:'⚠️',info:'ℹ️',success:'✅',danger:'❌'};$('#notifList').innerHTML=tb.sort((a,b)=>new Date(b.thoiGian)-new Date(a.thoiGian)).slice(0,10).map(n=>`<div class="notif-item ${n.daDoc?'':'unread'}" onclick="App.ThongBao.markRead('${n.id}')">${icons[n.loai]||'ℹ️'} <strong>${n.tieuDe}</strong><button class="btn-icon" style="float:right;width:22px;height:22px;font-size:12px" onclick="event.stopPropagation();App.ThongBao.del('${n.id}')" title="Xóa">✕</button><br><span style="color:var(--text2)">${n.noiDung.substring(0,50)}</span><div class="notif-time">${timeAgo(n.thoiGian)}</div></div>`).join('')||'<p style="padding:16px;color:var(--muted);font-size:13px">Không có thông báo</p>'},
   markRead(id){const tb=DB.get('thongbao')||[];const n=tb.find(x=>x.id===id);if(n)n.daDoc=true;DB.set('thongbao',tb);this.render()},
   markAllRead(){const tb=DB.get('thongbao')||[];tb.forEach(n=>n.daDoc=true);DB.set('thongbao',tb);this.render();showToast('Đã đánh dấu tất cả đã đọc')},
+  del(id){const tb=(DB.get('thongbao')||[]).filter(x=>x.id!==id);DB.set('thongbao',tb);this.render();showToast('Đã xóa thông báo')},
+  clearAll(){DB.set('thongbao',[]);this.render();showToast('Đã xóa tất cả thông báo')},
   toggle(){const p=$('#notifPanel');p.style.display=p.style.display==='none'?'block':'none'}
 },
 CaiDat:{
