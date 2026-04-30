@@ -4,7 +4,7 @@ const DB={
   set(key,val){try{localStorage.setItem(key,JSON.stringify(val))}catch(e){console.warn('localStorage error',e)}},
   remove(key){try{localStorage.removeItem(key)}catch(e){}}
 };
-const ACCOUNTS={admin:{pass:'admin123',role:'admin',name:'Admin'},doanvien:{pass:'user123',role:'user',name:'Đoàn viên'}};
+const ACCOUNTS={admin:{pass:'huys1tg',role:'admin',name:'Admin'},['24icd']:{pass:'123',role:'user',name:'Đoàn viên'}};
 let currentUser=null;
 const COLORS=['#d32f2f','#1e88e5','#10b981','#f59e0b','#8b5cf6','#06b6d4','#ec4899','#f97316','#14b8a6','#6366f1'];
 

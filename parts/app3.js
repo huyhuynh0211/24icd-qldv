@@ -89,10 +89,12 @@ document.addEventListener('DOMContentLoaded',()=>{
   $('#sidebarOverlay').addEventListener('click',()=>{$('#sidebar').classList.remove('open');$('#sidebarOverlay').classList.remove('show')});
   // Members
   $('#btnAddMember').addEventListener('click',()=>App.DoanVien.openAdd());
+  // Import CSV/XLSX
+  $('#btnImportFile').addEventListener('click',()=>$('#importFileInput').click());
+  $('#importFileInput').addEventListener('change',()=>{const f=$('#importFileInput').files[0];if(f)App.DoanVien.importFile(f);$('#importFileInput').value=''});
   const debouncedMember=debounce(()=>{memberPage=1;App.DoanVien.render()},300);
   $('#memberSearch').addEventListener('input',debouncedMember);
   $('#memberStatusFilter').addEventListener('change',()=>{memberPage=1;App.DoanVien.render()});
-  $('#memberUnitFilter').addEventListener('change',()=>{memberPage=1;App.DoanVien.render()});
   $$('.data-table th.sortable').forEach(th=>th.addEventListener('click',()=>{const k=th.dataset.sort;if(memberSort.key===k)memberSort.asc=!memberSort.asc;else{memberSort.key=k;memberSort.asc=true}App.DoanVien.render()}));
   // Docs
   $('#btnUploadDoc').addEventListener('click',()=>openModal('uploadModal'));
@@ -131,4 +133,4 @@ function handleFile(f){
   else prev.innerHTML=html;
   if(!$('#docTitle').value)$('#docTitle').value=f.name.replace('.'+ext,'');
 }
-function demoLogin(type){if(type==='admin')App.Auth.login('admin','admin123');else App.Auth.login('doanvien','user123')}
+

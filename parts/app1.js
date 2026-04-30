@@ -66,10 +66,8 @@ DoanVien:{
     let list=[...(DB.get('doanvien')||[])];
     const s=($('#memberSearch')?.value||'').toLowerCase();
     const st=$('#memberStatusFilter')?.value||'all';
-    const ut=$('#memberUnitFilter')?.value||'all';
-    if(s)list=list.filter(m=>m.hoTen.toLowerCase().includes(s)||m.id.toLowerCase().includes(s)||m.chiDoan.toLowerCase().includes(s));
+    if(s)list=list.filter(m=>(m.hoTen||'').toLowerCase().includes(s)||(m.maDinhDanh||'').toLowerCase().includes(s)||(m.soCCCD||'').toLowerCase().includes(s)||(m.email||'').toLowerCase().includes(s));
     if(st!=='all')list=list.filter(m=>m.trangThai===st);
-    if(ut!=='all')list=list.filter(m=>m.chiDoan===ut);
     list.sort((a,b)=>{let va=(a[memberSort.key]||'').toLowerCase(),vb=(b[memberSort.key]||'').toLowerCase();return memberSort.asc?(va>vb?1:-1):(va<vb?1:-1)});
     return list;
   },
@@ -81,31 +79,74 @@ DoanVien:{
     $('#memberCount').textContent=`Hiển thị ${slice.length}/${list.length} đoàn viên`;
     $('#memberBadge').textContent=all.length;
     $('#memberTbody').innerHTML=slice.map((m,i)=>{
-      const initials=m.hoTen.split(' ').slice(-2).map(w=>w[0]).join('');
-      const st=STATUS_MAP[m.trangThai]||{l:'?',c:''};
-      const debtQ=Object.entries(m.doanPhi||{}).filter(([,v])=>!v).map(([k])=>k.replace('_','/'));
-      const feeHtml=debtQ.length?`<span class="badge badge-danger">Nợ ${debtQ.join(', ')}</span>`:`<span class="badge badge-ok">Đã đóng đủ</span>`;
-      const rc={'Xuất sắc':'badge-primary','Tiên tiến':'badge-info','Hoàn thành':'badge-warn','Không HT':'badge-danger'};
+      const stt=start+i+1;
       const acts=isAdmin?`<button class="btn-icon" onclick="App.DoanVien.edit('${m.id}')" title="Sửa">✏️</button><button class="btn-icon" onclick="App.DoanVien.confirmDel('${m.id}')" title="Xóa">🗑️</button>`:'';
-      return`<tr><td><div class="member-info"><div class="member-avatar" style="background:${COLORS[i%COLORS.length]}">${initials}</div><div><div class="member-name">${m.hoTen}</div><div class="member-id">${m.id}</div></div></div></td><td>${m.chiDoan}</td><td>${feeHtml}</td><td><span class="badge ${rc[m.thiDua]||''}">${m.thiDua}</span></td><td><span class="badge ${st.c}">${st.l}</span></td><td style="display:flex;gap:4px"><button class="btn-icon" onclick="App.DoanVien.view('${m.id}')" title="Xem">👁️</button>${acts}</td></tr>`
+      return`<tr><td>${stt}</td><td class="sticky-col"><strong>${m.hoTen||''}</strong></td><td>${m.maDinhDanh||''}</td><td>${m.soTheDoan||''}</td><td>${fmtDate(m.ngaySinh)||''}</td><td>${m.gioiTinh||''}</td><td>${m.danToc||''}</td><td>${m.tonGiao||''}</td><td>${m.queQuan||''}</td><td>${m.diaChi||''}</td><td>${m.soCCCD||''}</td><td>${m.ngayCapCCCD||''}</td><td>${m.noiCapCCCD||''}</td><td>${m.trinhDoVH||''}</td><td>${m.trinhDoCM||''}</td><td>${m.trinhDoLLCT||''}</td><td>${m.tinHoc||''}</td><td>${m.ngoaiNgu||''}</td><td>${fmtDate(m.ngayKetNap)||''}</td><td>${m.soNghiQuyet||''}</td><td>${m.ngayVaoDang||''}</td><td>${m.ngheNghiep||''}</td><td>${m.doiTuongSH||''}</td><td>${m.renLuyen||''}</td><td>${m.danhGia||''}</td><td>${m.khenThuong||''}</td><td>${m.kyLuat||''}</td><td>${m.chucVu||'Đoàn viên'}</td><td>${m.hoi||''}</td><td>${m.email||''}</td><td>${m.soDienThoai||''}</td><td style="display:flex;gap:4px"><button class="btn-icon" onclick="App.DoanVien.view('${m.id}')" title="Xem">👁️</button>${acts}</td></tr>`
     }).join('');
     $('#memberPagination').innerHTML=Array.from({length:totalPages},(_,i)=>`<button class="page-btn ${i+1===memberPage?'active':''}" onclick="memberPage=${i+1};App.DoanVien.render()">${i+1}</button>`).join('');
   },
-  view(id){const m=(DB.get('doanvien')||[]).find(x=>x.id===id);if(!m)return;$('#previewTitle').textContent=m.hoTen;const debtQ=Object.entries(m.doanPhi||{}).filter(([,v])=>!v).map(([k])=>k.replace('_','/'));$('#previewBody').innerHTML=`<p><b>Mã:</b> ${m.id}</p><p><b>Ngày sinh:</b> ${fmtDate(m.ngaySinh)}</p><p><b>Giới tính:</b> ${m.gioiTinh}</p><p><b>Chi đoàn:</b> ${m.chiDoan}</p><p><b>SĐT:</b> ${m.soDienThoai}</p><p><b>Email:</b> ${m.email}</p><p><b>Kết nạp:</b> ${fmtDate(m.ngayKetNap)}</p><p><b>Thi đua:</b> ${m.thiDua}</p><p><b>Trạng thái:</b> ${(STATUS_MAP[m.trangThai]||{}).l||m.trangThai}</p><p><b>Đoàn phí nợ:</b> ${debtQ.length?debtQ.join(', '):'Không nợ'}</p>`;openModal('previewModal')},
+  view(id){const m=(DB.get('doanvien')||[]).find(x=>x.id===id);if(!m)return;$('#previewTitle').textContent=m.hoTen;$('#previewBody').innerHTML=`
+    <p><b>Mã định danh:</b> ${m.maDinhDanh||''}</p><p><b>Số thẻ đoàn:</b> ${m.soTheDoan||''}</p>
+    <p><b>Ngày sinh:</b> ${fmtDate(m.ngaySinh)}</p><p><b>Giới tính:</b> ${m.gioiTinh||''}</p>
+    <p><b>Dân tộc:</b> ${m.danToc||''}</p><p><b>Tôn giáo:</b> ${m.tonGiao||''}</p>
+    <p><b>Quê quán:</b> ${m.queQuan||''}</p><p><b>Địa chỉ:</b> ${m.diaChi||''}</p>
+    <p><b>CCCD:</b> ${m.soCCCD||''}</p><p><b>Ngày cấp:</b> ${m.ngayCapCCCD||''}</p><p><b>Nơi cấp:</b> ${m.noiCapCCCD||''}</p>
+    <p><b>Trình độ VH:</b> ${m.trinhDoVH||''}</p><p><b>Chuyên môn:</b> ${m.trinhDoCM||''}</p>
+    <p><b>LLCT:</b> ${m.trinhDoLLCT||''}</p><p><b>Tin học:</b> ${m.tinHoc||''}</p><p><b>Ngoại ngữ:</b> ${m.ngoaiNgu||''}</p>
+    <p><b>Vào Đoàn:</b> ${m.ngayKetNap||''}</p><p><b>Nghề nghiệp:</b> ${m.ngheNghiep||''}</p>
+    <p><b>Đối tượng SH:</b> ${m.doiTuongSH||''}</p><p><b>Rèn luyện:</b> ${m.renLuyen||''}</p>
+    <p><b>Đánh giá:</b> ${m.danhGia||''}</p><p><b>Khen thưởng:</b> ${m.khenThuong||''}</p><p><b>Kỷ luật:</b> ${m.kyLuat||''}</p>
+    <p><b>Chức vụ:</b> ${m.chucVu||''}</p><p><b>Hội:</b> ${m.hoi||''}</p>
+    <p><b>Email:</b> ${m.email||''}</p><p><b>SĐT:</b> ${m.soDienThoai||''}</p>`;openModal('previewModal')},
   openAdd(){editingId=null;$('#memberModalTitle').textContent='➕ Thêm Đoàn viên';['mName','mDob','mPhone','mEmail','mJoinDate'].forEach(id=>$('#'+id).value='');$$('.field-error').forEach(e=>e.textContent='');openModal('memberModal')},
-  edit(id){const m=(DB.get('doanvien')||[]).find(x=>x.id===id);if(!m)return;editingId=id;$('#memberModalTitle').textContent='✏️ Sửa Đoàn viên';$('#mName').value=m.hoTen;$('#mDob').value=m.ngaySinh;$('#mGender').value=m.gioiTinh;$('#mUnit').value=m.chiDoan;$('#mPhone').value=m.soDienThoai;$('#mEmail').value=m.email;$('#mJoinDate').value=m.ngayKetNap;$('#mRank').value=m.thiDua;$$('.field-error').forEach(e=>e.textContent='');openModal('memberModal')},
+  edit(id){const m=(DB.get('doanvien')||[]).find(x=>x.id===id);if(!m)return;editingId=id;$('#memberModalTitle').textContent='✏️ Sửa Đoàn viên';$('#mName').value=m.hoTen;$('#mDob').value=m.ngaySinh||'';$('#mGender').value=m.gioiTinh||'Nam';$('#mUnit').value=m.chiDoan||'Chi đoàn K22A';$('#mPhone').value=m.soDienThoai||'';$('#mEmail').value=m.email||'';$('#mJoinDate').value=m.ngayKetNap||'';$('#mRank').value=m.thiDua||'Hoàn thành';$$('.field-error').forEach(e=>e.textContent='');openModal('memberModal')},
   save(){
     let ok=true;const name=$('#mName').value.trim(),dob=$('#mDob').value,phone=$('#mPhone').value.trim(),email=$('#mEmail').value.trim();
     $$('.field-error').forEach(e=>e.textContent='');
     if(!name){$('#mNameErr').textContent='Vui lòng nhập họ tên';ok=false}
-    if(!dob){$('#mDobErr').textContent='Vui lòng chọn ngày sinh';ok=false}else if(new Date(dob)>new Date()){$('#mDobErr').textContent='Ngày sinh không hợp lệ';ok=false}
-    if(!phone){$('#mPhoneErr').textContent='Nhập SĐT';ok=false}else if(!/^0\d{9}$/.test(phone)){$('#mPhoneErr').textContent='SĐT phải 10 số, bắt đầu bằng 0';ok=false}
-    if(!email){$('#mEmailErr').textContent='Nhập email';ok=false}else if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)){$('#mEmailErr').textContent='Email không hợp lệ';ok=false}
     if(!ok)return;
     const arr=DB.get('doanvien')||[];
     if(editingId){const m=arr.find(x=>x.id===editingId);if(m){m.hoTen=name;m.ngaySinh=dob;m.gioiTinh=$('#mGender').value;m.chiDoan=$('#mUnit').value;m.soDienThoai=phone;m.email=email;m.ngayKetNap=$('#mJoinDate').value;m.thiDua=$('#mRank').value}showToast('Đã cập nhật đoàn viên')}
-    else{arr.push({id:genId('DV',arr),hoTen:name,ngaySinh:dob,gioiTinh:$('#mGender').value,chiDoan:$('#mUnit').value,soDienThoai:phone,email,ngayKetNap:$('#mJoinDate').value||new Date().toISOString().slice(0,10),trangThai:'hoat-dong',thiDua:$('#mRank').value,doanPhi:{Q1_2025:false,Q2_2025:false,Q3_2025:false,Q4_2025:false}});showToast('Đã thêm đoàn viên thành công!')}
+    else{arr.push({id:genId('DV',arr),hoTen:name,ngaySinh:dob,gioiTinh:$('#mGender').value,chiDoan:$('#mUnit').value,soDienThoai:phone,email,ngayKetNap:$('#mJoinDate').value||new Date().toISOString().slice(0,10),trangThai:'hoat-dong',thiDua:$('#mRank').value,maDinhDanh:'',soTheDoan:'',soCCCD:'',chucVu:'Đoàn viên'});showToast('Đã thêm đoàn viên thành công!')}
     DB.set('doanvien',arr);closeModal('memberModal');this.render();editingId=null;
   },
-  confirmDel(id){const m=(DB.get('doanvien')||[]).find(x=>x.id===id);$('#confirmMsg').textContent=`Bạn có chắc muốn xóa đoàn viên ${m?m.hoTen:id}? Hành động này không thể hoàn tác.`;$('#confirmOk').onclick=()=>{const arr=(DB.get('doanvien')||[]).filter(x=>x.id!==id);DB.set('doanvien',arr);closeModal('confirmModal');this.render();showToast('Đã xóa đoàn viên')};openModal('confirmModal')}
+  confirmDel(id){const m=(DB.get('doanvien')||[]).find(x=>x.id===id);$('#confirmMsg').textContent=`Bạn có chắc muốn xóa đoàn viên ${m?m.hoTen:id}? Hành động này không thể hoàn tác.`;$('#confirmOk').onclick=()=>{const arr=(DB.get('doanvien')||[]).filter(x=>x.id!==id);DB.set('doanvien',arr);closeModal('confirmModal');this.render();showToast('Đã xóa đoàn viên')};openModal('confirmModal')},
+  // Import CSV/XLSX
+  importFile(file){
+    if(typeof XLSX==='undefined'){showToast('Thư viện XLSX chưa tải','error');return}
+    const reader=new FileReader();
+    reader.onload=(e)=>{
+      try{
+        const wb=XLSX.read(e.target.result,{type:'array'});
+        const ws=wb.Sheets[wb.SheetNames[0]];
+        const rows=XLSX.utils.sheet_to_json(ws,{header:1});
+        if(rows.length<2){showToast('File không có dữ liệu','error');return}
+        const headers=rows[0].map(h=>(h||'').toString().trim());
+        const colMap={};
+        const mapping={'Họ và tên':'hoTen','Mã định danh đoàn viên':'maDinhDanh','Số thẻ đoàn':'soTheDoan','Ngày sinh':'ngaySinh','Giới tính':'gioiTinh','Dân tộc':'danToc','Tôn giáo':'tonGiao','Quê quán':'queQuan','Địa chỉ thường trú':'diaChi','Số CMND/CCCD':'soCCCD','Ngày cấp':'ngayCapCCCD','Nơi cấp':'noiCapCCCD','Trình độ văn hóa':'trinhDoVH','Trình độ chuyên môn':'trinhDoCM','Trình độ LLCT':'trinhDoLLCT','Tin học':'tinHoc','Ngoại ngữ':'ngoaiNgu','Thời gian vào đoàn':'ngayKetNap','Số Nghị quyết chuẩn y kết nạp đoàn viên':'soNghiQuyet','Thời gian vào Đảng':'ngayVaoDang','Nghề nghiệp hiện nay':'ngheNghiep','Đối tượng sinh hoạt':'doiTuongSH','Rèn luyện đoàn viên':'renLuyen','Đánh giá, xếp loại đoàn viên':'danhGia','Khen thưởng':'khenThuong','Kỷ luật':'kyLuat','Chức vụ trong chi đoàn':'chucVu','Hội':'hoi','Email liên hệ':'email','Điện thoại liên hệ':'soDienThoai'};
+        headers.forEach((h,i)=>{for(const[key,field]of Object.entries(mapping)){if(h.includes(key)||key.includes(h)){colMap[field]=i;break}}});
+        const arr=DB.get('doanvien')||[];
+        let count=0;
+        for(let r=1;r<rows.length;r++){
+          const row=rows[r];if(!row||row.length<2)continue;
+          const name=(row[colMap.hoTen]||'').toString().trim();
+          if(!name)continue;
+          const member={id:genId('DV',arr),hoTen:name,trangThai:'hoat-dong',thiDua:'Hoàn thành'};
+          for(const[field,col]of Object.entries(colMap)){
+            if(field==='hoTen')continue;
+            let val=(row[col]||'').toString().trim();
+            if(field==='ngaySinh'||field==='ngayKetNap'){
+              if(val&&/^\d{2}\/\d{2}\/\d{4}$/.test(val)){const p=val.split('/');val=p[2]+'-'+p[1]+'-'+p[0]}
+            }
+            member[field]=val;
+          }
+          arr.push(member);count++;
+        }
+        DB.set('doanvien',arr);this.render();
+        showToast(`Đã import ${count} đoàn viên thành công!`);
+      }catch(err){showToast('Lỗi đọc file: '+err.message,'error');console.error(err)}
+    };
+    reader.readAsArrayBuffer(file);
+  }
 },
+

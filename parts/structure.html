@@ -29,7 +29,7 @@ __CSS_PLACEHOLDER__
 <label class="login-remember"><input type="checkbox" id="rememberMe"> Ghi nhớ đăng nhập</label>
 <button type="submit" class="login-btn">Đăng nhập</button>
 </form>
-<div class="login-demo"><a href="#" onclick="demoLogin('admin');return false">🔑 Admin</a><a href="#" onclick="demoLogin('user');return false">👤 Đoàn viên</a></div>
+
 <a href="#" class="login-forgot" onclick="showToast('Vui lòng liên hệ Admin để đặt lại mật khẩu','warning');return false">Quên mật khẩu?</a>
 </div>
 </div>
@@ -88,18 +88,21 @@ __CSS_PLACEHOLDER__
 <section class="page" id="page-members">
 <div class="page-header" style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px">
 <div><h1>Quản lý Đoàn viên</h1><p>Hồ sơ, thi đua và đoàn phí</p></div>
-<button class="btn btn-primary admin-only" id="btnAddMember">➕ Thêm Đoàn viên</button>
+<div style="display:flex;gap:6px;flex-wrap:wrap">
+<button class="btn btn-primary admin-only" id="btnAddMember">➕ Thêm</button>
+<button class="btn btn-outline admin-only" id="btnImportFile">📥 Import CSV/Excel</button>
+<input type="file" id="importFileInput" style="display:none" accept=".csv,.xlsx,.xls">
+</div>
 </div>
 <div class="card"><div class="card-header" style="flex-wrap:wrap;gap:8px">
 <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
 <input class="form-input" placeholder="🔍 Tìm kiếm..." id="memberSearch" style="width:170px">
 <select class="form-input" id="memberStatusFilter" style="width:130px"><option value="all">Trạng thái ▾</option><option value="hoat-dong">Hoạt động</option><option value="tam-hoan">Tạm hoãn</option><option value="het-han">Hết hạn</option></select>
-<select class="form-input" id="memberUnitFilter" style="width:140px"><option value="all">Chi đoàn ▾</option><option>Chi đoàn K22A</option><option>Chi đoàn K22B</option><option>Chi đoàn K21C</option><option>Chi đoàn K23A</option></select>
 </div>
 <span style="color:var(--text2);font-size:12px" id="memberCount"></span>
 </div>
-<div class="card-body" style="padding:0"><div class="table-wrapper"><table class="data-table" id="memberTable"><thead><tr>
-<th class="sortable" data-sort="hoTen">Đoàn viên ⇅</th><th class="sortable" data-sort="chiDoan">Chi đoàn ⇅</th><th>Đoàn phí</th><th class="sortable" data-sort="thiDua">Thi đua ⇅</th><th>Trạng thái</th><th>Thao tác</th>
+<div class="card-body" style="padding:0"><div class="table-wrapper sticky-table"><table class="data-table" id="memberTable"><thead><tr>
+<th>STT</th><th class="sticky-col sortable" data-sort="hoTen">Họ và tên ⇅</th><th>Mã định danh</th><th>Số thẻ đoàn</th><th>Ngày sinh</th><th>Giới tính</th><th>Dân tộc</th><th>Tôn giáo</th><th>Quê quán</th><th>Địa chỉ thường trú</th><th>Số CMND/CCCD</th><th>Ngày cấp</th><th>Nơi cấp</th><th>Trình độ VH</th><th>Trình độ CM</th><th>Trình độ LLCT</th><th>Tin học</th><th>Ngoại ngữ</th><th>Vào Đoàn</th><th>Số NQ kết nạp</th><th>Vào Đảng</th><th>Nghề nghiệp</th><th>ĐT sinh hoạt</th><th>Rèn luyện</th><th>Đánh giá XL</th><th>Khen thưởng</th><th>Kỷ luật</th><th>Chức vụ</th><th>Hội</th><th>Email</th><th>SĐT</th><th>Thao tác</th>
 </tr></thead><tbody id="memberTbody"></tbody></table></div></div>
 <div class="card-footer" id="memberPagination"></div>
 </div></section>
