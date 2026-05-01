@@ -23,7 +23,18 @@ state:{currentTab:'dashboard'},
 
 // AUTH
 Auth:{
-  login(u,p){const acc=ACCOUNTS[u];if(!acc||acc.pass!==p)return false;currentUser={username:u,...acc};$('#loginPage').classList.add('hidden');$('#appLayout').style.display='flex';document.body.classList.toggle('role-admin',acc.role==='admin');$('#headerUserName').textContent=acc.name+' ('+acc.role+')';$('#headerAvatar').textContent=acc.name.substring(0,2).toUpperCase();App.init();return true},
+  async login(u,p){
+    if(!accountsLoaded){showToast('Đang tải dữ liệu, vui lòng thử lại...','warning');return false}
+    const acc=ACCOUNTS[u];if(!acc)return false;
+    const hashed=await hashPass(p);
+    if(acc.pass!==hashed)return false;
+    currentUser={username:u,...acc};
+    $('#loginPage').classList.add('hidden');$('#appLayout').style.display='flex';
+    document.body.classList.toggle('role-admin',acc.role==='admin');
+    $('#headerUserName').textContent=acc.name+' ('+acc.role+')';
+    $('#headerAvatar').textContent=acc.name.substring(0,2).toUpperCase();
+    App.init();return true;
+  },
   logout(){currentUser=null;$('#loginPage').classList.remove('hidden');$('#appLayout').style.display='none';document.body.classList.remove('role-admin');Object.values(charts).forEach(c=>{if(c&&c.destroy)c.destroy()});charts={}}
 },
 
