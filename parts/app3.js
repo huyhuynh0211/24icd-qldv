@@ -57,11 +57,61 @@ BaoCao:{
   }
 },
 ThongBao:{
-  render(){const tb=DB.get('thongbao')||[];const unread=tb.filter(n=>!n.daDoc).length;$('#notifCount').textContent=unread;$('#notifDot').style.display=unread>0?'block':'none';const icons={warning:'⚠️',info:'ℹ️',success:'✅',danger:'❌'};$('#notifList').innerHTML=tb.sort((a,b)=>new Date(b.thoiGian)-new Date(a.thoiGian)).slice(0,10).map(n=>`<div class="notif-item ${n.daDoc?'':'unread'}" onclick="App.ThongBao.markRead('${n.id}')">${icons[n.loai]||'ℹ️'} <strong>${n.tieuDe}</strong><button class="btn-icon" style="float:right;width:22px;height:22px;font-size:12px" onclick="event.stopPropagation();App.ThongBao.del('${n.id}')" title="Xóa">✕</button><br><span style="color:var(--text2)">${n.noiDung.substring(0,50)}</span><div class="notif-time">${timeAgo(n.thoiGian)}</div></div>`).join('')||'<p style="padding:16px;color:var(--muted);font-size:13px">Không có thông báo</p>'},
-  markRead(id){const tb=DB.get('thongbao')||[];const n=tb.find(x=>x.id===id);if(n)n.daDoc=true;DB.set('thongbao',tb);this.render()},
-  markAllRead(){const tb=DB.get('thongbao')||[];tb.forEach(n=>n.daDoc=true);DB.set('thongbao',tb);this.render();showToast('Đã đánh dấu tất cả đã đọc')},
-  del(id){const tb=(DB.get('thongbao')||[]).filter(x=>x.id!==id);DB.set('thongbao',tb);this.render();showToast('Đã xóa thông báo')},
-  clearAll(){DB.set('thongbao',[]);this.render();showToast('Đã xóa tất cả thông báo')},
+  render(){
+    let tb=DB.get('thongbao')||[];
+    const curUser = (typeof currentUser !== 'undefined' && currentUser) ? currentUser.username : '';
+    tb = tb.filter(n => !n.targetUser || n.targetUser === 'all' || n.targetUser === curUser);
+    tb = tb.filter(n => !(n.daXoaBoi && n.daXoaBoi.includes(curUser)));
+    const unread = tb.filter(n => !(n.daDocBoi && n.daDocBoi.includes(curUser))).length;
+    $('#notifCount').textContent=unread;$('#notifDot').style.display=unread>0?'block':'none';
+    const icons={warning:'⚠️',info:'ℹ️',success:'✅',danger:'❌'};
+    $('#notifList').innerHTML=tb.sort((a,b)=>new Date(b.thoiGian)-new Date(a.thoiGian)).slice(0,10).map(n=>{
+      const isRead = n.daDocBoi && n.daDocBoi.includes(curUser);
+      return `<div class="notif-item ${isRead?'':'unread'}" onclick="App.ThongBao.markRead('${n.id}')">${icons[n.loai]||'ℹ️'} <strong>${n.tieuDe}</strong><button class="btn-icon" style="float:right;width:22px;height:22px;font-size:12px" onclick="event.stopPropagation();App.ThongBao.del('${n.id}')" title="Xóa">✕</button><br><span style="color:var(--text2)">${n.noiDung.substring(0,50)}</span><div class="notif-time">${timeAgo(n.thoiGian)}</div></div>`;
+    }).join('')||'<p style="padding:16px;color:var(--muted);font-size:13px">Không có thông báo</p>'
+  },
+  markRead(id){
+    const tb=DB.get('thongbao')||[];
+    const curUser = (typeof currentUser !== 'undefined' && currentUser) ? currentUser.username : '';
+    const n=tb.find(x=>x.id===id);
+    if(n){ if(!n.daDocBoi) n.daDocBoi=[]; if(!n.daDocBoi.includes(curUser)) n.daDocBoi.push(curUser); }
+    DB.set('thongbao',tb);this.render()
+  },
+  markAllRead(){
+    const tb=DB.get('thongbao')||[];
+    const curUser = (typeof currentUser !== 'undefined' && currentUser) ? currentUser.username : '';
+    tb.forEach(n=>{
+      if(!n.targetUser || n.targetUser === 'all' || n.targetUser === curUser) {
+        if(!n.daDocBoi) n.daDocBoi=[]; 
+        if(!n.daDocBoi.includes(curUser)) n.daDocBoi.push(curUser);
+      }
+    });
+    DB.set('thongbao',tb);this.render();showToast('Đã đánh dấu tất cả đã đọc')
+  },
+  del(id){
+    let tb=DB.get('thongbao')||[];
+    const curUser = (typeof currentUser !== 'undefined' && currentUser) ? currentUser.username : '';
+    const n=tb.find(x=>x.id===id);
+    if(n){
+      if(n.targetUser === curUser) { tb = tb.filter(x=>x.id!==id); }
+      else { if(!n.daXoaBoi) n.daXoaBoi=[]; if(!n.daXoaBoi.includes(curUser)) n.daXoaBoi.push(curUser); }
+    }
+    DB.set('thongbao',tb);this.render();showToast('Đã xóa thông báo')
+  },
+  clearAll(){
+    let tb=DB.get('thongbao')||[];
+    const curUser = (typeof currentUser !== 'undefined' && currentUser) ? currentUser.username : '';
+    tb = tb.filter(n => {
+      if(n.targetUser === curUser) return false;
+      if(!n.targetUser || n.targetUser === 'all'){
+        if(!n.daXoaBoi) n.daXoaBoi=[]; 
+        if(!n.daXoaBoi.includes(curUser)) n.daXoaBoi.push(curUser);
+        return true;
+      }
+      return true;
+    });
+    DB.set('thongbao',tb);this.render();showToast('Đã xóa tất cả thông báo')
+  },
   toggle(){const p=$('#notifPanel');p.style.display=p.style.display==='none'?'block':'none'}
 },
 CaiDat:{

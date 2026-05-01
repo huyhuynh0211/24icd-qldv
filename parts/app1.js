@@ -52,7 +52,8 @@ Dashboard:{
       {icon:'📄',val:tl.length,label:'Tài liệu số hóa',ch:'Đa dạng danh mục'}
     ].map(s=>`<div class="stat-card"><div class="stat-icon">${s.icon}</div><div class="stat-value">${s.val}</div><div class="stat-label">${s.label}</div><div class="stat-change up">${s.ch}</div></div>`).join('');
     // Recent activity
-    const tb=DB.get('thongbao')||[];
+    let tb=DB.get('thongbao')||[];
+    if(typeof currentUser!=='undefined'&&currentUser){ tb=tb.filter(n=>!n.targetUser||n.targetUser==='all'||n.targetUser===currentUser.username); }
     const recent=tb.sort((a,b)=>new Date(b.thoiGian)-new Date(a.thoiGian)).slice(0,5);
     const dotMap={warning:'yellow',info:'blue',success:'green',danger:'red'};
     $('#recentActivity').innerHTML=recent.length?recent.map(n=>`<div class="activity-item"><div class="activity-dot ${dotMap[n.loai]||'blue'}"></div><div><div class="activity-text"><strong>${n.tieuDe}</strong> — ${n.noiDung.substring(0,60)}</div><div class="activity-time">${timeAgo(n.thoiGian)}</div></div></div>`).join(''):'<p style="color:var(--muted);font-size:13px">Chưa có hoạt động</p>';
