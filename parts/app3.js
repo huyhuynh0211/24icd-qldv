@@ -4,8 +4,7 @@ BaoCao:{
     if(typeof Chart==='undefined')return;
     ['r1','r2','r3'].forEach(k=>{if(charts[k])charts[k].destroy()});
     const dv=DB.get('doanvien')||[],sk=DB.get('sukien')||[],tl=DB.get('tailieu')||[];
-    const units=['Chi đoàn K22A','Chi đoàn K22B','Chi đoàn K21C','Chi đoàn K23A'];
-    const c1=$('#rptChart1');if(c1)charts.r1=new Chart(c1,{type:'bar',data:{labels:units.map(u=>u.replace('Chi đoàn ','')),datasets:[{label:'Số lượng',data:units.map(u=>dv.filter(m=>m.chiDoan===u).length),backgroundColor:['#d32f2f','#f9a825','#10b981','#6366f1']}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{ticks:{color:'#64748b'}},y:{ticks:{color:'#64748b'}}}}});
+    const c1=$('#rptChart1');if(c1)charts.r1=new Chart(c1,{type:'bar',data:{labels:['24ICD'],datasets:[{label:'Số lượng',data:[dv.length],backgroundColor:['#d32f2f'],barThickness:60}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},title:{display:true,text:'Chi Đoàn 24ICD — '+dv.length+' đoàn viên',color:'#94a3b8'}},scales:{x:{ticks:{color:'#64748b'}},y:{ticks:{color:'#64748b'},beginAtZero:true}}}});
     const c2=$('#rptChart2');if(c2)charts.r2=new Chart(c2,{type:'bar',data:{labels:['Hoàn thành','Sắp tới','Đang','Hủy'],datasets:[{data:[sk.filter(e=>e.trangThai==='hoan-thanh').length,sk.filter(e=>e.trangThai==='sap-dien-ra').length,sk.filter(e=>e.trangThai==='dang-dien-ra').length,sk.filter(e=>e.trangThai==='huy').length],backgroundColor:['#10b981','#06b6d4','#f59e0b','#ef4444']}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{ticks:{color:'#64748b'}},y:{ticks:{color:'#64748b'}}}}});
     const cats=['Nghị quyết','Học tập CT','Phong trào','Hành chính'];
     const c3=$('#rptChart3');if(c3)charts.r3=new Chart(c3,{type:'doughnut',data:{labels:cats,datasets:[{data:cats.map(c=>tl.filter(d=>d.danhMuc===c).length),backgroundColor:['#d32f2f','#f9a825','#10b981','#6366f1']}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'bottom',labels:{color:'#94a3b8'}}}}});
@@ -16,12 +15,21 @@ BaoCao:{
     const wb=XLSX.utils.book_new();const today=new Date().toISOString().slice(0,10).replace(/-/g,'');
     if(type==='doanvien'){
       const dv=DB.get('doanvien')||[];
-      const ws1Data=[['Mã','Họ tên','Ngày sinh','Giới tính','Chi đoàn','SĐT','Email','Kết nạp','Trạng thái','Thi đua']];dv.forEach(m=>ws1Data.push([m.id,m.hoTen,m.ngaySinh,m.gioiTinh,m.chiDoan,m.soDienThoai,m.email,m.ngayKetNap,(STATUS_MAP[m.trangThai]||{}).l||m.trangThai,m.thiDua]));XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet(ws1Data),'Danh sách');
+      const ws1Data=[['MSSV','Họ tên','Ngày sinh','Giới tính','Chi đoàn','SĐT','Email','Kết nạp','Trạng thái','Đánh giá XL']];dv.forEach(m=>ws1Data.push([m.mssv||m.maDinhDanh||m.id,m.hoTen,m.ngaySinh,m.gioiTinh,m.chiDoan||'24ICD',m.soDienThoai,m.email,m.ngayKetNap,(STATUS_MAP[m.trangThai]||{}).l||m.trangThai,m.danhGia||'Chưa đánh giá']));XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet(ws1Data),'Danh sách');
       const ws2Data=[['Quý','Đã đóng','Chưa đóng']];['Q1_2025','Q2_2025','Q3_2025','Q4_2025'].forEach(q=>{const paid=dv.filter(m=>m.doanPhi&&m.doanPhi[q]).length;ws2Data.push([q.replace('_','/'),paid,dv.length-paid])});XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet(ws2Data),'Đoàn phí');
       const ws3Data=[['Xếp loại','Số lượng']];['Xuất sắc','Tiên tiến','Hoàn thành','Không HT'].forEach(r=>ws3Data.push([r,dv.filter(m=>m.thiDua===r).length]));XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet(ws3Data),'Thi đua');
       XLSX.writeFile(wb,'BaoCao_DoanVien_'+today+'.xlsx');
     }else if(type==='sukien'){
-      const sk=DB.get('sukien')||[];const ws=[['Mã','Tên','Ngày','Giờ','Địa điểm','Trạng thái','Tham gia']];sk.forEach(e=>ws.push([e.id,e.tenSuKien,e.ngayToChuc,e.thoiGian,e.diaDiem,(EVT_STATUS[e.trangThai]||{}).l||'',e.soLuongThamGia]));XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet(ws),'Sự kiện');XLSX.writeFile(wb,'BaoCao_HoatDong_'+today+'.xlsx');
+      const sk=DB.get('sukien')||[];const dv=DB.get('doanvien')||[];
+      const ws=[['Mã','Tên','Ngày','Giờ','Địa điểm','Trạng thái','Tham gia']];sk.forEach(e=>ws.push([e.id,e.tenSuKien,e.ngayToChuc,e.thoiGian,e.diaDiem,(EVT_STATUS[e.trangThai]||{}).l||'',e.soLuongThamGia]));XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet(ws),'Sự kiện');
+      // Sheet "Danh sách đăng ký" per event
+      const regData=[['Họ tên','MSSV','Trạng thái','Đăng ký hoạt động']];
+      sk.forEach(e=>{(e.danhSachThamGia||[]).forEach(uid=>{
+        const acc=ACCOUNTS[uid];const m=dv.find(x=>x.mssv===uid||x.maDinhDanh===uid||x.id===uid);
+        regData.push([acc?acc.name:(m?m.hoTen:uid),uid,(STATUS_MAP[(m||{}).trangThai]||{}).l||'Đoàn viên',e.tenSuKien]);
+      })});
+      XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet(regData),'Đăng ký HĐ');
+      XLSX.writeFile(wb,'BaoCao_HoatDong_'+today+'.xlsx');
     }else{
       const tl=DB.get('tailieu')||[];const ws=[['Mã','Tiêu đề','Danh mục','Loại','Kích thước','Ngày upload','Lượt xem']];tl.forEach(d=>ws.push([d.id,d.tieuDe,d.danhMuc,d.loaiFile,d.kichThuoc,d.ngayUpload.slice(0,10),d.luotXem]));XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet(ws),'Tài liệu');XLSX.writeFile(wb,'BaoCao_TaiLieu_'+today+'.xlsx');
     }
@@ -58,8 +66,20 @@ ThongBao:{
   toggle(){const p=$('#notifPanel');p.style.display=p.style.display==='none'?'block':'none'}
 },
 CaiDat:{
-  load(){const cfg=DB.get('caiDat')||{};$$('.toggle[data-key]').forEach(t=>{const v=cfg[t.dataset.key];if(v)t.classList.add('active');else t.classList.remove('active')});if(cfg.darkMode)document.body.classList.add('light');else document.body.classList.remove('light')},
+  load(){const cfg=DB.get('caiDat')||{};$$('.toggle[data-key]').forEach(t=>{const v=cfg[t.dataset.key];if(v)t.classList.add('active');else t.classList.remove('active')});if(cfg.darkMode)document.body.classList.add('light');else document.body.classList.remove('light');this.updateThemeBtn()},
   save(){const cfg={};$$('.toggle[data-key]').forEach(t=>cfg[t.dataset.key]=t.classList.contains('active'));DB.set('caiDat',cfg);showToast('Đã lưu cài đặt thành công!')},
+  toggleTheme(){
+    const isLight=document.body.classList.toggle('light');
+    const cfg=DB.get('caiDat')||{};cfg.darkMode=isLight;DB.set('caiDat',cfg);
+    const dt=$('#darkModeToggle');if(dt){if(isLight)dt.classList.add('active');else dt.classList.remove('active')}
+    this.updateThemeBtn();
+  },
+  updateThemeBtn(){
+    const isLight=document.body.classList.contains('light');
+    const icon=$('#themeIcon');const label=$('#themeLabel');
+    if(icon)icon.textContent=isLight?'☀️':'🌙';
+    if(label)label.textContent=isLight?'Chế độ sáng':'Chế độ tối';
+  },
   changePassword(){const o=$('#oldPass').value,n=$('#newPass').value;if(!o||!n){showToast('Nhập đầy đủ mật khẩu','error');return}if(currentUser&&ACCOUNTS[currentUser.username]&&ACCOUNTS[currentUser.username].pass===o){ACCOUNTS[currentUser.username].pass=n;showToast('Đã đổi mật khẩu');$('#oldPass').value='';$('#newPass').value=''}else showToast('Mật khẩu cũ không đúng','error')},
   resetData(){$('#confirmMsg').textContent='Xóa toàn bộ dữ liệu? Trang sẽ tải lại.';$('#confirmOk').onclick=()=>{localStorage.clear();location.reload()};openModal('confirmModal')}
 },

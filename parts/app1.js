@@ -8,7 +8,7 @@ function showLoading(){$('#loadingOverlay').style.display='flex'}
 function hideLoading(){$('#loadingOverlay').style.display='none'}
 function timeAgo(d){const s=Math.floor((Date.now()-new Date(d))/1000);if(s<60)return s+' giây trước';if(s<3600)return Math.floor(s/60)+' phút trước';if(s<86400)return Math.floor(s/3600)+' giờ trước';return Math.floor(s/86400)+' ngày trước'}
 function fmtDate(d){if(!d)return'';const p=d.split('-');return p.length===3?p[2]+'/'+p[1]+'/'+p[0]:d}
-function genId(prefix,arr){const n=arr.length+1;return prefix+String(n).padStart(3,'0')}
+function genId(prefix,arr){return prefix+Date.now().toString(36)+Math.random().toString(36).slice(2,5)}
 function debounce(fn,ms){let t;return(...a)=>{clearTimeout(t);t=setTimeout(()=>fn(...a),ms)}}
 const MONTHS=['Th1','Th2','Th3','Th4','Th5','Th6','Th7','Th8','Th9','Th10','Th11','Th12'];
 const STATUS_MAP={'hoat-dong':{l:'Hoạt động',c:'badge-ok'},'tam-hoan':{l:'Tạm hoãn',c:'badge-warn'},'het-han':{l:'Hết hạn',c:'badge-danger'}};
@@ -35,7 +35,7 @@ Dashboard:{
     const now=new Date(),thisMonth=sk.filter(e=>{const d=new Date(e.ngayToChuc);return d.getMonth()===now.getMonth()&&d.getFullYear()===now.getFullYear()}).length;
     $('#dashGreeting').textContent='Xin chào '+((currentUser&&currentUser.name)||'')+', tổng quan hệ thống';
     $('#dashStats').innerHTML=[
-      {icon:'👥',val:dv.length,label:'Tổng Đoàn viên',ch:'Chi đoàn: 4'},
+      {icon:'👥',val:dv.length,label:'Tổng Đoàn viên',ch:'Chi đoàn: 24ICD'},
       {icon:'✅',val:active,label:'Đang hoạt động',ch:dv.length?Math.round(active/dv.length*100)+'%':'0%'},
       {icon:'📅',val:thisMonth,label:'Sự kiện tháng này',ch:sk.filter(e=>e.trangThai==='hoan-thanh').length+' hoàn thành'},
       {icon:'📄',val:tl.length,label:'Tài liệu số hóa',ch:'Đa dạng danh mục'}
@@ -54,9 +54,9 @@ Dashboard:{
     const now=new Date();const labels=[],data=[];
     for(let i=5;i>=0;i--){const m=new Date(now.getFullYear(),now.getMonth()-i,1);labels.push(MONTHS[m.getMonth()]);data.push(dv.filter(d=>{const j=new Date(d.ngayKetNap);return j.getMonth()===m.getMonth()&&j.getFullYear()===m.getFullYear()}).length)}
     const ctx1=$('#lineChart');if(ctx1)charts.line=new Chart(ctx1,{type:'line',data:{labels,datasets:[{label:'Kết nạp',data,borderColor:'#d32f2f',backgroundColor:'rgba(211,47,47,.1)',fill:true,tension:.4}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{color:'#94a3b8'}}},scales:{x:{ticks:{color:'#64748b'},grid:{color:'rgba(51,65,85,.3)'}},y:{ticks:{color:'#64748b'},grid:{color:'rgba(51,65,85,.3)'}}}}});
-    // Pie chart
-    const units=['Chi đoàn K22A','Chi đoàn K22B','Chi đoàn K21C','Chi đoàn K23A'];
-    const ctx2=$('#pieChart');if(ctx2)charts.pie=new Chart(ctx2,{type:'doughnut',data:{labels:units,datasets:[{data:units.map(u=>dv.filter(m=>m.chiDoan===u).length),backgroundColor:['#d32f2f','#f9a825','#10b981','#6366f1']}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'bottom',labels:{color:'#94a3b8',padding:10}}}}});
+    // Pie chart - Giới tính
+    const nam=dv.filter(m=>(m.gioiTinh||'').includes('Nam')).length;const nu=dv.filter(m=>(m.gioiTinh||'').includes('Nữ')).length;const khac=dv.length-nam-nu;
+    const ctx2=$('#pieChart');if(ctx2)charts.pie=new Chart(ctx2,{type:'doughnut',data:{labels:['Nam ('+nam+')','Nữ ('+nu+')'+(khac>0?', Khác ('+khac+')':'')],datasets:[{data:khac>0?[nam,nu,khac]:[nam,nu],backgroundColor:khac>0?['#3b82f6','#ec4899','#94a3b8']:['#3b82f6','#ec4899']}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'bottom',labels:{color:'#94a3b8',padding:10}}}}});
   }
 },
 
@@ -83,7 +83,7 @@ DoanVien:{
       const acts=isAdmin?`<button class="btn-icon" onclick="App.DoanVien.edit('${m.id}')" title="Sửa">✏️</button><button class="btn-icon" onclick="App.DoanVien.confirmDel('${m.id}')" title="Xóa">🗑️</button>`:'';
       const dgOpts=['Không hoàn thành nhiệm vụ','Hoàn thành nhiệm vụ','Hoàn thành tốt nhiệm vụ','Hoàn thành xuất sắc nhiệm vụ'];
       const dgCell=isAdmin?`<select class="form-input" style="font-size:11px;padding:4px 6px;width:auto;min-width:100px" onchange="App.DoanVien.updateDanhGia('${m.id}',this.value)">${dgOpts.map(o=>`<option${(m.danhGia||'')=== o?' selected':''}>${o}</option>`).join('')}</select>`:`<span style="font-size:11px">${m.danhGia||'Chưa đánh giá'}</span>`;
-      return`<tr><td>${stt}</td><td class="sticky-col"><strong>${m.hoTen||''}</strong></td><td>${m.maDinhDanh||''}</td><td>${m.soTheDoan||''}</td><td>${fmtDate(m.ngaySinh)||''}</td><td>${m.gioiTinh||''}</td><td>${m.danToc||''}</td><td>${m.tonGiao||''}</td><td>${m.queQuan||''}</td><td>${m.diaChi||''}</td><td>${m.soCCCD||''}</td><td>${m.ngayCapCCCD||''}</td><td>${m.noiCapCCCD||''}</td><td>${m.trinhDoVH||''}</td><td>${m.trinhDoCM||''}</td><td>${m.trinhDoLLCT||''}</td><td>${m.tinHoc||''}</td><td>${m.ngoaiNgu||''}</td><td>${fmtDate(m.ngayKetNap)||''}</td><td>${m.soNghiQuyet||''}</td><td>${m.ngayVaoDang||''}</td><td>${m.ngheNghiep||''}</td><td>${m.doiTuongSH||''}</td><td>${m.renLuyen||''}</td><td>${dgCell}</td><td>${m.khenThuong||''}</td><td>${m.kyLuat||''}</td><td>${m.chucVu||'Đoàn viên'}</td><td>${m.hoi||''}</td><td>${m.email||''}</td><td>${m.soDienThoai||''}</td><td style="display:flex;gap:4px"><button class="btn-icon" onclick="App.DoanVien.view('${m.id}')" title="Xem">👁️</button>${acts}</td></tr>`
+      return`<tr><td>${stt}</td><td class="sticky-col"><strong>${m.hoTen||''}</strong></td><td>${m.mssv||''}</td><td>${m.maDinhDanh||''}</td><td>${m.soTheDoan||''}</td><td>${fmtDate(m.ngaySinh)||''}</td><td>${m.gioiTinh||''}</td><td>${m.danToc||''}</td><td>${m.tonGiao||''}</td><td>${m.queQuan||''}</td><td>${m.diaChi||''}</td><td>${m.soCCCD||''}</td><td>${m.ngayCapCCCD||''}</td><td>${m.noiCapCCCD||''}</td><td>${m.trinhDoVH||''}</td><td>${m.trinhDoCM||''}</td><td>${m.trinhDoLLCT||''}</td><td>${m.tinHoc||''}</td><td>${m.ngoaiNgu||''}</td><td>${fmtDate(m.ngayKetNap)||''}</td><td>${m.soNghiQuyet||''}</td><td>${m.ngayVaoDang||''}</td><td>${m.ngheNghiep||''}</td><td>${m.doiTuongSH||''}</td><td>${m.renLuyen||''}</td><td>${dgCell}</td><td>${m.khenThuong||''}</td><td>${m.kyLuat||''}</td><td>${m.chucVu||'Đoàn viên'}</td><td>${m.hoi||''}</td><td>${m.email||''}</td><td>${m.soDienThoai||''}</td><td style="display:flex;gap:4px"><button class="btn-icon" onclick="App.DoanVien.view('${m.id}')" title="Xem">👁️</button>${acts}</td></tr>`
     }).join('');
     $('#memberPagination').innerHTML=Array.from({length:totalPages},(_,i)=>`<button class="page-btn ${i+1===memberPage?'active':''}" onclick="memberPage=${i+1};App.DoanVien.render()">${i+1}</button>`).join('');
   },
@@ -101,7 +101,7 @@ DoanVien:{
     <p><b>Chức vụ:</b> ${m.chucVu||''}</p><p><b>Hội:</b> ${m.hoi||''}</p>
     <p><b>Email:</b> ${m.email||''}</p><p><b>SĐT:</b> ${m.soDienThoai||''}</p>`;openModal('previewModal')},
   openAdd(){editingId=null;$('#memberModalTitle').textContent='➕ Thêm Đoàn viên';['mName','mDob','mPhone','mEmail','mJoinDate'].forEach(id=>$('#'+id).value='');$$('.field-error').forEach(e=>e.textContent='');openModal('memberModal')},
-  edit(id){const m=(DB.get('doanvien')||[]).find(x=>x.id===id);if(!m)return;editingId=id;$('#memberModalTitle').textContent='✏️ Sửa Đoàn viên';$('#mName').value=m.hoTen;$('#mDob').value=m.ngaySinh||'';$('#mGender').value=m.gioiTinh||'Nam';$('#mUnit').value=m.chiDoan||'Chi đoàn K22A';$('#mPhone').value=m.soDienThoai||'';$('#mEmail').value=m.email||'';$('#mJoinDate').value=m.ngayKetNap||'';$('#mRank').value=m.thiDua||'Hoàn thành';$$('.field-error').forEach(e=>e.textContent='');openModal('memberModal')},
+  edit(id){const m=(DB.get('doanvien')||[]).find(x=>x.id===id);if(!m)return;editingId=id;$('#memberModalTitle').textContent='✏️ Sửa Đoàn viên';$('#mName').value=m.hoTen;$('#mDob').value=m.ngaySinh||'';$('#mGender').value=m.gioiTinh||'Nam';$('#mUnit').value=m.chiDoan||'Chi đoàn 24ICD';$('#mPhone').value=m.soDienThoai||'';$('#mEmail').value=m.email||'';$('#mJoinDate').value=m.ngayKetNap||'';$('#mRank').value=m.thiDua||'Hoàn thành';$$('.field-error').forEach(e=>e.textContent='');openModal('memberModal')},
   save(){
     let ok=true;const name=$('#mName').value.trim(),dob=$('#mDob').value,phone=$('#mPhone').value.trim(),email=$('#mEmail').value.trim();
     $$('.field-error').forEach(e=>e.textContent='');
@@ -120,33 +120,50 @@ DoanVien:{
     const reader=new FileReader();
     reader.onload=(e)=>{
       try{
-        const wb=XLSX.read(e.target.result,{type:'array'});
+        const wb=XLSX.read(e.target.result,{type:'array',cellDates:true});
         const ws=wb.Sheets[wb.SheetNames[0]];
-        const rows=XLSX.utils.sheet_to_json(ws,{header:1});
+        const rows=XLSX.utils.sheet_to_json(ws,{header:1,raw:false,dateNF:'yyyy-mm-dd'});
         if(rows.length<2){showToast('File không có dữ liệu','error');return}
         const headers=rows[0].map(h=>(h||'').toString().trim());
         const colMap={};
-        const mapping={'Họ và tên':'hoTen','Mã định danh đoàn viên':'maDinhDanh','Số thẻ đoàn':'soTheDoan','Ngày sinh':'ngaySinh','Giới tính':'gioiTinh','Dân tộc':'danToc','Tôn giáo':'tonGiao','Quê quán':'queQuan','Địa chỉ thường trú':'diaChi','Số CMND/CCCD':'soCCCD','Ngày cấp':'ngayCapCCCD','Nơi cấp':'noiCapCCCD','Trình độ văn hóa':'trinhDoVH','Trình độ chuyên môn':'trinhDoCM','Trình độ LLCT':'trinhDoLLCT','Tin học':'tinHoc','Ngoại ngữ':'ngoaiNgu','Thời gian vào đoàn':'ngayKetNap','Số Nghị quyết chuẩn y kết nạp đoàn viên':'soNghiQuyet','Thời gian vào Đảng':'ngayVaoDang','Nghề nghiệp hiện nay':'ngheNghiep','Đối tượng sinh hoạt':'doiTuongSH','Rèn luyện đoàn viên':'renLuyen','Đánh giá, xếp loại đoàn viên':'danhGia','Khen thưởng':'khenThuong','Kỷ luật':'kyLuat','Chức vụ trong chi đoàn':'chucVu','Hội':'hoi','Email liên hệ':'email','Điện thoại liên hệ':'soDienThoai'};
-        headers.forEach((h,i)=>{for(const[key,field]of Object.entries(mapping)){if(h.includes(key)||key.includes(h)){colMap[field]=i;break}}});
-        const arr=DB.get('doanvien')||[];
+        const mapping={'STT':'_stt','MSSV':'mssv','Họ và tên':'hoTen','Họ tên':'hoTen','Mã định danh đoàn viên':'maDinhDanh','Mã định danh':'maDinhDanh','Số thẻ đoàn':'soTheDoan','Ngày sinh':'ngaySinh','Giới tính':'gioiTinh','Dân tộc':'danToc','Tôn giáo':'tonGiao','Quê quán':'queQuan','Địa chỉ thường trú':'diaChi','Số CMND/CCCD':'soCCCD','Ngày cấp':'ngayCapCCCD','Nơi cấp':'noiCapCCCD','Trình độ văn hóa':'trinhDoVH','Trình độ chuyên môn':'trinhDoCM','Trình độ LLCT':'trinhDoLLCT','Tin học':'tinHoc','Ngoại ngữ':'ngoaiNgu','Thời gian vào đoàn':'ngayKetNap','Kết nạp':'ngayKetNap','Số Nghị quyết':'soNghiQuyet','Thời gian vào Đảng':'ngayVaoDang','Nghề nghiệp':'ngheNghiep','Đối tượng sinh hoạt':'doiTuongSH','Rèn luyện':'renLuyen','Đánh giá':'danhGia','Thi đua':'thiDua','Khen thưởng':'khenThuong','Kỷ luật':'kyLuat','Chức vụ':'chucVu','Hội':'hoi','Email':'email','Điện thoại':'soDienThoai','SĐT':'soDienThoai','Trạng thái':'trangThaiText','Chi đoàn':'chiDoan','Mã':'maDinhDanh'};
+        headers.forEach((h,i)=>{
+          for(const[key,field]of Object.entries(mapping)){
+            if(h===key||h.includes(key)){colMap[field]=i;break}
+          }
+        });
+        console.log('Import headers:',headers);
+        console.log('Import colMap:',colMap);
+        // Ensure arr is a proper array
+        let existing=DB.get('doanvien');
+        let arr=Array.isArray(existing)?existing:existing?Object.values(existing):[];
         let count=0;
         for(let r=1;r<rows.length;r++){
           const row=rows[r];if(!row||row.length<2)continue;
-          const name=(row[colMap.hoTen]||'').toString().trim();
+          const nameCol=colMap.hoTen;
+          const name=nameCol!==undefined?(row[nameCol]||'').toString().trim():'';
           if(!name)continue;
-          const member={id:genId('DV',arr),hoTen:name,trangThai:'hoat-dong',thiDua:'Hoàn thành'};
+          const member={id:genId('DV',arr),hoTen:name,trangThai:'hoat-dong',thiDua:'Hoàn thành',chiDoan:'24ICD'};
           for(const[field,col]of Object.entries(colMap)){
-            if(field==='hoTen')continue;
-            let val=(row[col]||'').toString().trim();
-            if(field==='ngaySinh'||field==='ngayKetNap'){
+            if(field==='hoTen'||field==='_stt'||col===undefined)continue;
+            let val=(row[col]!=null)?row[col].toString().trim():'';
+            // Convert date formats
+            if(field==='ngaySinh'||field==='ngayKetNap'||field==='ngayCapCCCD'){
               if(val&&/^\d{2}\/\d{2}\/\d{4}$/.test(val)){const p=val.split('/');val=p[2]+'-'+p[1]+'-'+p[0]}
+              else if(val&&/^\d{4}-\d{2}-\d{2}/.test(val)){val=val.slice(0,10)}
+            }
+            if(field==='trangThaiText'){
+              if(val.includes('Hoạt động'))member.trangThai='hoat-dong';
+              else if(val.includes('Tạm'))member.trangThai='tam-hoan';
+              else if(val.includes('Hết'))member.trangThai='het-han';
+              continue;
             }
             member[field]=val;
           }
           arr.push(member);count++;
         }
         DB.set('doanvien',arr);this.render();
-        showToast(`Đã import ${count} đoàn viên thành công!`);
+        showToast('Đã import '+count+' đoàn viên thành công!');
       }catch(err){showToast('Lỗi đọc file: '+err.message,'error');console.error(err)}
     };
     reader.readAsArrayBuffer(file);

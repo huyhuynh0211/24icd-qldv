@@ -19,7 +19,19 @@ try{
 // ===== STORAGE HELPERS (Firebase + localStorage cache) =====
 const DB={
   // Read from localStorage cache (instant), Firebase updates via listeners
-  get(key){try{return JSON.parse(localStorage.getItem(key))||null}catch(e){return null}},
+  // Ensures array keys always return arrays (Firebase may convert to objects)
+  get(key){
+    try{
+      const val=JSON.parse(localStorage.getItem(key));
+      if(!val)return null;
+      // Known array keys - ensure they're always arrays
+      const arrayKeys=['doanvien','sukien','tailieu','thongbao'];
+      if(arrayKeys.includes(key)&&val&&!Array.isArray(val)){
+        return Object.values(val);
+      }
+      return val;
+    }catch(e){return null}
+  },
   // Write to both localStorage AND Firebase
   set(key,val){
     try{localStorage.setItem(key,JSON.stringify(val))}catch(e){console.warn('localStorage error',e)}
@@ -85,7 +97,74 @@ function setupFirebaseListeners(){
   });
 }
 
-const ACCOUNTS={admin:{pass:'huys1tg',role:'admin',name:'Admin'},['24icd']:{pass:'123',role:'user',name:'Đoàn viên'}};
+const ACCOUNTS={
+  admin:{pass:'huys1tg',role:'admin',name:'Admin'},
+  '24icd':{pass:'123',role:'user',name:'Đoàn viên'},
+  '24200001':{pass:'123',role:'user',name:'NGUYỄN HOÀNG ÂN'},
+  '24200002':{pass:'123',role:'user',name:'ĐINH TIẾN ANH'},
+  '24200007':{pass:'123',role:'user',name:'LÊ THANH TRUNG HIẾU'},
+  '24200010':{pass:'123',role:'user',name:'LÝ TUẤN NGHI'},
+  '24200013':{pass:'123',role:'user',name:'NGUYỄN NGỌC MẪN THANH'},
+  '24200017':{pass:'123',role:'user',name:'LÊ MINH CHÍNH'},
+  '24200019':{pass:'123',role:'user',name:'DƯƠNG THÀNH DANH'},
+  '24200023':{pass:'123',role:'user',name:'BÙI QUỐC KHẢI'},
+  '24200024':{pass:'123',role:'user',name:'LÊ HÀ VĂN KHẢI'},
+  '24200025':{pass:'123',role:'user',name:'MAI KIM KHÁNH'},
+  '24200029':{pass:'123',role:'user',name:'HUỲNH TẤN PHONG'},
+  '24200032':{pass:'123',role:'user',name:'CHOI WON SEOK'},
+  '24200038':{pass:'123',role:'user',name:'MAI HOÀNG HIỂN'},
+  '24200041':{pass:'123',role:'user',name:'DƯƠNG HOÀ THUẬN'},
+  '24200050':{pass:'123',role:'user',name:'HUỲNH VĂN CHIẾN'},
+  '24200052':{pass:'123',role:'user',name:'LÊ HẢI ĐĂNG'},
+  '24200054':{pass:'123',role:'user',name:'ĐỖ TIẾN ĐẠT'},
+  '24200055':{pass:'123',role:'user',name:'NGUYỄN TẤN ĐẠT'},
+  '24200058':{pass:'123',role:'user',name:'TRẦN VĨ ĐÔNG'},
+  '24200060':{pass:'123',role:'user',name:'KIỀU MINH ĐỨC'},
+  '24200062':{pass:'123',role:'user',name:'PHẠM ANH ĐỨC'},
+  '24200067':{pass:'123',role:'user',name:'ĐINH HUỲNH GIA HIẾU'},
+  '24200068':{pass:'123',role:'user',name:'HUỲNH PHÚC HIẾU'},
+  '24200070':{pass:'123',role:'user',name:'NGUYỄN TRẦN VĂN HIẾU'},
+  '24200071':{pass:'123',role:'user',name:'NGUYỄN TRUNG HIẾU'},
+  '24200075':{pass:'123',role:'user',name:'LÊ MINH HOÀNG'},
+  '24200076':{pass:'123',role:'user',name:'NGUYỄN PHAN HUY HOÀNG'},
+  '24200080':{pass:'123',role:'user',name:'LÊ THIÊN HƯNG'},
+  '24200081':{pass:'123',role:'user',name:'LÊ TRẦN NGỌC HƯNG'},
+  '24200086':{pass:'123',role:'user',name:'ĐINH VĂN HUY'},
+  '24200087':{pass:'123',role:'user',name:'HUỲNH NGỌC HUY'},
+  '24200091':{pass:'123',role:'user',name:'TRẦN VĨNH HUY'},
+  '24200094':{pass:'123',role:'user',name:'PHAN TẤN KHẢI'},
+  '24200097':{pass:'123',role:'user',name:'PHẠM TRẦN GIA KHANG'},
+  '24200100':{pass:'123',role:'user',name:'NGUYỄN CHU ĐĂNG KHOA'},
+  '24200106':{pass:'123',role:'user',name:'TRẦN THANH KHÔI'},
+  '24200110':{pass:'123',role:'user',name:'PHẠM MINH KIÊN'},
+  '24200114':{pass:'123',role:'user',name:'HỒ SƠN LÂM'},
+  '24200117':{pass:'123',role:'user',name:'NGUYỄN HỮU PHƯỚC LỘC'},
+  '24200123':{pass:'123',role:'user',name:'NGUYỄN VĂN MẪN'},
+  '24200124':{pass:'123',role:'user',name:'NGUYỄN HỒ DUY MẠNH'},
+  '24200126':{pass:'123',role:'user',name:'LỮ GIA MINH'},
+  '24200131':{pass:'123',role:'user',name:'TRẦN HOÀI NAM'},
+  '24200134':{pass:'123',role:'user',name:'LƯƠNG KHÁNH NGỌC'},
+  '24200139':{pass:'123',role:'user',name:'VÕ NHẬT NGUYÊN'},
+  '24200142':{pass:'123',role:'user',name:'LÊ QUANG NHẬT'},
+  '24200147':{pass:'123',role:'user',name:'LÝ VŨ ĐỨC PHÚ'},
+  '24200148':{pass:'123',role:'user',name:'TÔ VĂN NGỌC PHÚ'},
+  '24200151':{pass:'123',role:'user',name:'NGUYỄN ÍCH QUỐC PHƯƠNG'},
+  '24200153':{pass:'123',role:'user',name:'LÊ NGUYỄN MINH QUÂN'},
+  '24200158':{pass:'123',role:'user',name:'LÊ MINH QUANG'},
+  '24200160':{pass:'123',role:'user',name:'NGUYỄN TRẦN MINH QUANG'},
+  '24200163':{pass:'123',role:'user',name:'HUỲNH VŨ THỤC QUYÊN'},
+  '24200167':{pass:'123',role:'user',name:'HOÀNG LƯƠNG VIỆT SƠN'},
+  '24200183':{pass:'123',role:'user',name:'NGUYỄN HOÀI THƯƠNG'},
+  '24200186':{pass:'123',role:'user',name:'VÕ THÀNH TRA'},
+  '24200188':{pass:'123',role:'user',name:'HOÀNG CAO TRÍ'},
+  '24200190':{pass:'123',role:'user',name:'NGUYỄN ĐÌNH TRỌNG'},
+  '24200196':{pass:'123',role:'user',name:'TRƯƠNG TRIỀU TRƯỜNG'},
+  '24200198':{pass:'123',role:'user',name:'HUỲNH ĐĂNG TUẤN'},
+  '24200200':{pass:'123',role:'user',name:'PHẠM ANH TUẤN'},
+  '24200202':{pass:'123',role:'user',name:'TẠ VĂN VIỆT'},
+  '24200205':{pass:'123',role:'user',name:'LÊ QUỐC ANH VŨ'},
+  '24200206':{pass:'123',role:'user',name:'NGUYỄN QUỐC ANH VŨ'}
+};
 let currentUser=null;
 const COLORS=['#d32f2f','#1e88e5','#10b981','#f59e0b','#8b5cf6','#06b6d4','#ec4899','#f97316','#14b8a6','#6366f1'];
 
@@ -126,16 +205,16 @@ function initSampleData(){
 function seedLocalData(){
   if(!DB.get('doanvien')){
     DB.set('doanvien',[
-      {id:'DV001',hoTen:'Nguyễn Văn An',ngaySinh:'2002-05-15',gioiTinh:'Nam',chiDoan:'Chi đoàn K22A',soDienThoai:'0901234001',email:'an@email.com',ngayKetNap:'2024-09-01',trangThai:'hoat-dong',thiDua:'Xuất sắc',doanPhi:{Q1_2025:true,Q2_2025:true,Q3_2025:false,Q4_2025:false}},
-      {id:'DV002',hoTen:'Trần Thị Bích',ngaySinh:'2003-06-20',gioiTinh:'Nữ',chiDoan:'Chi đoàn K22B',soDienThoai:'0901234002',email:'bich@email.com',ngayKetNap:'2024-10-15',trangThai:'hoat-dong',thiDua:'Tiên tiến',doanPhi:{Q1_2025:true,Q2_2025:false,Q3_2025:false,Q4_2025:false}},
-      {id:'DV003',hoTen:'Lê Minh Đức',ngaySinh:'2001-01-10',gioiTinh:'Nam',chiDoan:'Chi đoàn K21C',soDienThoai:'0901234003',email:'duc@email.com',ngayKetNap:'2024-03-20',trangThai:'tam-hoan',thiDua:'Hoàn thành',doanPhi:{Q1_2025:true,Q2_2025:false,Q3_2025:false,Q4_2025:false}},
-      {id:'DV004',hoTen:'Phạm Thị Hoa',ngaySinh:'2004-09-05',gioiTinh:'Nữ',chiDoan:'Chi đoàn K23A',soDienThoai:'0901234004',email:'hoa@email.com',ngayKetNap:'2025-01-15',trangThai:'hoat-dong',thiDua:'Xuất sắc',doanPhi:{Q1_2025:true,Q2_2025:true,Q3_2025:true,Q4_2025:false}},
-      {id:'DV005',hoTen:'Hoàng Văn Khánh',ngaySinh:'2002-12-25',gioiTinh:'Nam',chiDoan:'Chi đoàn K22A',soDienThoai:'0901234005',email:'khanh@email.com',ngayKetNap:'2024-11-01',trangThai:'hoat-dong',thiDua:'Tiên tiến',doanPhi:{Q1_2025:true,Q2_2025:true,Q3_2025:false,Q4_2025:false}},
-      {id:'DV006',hoTen:'Ngô Thị Lan',ngaySinh:'2003-04-18',gioiTinh:'Nữ',chiDoan:'Chi đoàn K22B',soDienThoai:'0901234006',email:'lan@email.com',ngayKetNap:'2025-02-10',trangThai:'hoat-dong',thiDua:'Xuất sắc',doanPhi:{Q1_2025:true,Q2_2025:true,Q3_2025:true,Q4_2025:true}},
-      {id:'DV007',hoTen:'Đỗ Quang Minh',ngaySinh:'2001-07-30',gioiTinh:'Nam',chiDoan:'Chi đoàn K21C',soDienThoai:'0901234007',email:'minh@email.com',ngayKetNap:'2024-06-15',trangThai:'hoat-dong',thiDua:'Hoàn thành',doanPhi:{Q1_2025:true,Q2_2025:true,Q3_2025:true,Q4_2025:true}},
-      {id:'DV008',hoTen:'Vũ Thanh Nga',ngaySinh:'2004-02-14',gioiTinh:'Nữ',chiDoan:'Chi đoàn K23A',soDienThoai:'0901234008',email:'nga@email.com',ngayKetNap:'2024-12-01',trangThai:'het-han',thiDua:'Không HT',doanPhi:{Q1_2025:false,Q2_2025:false,Q3_2025:false,Q4_2025:false}},
-      {id:'DV009',hoTen:'Bùi Văn Phong',ngaySinh:'2002-08-22',gioiTinh:'Nam',chiDoan:'Chi đoàn K22A',soDienThoai:'0901234009',email:'phong@email.com',ngayKetNap:'2025-03-01',trangThai:'hoat-dong',thiDua:'Tiên tiến',doanPhi:{Q1_2025:true,Q2_2025:true,Q3_2025:true,Q4_2025:false}},
-      {id:'DV010',hoTen:'Lý Thị Quỳnh',ngaySinh:'2003-11-08',gioiTinh:'Nữ',chiDoan:'Chi đoàn K22B',soDienThoai:'0901234010',email:'quynh@email.com',ngayKetNap:'2024-08-20',trangThai:'tam-hoan',thiDua:'Hoàn thành',doanPhi:{Q1_2025:true,Q2_2025:false,Q3_2025:false,Q4_2025:false}}
+      {id:'DV001',hoTen:'Nguyễn Văn An',ngaySinh:'2002-05-15',gioiTinh:'Nam',chiDoan:'24ICD',soDienThoai:'0901234001',email:'an@email.com',ngayKetNap:'2024-09-01',trangThai:'hoat-dong',thiDua:'Xuất sắc',doanPhi:{Q1_2025:true,Q2_2025:true,Q3_2025:false,Q4_2025:false}},
+      {id:'DV002',hoTen:'Trần Thị Bích',ngaySinh:'2003-06-20',gioiTinh:'Nữ',chiDoan:'24ICD',soDienThoai:'0901234002',email:'bich@email.com',ngayKetNap:'2024-10-15',trangThai:'hoat-dong',thiDua:'Tiên tiến',doanPhi:{Q1_2025:true,Q2_2025:false,Q3_2025:false,Q4_2025:false}},
+      {id:'DV003',hoTen:'Lê Minh Đức',ngaySinh:'2001-01-10',gioiTinh:'Nam',chiDoan:'24ICD',soDienThoai:'0901234003',email:'duc@email.com',ngayKetNap:'2024-03-20',trangThai:'tam-hoan',thiDua:'Hoàn thành',doanPhi:{Q1_2025:true,Q2_2025:false,Q3_2025:false,Q4_2025:false}},
+      {id:'DV004',hoTen:'Phạm Thị Hoa',ngaySinh:'2004-09-05',gioiTinh:'Nữ',chiDoan:'24ICD',soDienThoai:'0901234004',email:'hoa@email.com',ngayKetNap:'2025-01-15',trangThai:'hoat-dong',thiDua:'Xuất sắc',doanPhi:{Q1_2025:true,Q2_2025:true,Q3_2025:true,Q4_2025:false}},
+      {id:'DV005',hoTen:'Hoàng Văn Khánh',ngaySinh:'2002-12-25',gioiTinh:'Nam',chiDoan:'24ICD',soDienThoai:'0901234005',email:'khanh@email.com',ngayKetNap:'2024-11-01',trangThai:'hoat-dong',thiDua:'Tiên tiến',doanPhi:{Q1_2025:true,Q2_2025:true,Q3_2025:false,Q4_2025:false}},
+      {id:'DV006',hoTen:'Ngô Thị Lan',ngaySinh:'2003-04-18',gioiTinh:'Nữ',chiDoan:'24ICD',soDienThoai:'0901234006',email:'lan@email.com',ngayKetNap:'2025-02-10',trangThai:'hoat-dong',thiDua:'Xuất sắc',doanPhi:{Q1_2025:true,Q2_2025:true,Q3_2025:true,Q4_2025:true}},
+      {id:'DV007',hoTen:'Đỗ Quang Minh',ngaySinh:'2001-07-30',gioiTinh:'Nam',chiDoan:'24ICD',soDienThoai:'0901234007',email:'minh@email.com',ngayKetNap:'2024-06-15',trangThai:'hoat-dong',thiDua:'Hoàn thành',doanPhi:{Q1_2025:true,Q2_2025:true,Q3_2025:true,Q4_2025:true}},
+      {id:'DV008',hoTen:'Vũ Thanh Nga',ngaySinh:'2004-02-14',gioiTinh:'Nữ',chiDoan:'24ICD',soDienThoai:'0901234008',email:'nga@email.com',ngayKetNap:'2024-12-01',trangThai:'het-han',thiDua:'Không HT',doanPhi:{Q1_2025:false,Q2_2025:false,Q3_2025:false,Q4_2025:false}},
+      {id:'DV009',hoTen:'Bùi Văn Phong',ngaySinh:'2002-08-22',gioiTinh:'Nam',chiDoan:'24ICD',soDienThoai:'0901234009',email:'phong@email.com',ngayKetNap:'2025-03-01',trangThai:'hoat-dong',thiDua:'Tiên tiến',doanPhi:{Q1_2025:true,Q2_2025:true,Q3_2025:true,Q4_2025:false}},
+      {id:'DV010',hoTen:'Lý Thị Quỳnh',ngaySinh:'2003-11-08',gioiTinh:'Nữ',chiDoan:'24ICD',soDienThoai:'0901234010',email:'quynh@email.com',ngayKetNap:'2024-08-20',trangThai:'tam-hoan',thiDua:'Hoàn thành',doanPhi:{Q1_2025:true,Q2_2025:false,Q3_2025:false,Q4_2025:false}}
     ]);
   }
   if(!DB.get('tailieu')){

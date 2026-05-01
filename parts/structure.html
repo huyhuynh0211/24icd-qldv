@@ -1,247 +1,605 @@
 <!DOCTYPE html>
 <html lang="vi">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1.0">
-<meta name="description" content="Hệ thống quản lý Đoàn TNCS HCM - Số hóa tài liệu, quản lý đoàn viên">
-<title>Đoàn TNCS HCM — Hệ thống Quản lý & Số hóa Tài liệu</title>
-<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>Đ</text></svg>">
-<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
-<style>
-__CSS_PLACEHOLDER__
-</style>
-</head>
-<body>
-<!-- LOGIN -->
-<div id="loginPage" class="login-page">
-<div class="login-bg"></div>
-<div class="login-card">
-<div class="login-logo">Đ</div>
-<h1>Đoàn TNCS HCM</h1>
-<p class="login-subtitle">Hệ thống Quản lý & Số hóa Tài liệu</p>
-<form id="loginForm" autocomplete="off">
-<div class="login-field"><label for="loginUser">Tên đăng nhập</label><input type="text" id="loginUser" placeholder="Nhập tên đăng nhập" required></div>
-<div class="login-field"><label for="loginPass">Mật khẩu</label><input type="password" id="loginPass" placeholder="Nhập mật khẩu" required></div>
-<div id="loginError" class="login-error"></div>
-<label class="login-remember"><input type="checkbox" id="rememberMe"> Ghi nhớ đăng nhập</label>
-<button type="submit" class="login-btn">Đăng nhập</button>
-</form>
 
-<a href="#" class="login-forgot" onclick="showToast('Vui lòng liên hệ Admin để đặt lại mật khẩu','warning');return false">Quên mật khẩu?</a>
-</div>
-</div>
-<!-- TOAST -->
-<div id="toastContainer" class="toast-container"></div>
-<!-- LOADING -->
-<div id="loadingOverlay" class="loading-overlay" style="display:none"><div class="spinner"></div></div>
-<!-- APP -->
-<div class="app-layout" id="appLayout" style="display:none">
-<div class="sidebar-overlay" id="sidebarOverlay"></div>
-<aside class="sidebar" id="sidebar">
-<div class="sidebar-logo"><div class="logo-icon">Đ</div><div><span>Đoàn TNCS HCM</span><small>Hệ thống quản lý</small></div></div>
-<nav class="sidebar-nav">
-<div class="nav-group"><div class="nav-group-title">Chính</div>
-<div class="nav-item active" data-page="dashboard"><span class="icon">📊</span>Dashboard</div>
-<div class="nav-item" data-page="members"><span class="icon">👤</span>Đoàn viên<span class="badge" id="memberBadge">0</span></div>
-<div class="nav-item" data-page="events"><span class="icon">🏅</span>Hoạt động</div>
-</div>
-<div class="nav-group"><div class="nav-group-title">Tài liệu</div>
-<div class="nav-item" data-page="documents"><span class="icon">📂</span>Thư viện<span class="badge" id="docBadge">0</span></div>
-<div class="nav-item" id="navUpload"><span class="icon">📤</span>Upload mới</div>
-</div>
-<div class="nav-group"><div class="nav-group-title">Hệ thống</div>
-<div class="nav-item" data-page="reports"><span class="icon">📈</span>Báo cáo</div>
-<div class="nav-item" data-page="settings"><span class="icon">⚙️</span>Cài đặt</div>
-</div>
-</nav>
-</aside>
-<main class="main-content">
-<header class="header">
-<div class="header-left">
-<button class="menu-toggle" id="menuToggle" aria-label="Menu">☰</button>
-<div class="header-search"><span class="search-icon">🔍</span><input type="text" placeholder="Tìm kiếm..." id="globalSearch"><div class="search-results" id="searchResults" style="display:none"></div></div>
-</div>
-<div class="header-right">
-<div class="notif-wrapper"><button class="header-btn" id="notifBtn" aria-label="Thông báo">🔔<span class="notif-dot" id="notifDot" style="display:none"></span></button>
-<div class="notif-panel" id="notifPanel" style="display:none"><div class="notif-panel-header"><strong>Thông báo</strong><span class="badge badge-danger" id="notifCount">0</span></div><div id="notifList" class="notif-list"></div><div class="notif-panel-footer" style="display:flex;gap:6px;justify-content:center"><button class="btn btn-sm btn-outline" onclick="App.ThongBao.markAllRead()">✓ Đã đọc</button><button class="btn btn-sm" style="background:#ef4444;color:#fff" onclick="App.ThongBao.clearAll()">🗑️ Xóa tất cả</button></div></div>
-</div>
-<span id="syncStatus" style="font-size:11px;padding:3px 8px;border-radius:10px;background:rgba(16,185,129,.15);color:#10b981" title="Trạng thái đồng bộ">🟢 Online</span>
-<span id="headerUserName" style="font-size:12px;color:var(--text2)"></span>
-<div class="user-avatar" id="headerAvatar">AD</div>
-<button class="btn btn-outline btn-sm" id="logoutBtn">Đăng xuất</button>
-</div>
-</header>
-<div class="page-content">
-<!-- DASHBOARD -->
-<section class="page active" id="page-dashboard">
-<div class="page-header"><h1>Dashboard Tổng quan</h1><p id="dashGreeting"></p></div>
-<div class="stats-grid" id="dashStats"></div>
-<div class="dashboard-grid">
-<div class="card"><div class="card-header"><h3>📈 Kết nạp 6 tháng</h3></div><div class="card-body"><div class="chart-area"><canvas id="lineChart"></canvas></div></div></div>
-<div class="card"><div class="card-header"><h3>🥧 Phân bố Chi đoàn</h3></div><div class="card-body"><div class="chart-area"><canvas id="pieChart"></canvas></div></div></div>
-</div>
-<div class="card" style="margin-top:16px"><div class="card-header"><h3>🕐 Hoạt động gần đây</h3></div><div class="card-body"><div class="activity-list" id="recentActivity"></div></div></div>
-</section>
-<!-- MEMBERS -->
-<section class="page" id="page-members">
-<div class="page-header" style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px">
-<div><h1>Quản lý Đoàn viên</h1><p>Hồ sơ, thi đua và đoàn phí</p></div>
-<div style="display:flex;gap:6px;flex-wrap:wrap">
-<button class="btn btn-primary admin-only" id="btnAddMember">➕ Thêm</button>
-<button class="btn btn-outline admin-only" id="btnImportFile">📥 Import CSV/Excel</button>
-<input type="file" id="importFileInput" style="display:none" accept=".csv,.xlsx,.xls">
-</div>
-</div>
-<div class="card"><div class="card-header" style="flex-wrap:wrap;gap:8px">
-<div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
-<input class="form-input" placeholder="🔍 Tìm kiếm..." id="memberSearch" style="width:170px">
-<select class="form-input" id="memberStatusFilter" style="width:130px"><option value="all">Trạng thái ▾</option><option value="hoat-dong">Hoạt động</option><option value="tam-hoan">Tạm hoãn</option><option value="het-han">Hết hạn</option></select>
-</div>
-<span style="color:var(--text2);font-size:12px" id="memberCount"></span>
-</div>
-<div class="card-body" style="padding:0"><div class="table-wrapper sticky-table"><table class="data-table" id="memberTable"><thead><tr>
-<th>STT</th><th class="sticky-col sortable" data-sort="hoTen">Họ và tên ⇅</th><th>Mã định danh</th><th>Số thẻ đoàn</th><th>Ngày sinh</th><th>Giới tính</th><th>Dân tộc</th><th>Tôn giáo</th><th>Quê quán</th><th>Địa chỉ thường trú</th><th>Số CMND/CCCD</th><th>Ngày cấp</th><th>Nơi cấp</th><th>Trình độ VH</th><th>Trình độ CM</th><th>Trình độ LLCT</th><th>Tin học</th><th>Ngoại ngữ</th><th>Vào Đoàn</th><th>Số NQ kết nạp</th><th>Vào Đảng</th><th>Nghề nghiệp</th><th>ĐT sinh hoạt</th><th>Rèn luyện</th><th>Đánh giá XL</th><th>Khen thưởng</th><th>Kỷ luật</th><th>Chức vụ</th><th>Hội</th><th>Email</th><th>SĐT</th><th>Thao tác</th>
-</tr></thead><tbody id="memberTbody"></tbody></table></div></div>
-<div class="card-footer" id="memberPagination"></div>
-</div></section>
-<!-- DOCUMENTS -->
-<section class="page" id="page-documents">
-<div class="page-header" style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px">
-<div><h1>Thư viện Tài liệu</h1><p>Tra cứu tài liệu số hóa</p></div>
-<button class="btn btn-primary" id="btnUploadDoc">📤 Upload</button>
-</div>
-<div class="tab-filters" id="docTabs"></div>
-<div class="toolbar">
-<input class="form-input" placeholder="🔍 Tìm theo tiêu đề, tags..." id="docSearch" style="width:240px">
-<div style="display:flex;gap:6px">
-<select class="form-input" id="docTypeFilter" style="width:120px"><option value="all">Loại file ▾</option><option value="PDF">PDF</option><option value="DOCX">DOCX</option><option value="PPTX">PPTX</option><option value="Image">Ảnh</option></select>
-<select class="form-input" id="docSort" style="width:130px"><option value="newest">Mới nhất</option><option value="views">Lượt xem ▾</option><option value="az">A → Z</option></select>
-</div>
-</div>
-<div class="doc-grid" id="docGrid"></div>
-</section>
-<!-- EVENTS -->
-<section class="page" id="page-events">
-<div class="page-header" style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px">
-<div><h1>Hoạt động & Sự kiện</h1><p>Quản lý sự kiện và điểm danh</p></div>
-<button class="btn btn-primary admin-only" id="btnAddEvent">📅 Tạo sự kiện</button>
-</div>
-<div class="stats-grid" id="eventStats"></div>
-<div class="card"><div class="card-header"><h3>Danh sách sự kiện</h3>
-<div style="display:flex;gap:4px"><button class="filter-btn active" data-ef="all">Tất cả</button><button class="filter-btn" data-ef="sap-dien-ra">Sắp tới</button><button class="filter-btn" data-ef="dang-dien-ra">Đang diễn ra</button><button class="filter-btn" data-ef="hoan-thanh">Đã xong</button></div>
-</div><div class="card-body"><div class="event-list" id="eventList"></div></div></div>
-</section>
-<!-- REPORTS -->
-<section class="page" id="page-reports">
-<div class="page-header"><h1>Báo cáo & Thống kê</h1><p>Xuất báo cáo định kỳ</p></div>
-<div class="report-grid">
-<div class="card"><div class="card-header"><h3>📊 Đoàn viên</h3></div><div class="card-body"><div class="chart-area" style="height:180px"><canvas id="rptChart1"></canvas></div><p style="color:var(--text2);font-size:12px;margin:10px 0">Theo chi đoàn, thi đua, đoàn phí</p><div style="display:flex;gap:6px"><button class="btn btn-primary btn-sm" onclick="App.BaoCao.exportExcel('doanvien')">📥 Excel</button><button class="btn btn-outline btn-sm" onclick="App.BaoCao.exportPDF('doanvien')">📄 PDF</button></div></div></div>
-<div class="card"><div class="card-header"><h3>📅 Hoạt động</h3></div><div class="card-body"><div class="chart-area" style="height:180px"><canvas id="rptChart2"></canvas></div><p style="color:var(--text2);font-size:12px;margin:10px 0">Sự kiện, lượt tham gia</p><div style="display:flex;gap:6px"><button class="btn btn-primary btn-sm" onclick="App.BaoCao.exportExcel('sukien')">📥 Excel</button><button class="btn btn-outline btn-sm" onclick="App.BaoCao.exportPDF('sukien')">📄 PDF</button></div></div></div>
-<div class="card"><div class="card-header"><h3>📂 Tài liệu</h3></div><div class="card-body"><div class="chart-area" style="height:180px"><canvas id="rptChart3"></canvas></div><p style="color:var(--text2);font-size:12px;margin:10px 0">Upload, lượt xem theo danh mục</p><div style="display:flex;gap:6px"><button class="btn btn-primary btn-sm" onclick="App.BaoCao.exportExcel('tailieu')">📥 Excel</button><button class="btn btn-outline btn-sm" onclick="App.BaoCao.exportPDF('tailieu')">📄 PDF</button></div></div></div>
-</div></section>
-<!-- SETTINGS -->
-<section class="page" id="page-settings">
-<div class="page-header"><h1>Cài đặt</h1><p>Cấu hình hệ thống</p></div>
-<div class="card"><div class="card-body">
-<div class="settings-section"><h3>🔔 Thông báo</h3>
-<div class="setting-row"><div class="setting-label"><h4>Email</h4><p>Gửi email khi có hoạt động mới</p></div><div class="toggle" data-key="thongBaoEmail"></div></div>
-<div class="setting-row"><div class="setting-label"><h4>Web push</h4><p>Thông báo trên trình duyệt</p></div><div class="toggle" data-key="thongBaoWeb"></div></div>
-<div class="setting-row"><div class="setting-label"><h4>Nhắc đoàn phí</h4><p>Tự động nhắc khi chưa đóng</p></div><div class="toggle" data-key="nhacDoanPhi"></div></div>
-</div>
-<div class="settings-section"><h3>🎨 Giao diện</h3>
-<div class="setting-row"><div class="setting-label"><h4>Chế độ tối</h4><p>Giao diện nền tối</p></div><div class="toggle" id="darkModeToggle" data-key="darkMode"></div></div>
-<div class="setting-row"><div class="setting-label"><h4>Hiệu ứng</h4><p>Animation chuyển động</p></div><div class="toggle" data-key="hieu_ung"></div></div>
-</div>
-<div class="settings-section admin-only"><h3>🔐 Bảo mật</h3>
-<div class="setting-row"><div class="setting-label"><h4>2FA</h4><p>Xác thực hai lớp</p></div><div class="toggle" data-key="baoMat2FA"></div></div>
-<div class="setting-row"><div class="setting-label"><h4>Tự động đăng xuất</h4><p>Sau 30 phút không hoạt động</p></div><div class="toggle" data-key="tuDongDangXuat"></div></div>
-<div style="margin-top:16px"><button class="btn btn-primary btn-sm" onclick="App.CaiDat.save()">💾 Lưu cài đặt</button><button class="btn btn-sm" style="background:#ef4444;color:#fff;margin-left:8px" onclick="App.CaiDat.resetData()">🗑️ Xóa dữ liệu</button></div>
-</div>
-<div class="settings-section admin-only"><h3>🔑 Đổi mật khẩu</h3>
-<div class="form-group"><label>Mật khẩu hiện tại</label><input type="password" id="oldPass" class="form-input"></div>
-<div class="form-group"><label>Mật khẩu mới</label><input type="password" id="newPass" class="form-input"></div>
-<button class="btn btn-primary btn-sm" onclick="App.CaiDat.changePassword()">Đổi mật khẩu</button>
-</div>
-<div class="settings-section"><h3>ℹ️ Hệ thống</h3>
-<div class="setting-row"><div class="setting-label"><h4>Phiên bản</h4><p>v2.0.0 — 30/04/2025</p></div></div>
-<div class="setting-row"><div class="setting-label"><h4>Đơn vị</h4><p>Đoàn TNCS HCM — Khoa CNTT</p></div></div>
-</div>
-</div></div>
-</section>
-</div></main></div>
-<!-- MODAL: Upload -->
-<div class="modal-overlay" id="uploadModal"><div class="modal">
-<div class="modal-header"><h3>📤 Upload tài liệu</h3><button class="modal-close" onclick="closeModal('uploadModal')">&times;</button></div>
-<div class="modal-body">
-<div class="upload-zone" id="uploadZone"><div class="icon">📁</div><p>Kéo thả hoặc <strong>nhấn chọn file</strong></p><small>PDF, DOCX, PPTX, JPG/PNG, MP4 — Max 100MB</small><input type="file" id="fileInput" style="display:none" accept=".pdf,.docx,.pptx,.jpg,.jpeg,.png,.mp4"></div>
-<div id="filePreview" style="display:none;margin:12px 0;padding:10px;background:var(--input);border-radius:8px"></div>
-<div id="uploadProgress" style="display:none;margin:8px 0"><div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div><span id="progressText" style="font-size:11px;color:var(--text2)">0%</span></div>
-<div class="form-group" style="margin-top:12px"><label>Tiêu đề *</label><input type="text" id="docTitle" class="form-input" required><span class="field-error" id="docTitleErr"></span></div>
-<div class="form-group"><label>Mô tả</label><textarea id="docDesc" class="form-input"></textarea></div>
-<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
-<div class="form-group"><label>Danh mục</label><select id="docCat" class="form-input"><option value="Nghị quyết">Nghị quyết</option><option value="Học tập CT">Học tập CT</option><option value="Phong trào">Phong trào</option><option value="Hành chính">Hành chính</option><option value="Khác">Khác</option></select></div>
-<div class="form-group"><label>Quyền xem</label><select id="docAccess" class="form-input"><option>Công khai</option><option>Nội bộ</option><option>Giới hạn</option></select></div>
-</div>
-<div class="form-group"><label>Tags</label><input type="text" id="docTags" class="form-input" placeholder="tag1, tag2..."></div>
-</div>
-<div class="modal-footer"><button class="btn btn-outline" onclick="closeModal('uploadModal')">Hủy</button><button class="btn btn-primary" id="uploadBtn" onclick="App.TaiLieu.upload()">📤 Upload</button></div>
-</div></div>
-<!-- MODAL: Member -->
-<div class="modal-overlay" id="memberModal"><div class="modal">
-<div class="modal-header"><h3 id="memberModalTitle">➕ Thêm Đoàn viên</h3><button class="modal-close" onclick="closeModal('memberModal')">&times;</button></div>
-<div class="modal-body">
-<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
-<div class="form-group"><label>Họ tên *</label><input type="text" id="mName" class="form-input" required><span class="field-error" id="mNameErr"></span></div>
-<div class="form-group"><label>Ngày sinh *</label><input type="date" id="mDob" class="form-input" required><span class="field-error" id="mDobErr"></span></div>
-</div>
-<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
-<div class="form-group"><label>Giới tính</label><select id="mGender" class="form-input"><option>Nam</option><option>Nữ</option></select></div>
-<div class="form-group"><label>Chi đoàn</label><select id="mUnit" class="form-input"><option>Chi đoàn K22A</option><option>Chi đoàn K22B</option><option>Chi đoàn K21C</option><option>Chi đoàn K23A</option></select></div>
-</div>
-<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
-<div class="form-group"><label>SĐT *</label><input type="tel" id="mPhone" class="form-input" required><span class="field-error" id="mPhoneErr"></span></div>
-<div class="form-group"><label>Email *</label><input type="email" id="mEmail" class="form-input" required><span class="field-error" id="mEmailErr"></span></div>
-</div>
-<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
-<div class="form-group"><label>Ngày kết nạp</label><input type="date" id="mJoinDate" class="form-input"></div>
-<div class="form-group"><label>Thi đua</label><select id="mRank" class="form-input"><option>Xuất sắc</option><option>Tiên tiến</option><option>Hoàn thành</option><option>Không HT</option></select></div>
-</div>
-</div>
-<div class="modal-footer"><button class="btn btn-outline" onclick="closeModal('memberModal')">Hủy</button><button class="btn btn-primary" onclick="App.DoanVien.save()">💾 Lưu</button></div>
-</div></div>
-<!-- MODAL: Event -->
-<div class="modal-overlay" id="eventModal"><div class="modal">
-<div class="modal-header"><h3>📅 Tạo sự kiện</h3><button class="modal-close" onclick="closeModal('eventModal')">&times;</button></div>
-<div class="modal-body">
-<div class="form-group"><label>Tên sự kiện *</label><input type="text" id="eName" class="form-input" required><span class="field-error" id="eNameErr"></span></div>
-<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
-<div class="form-group"><label>Ngày *</label><input type="date" id="eDate" class="form-input" required><span class="field-error" id="eDateErr"></span></div>
-<div class="form-group"><label>Giờ</label><input type="time" id="eTime" class="form-input" value="08:00"></div>
-</div>
-<div class="form-group"><label>Địa điểm</label><input type="text" id="eLocation" class="form-input"></div>
-<div class="form-group"><label>Mô tả</label><textarea id="eDesc" class="form-input"></textarea></div>
-<div class="form-group"><label>Số lượng dự kiến</label><input type="number" id="eMax" class="form-input" value="100"></div>
-</div>
-<div class="modal-footer"><button class="btn btn-outline" onclick="closeModal('eventModal')">Hủy</button><button class="btn btn-primary" onclick="App.SuKien.create()">💾 Tạo</button></div>
-</div></div>
-<!-- MODAL: Preview -->
-<div class="modal-overlay" id="previewModal"><div class="modal" style="max-width:600px">
-<div class="modal-header"><h3 id="previewTitle">Chi tiết</h3><button class="modal-close" onclick="closeModal('previewModal')">&times;</button></div>
-<div class="modal-body" id="previewBody"></div>
-</div></div>
-<!-- CONFIRM -->
-<div class="modal-overlay" id="confirmModal"><div class="modal" style="max-width:380px">
-<div class="modal-header"><h3>⚠️ Xác nhận</h3><button class="modal-close" onclick="closeModal('confirmModal')">&times;</button></div>
-<div class="modal-body"><p id="confirmMsg"></p></div>
-<div class="modal-footer"><button class="btn btn-outline" onclick="closeModal('confirmModal')">Hủy</button><button class="btn" id="confirmOk" style="background:#ef4444;color:#fff">Xác nhận</button></div>
-</div></div>
-<script>
-__JS_PLACEHOLDER__
-</script>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1.0">
+    <meta name="description" content="Hệ thống quản lý Đoàn TNCS HCM - Số hóa tài liệu, quản lý đoàn viên">
+    <title>Đoàn TNCS HCM — Hệ thống Quản lý & Số hóa Tài liệu</title>
+    <link rel="icon"
+        href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>Đ</text></svg>">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
+    <style>
+        __CSS_PLACEHOLDER__
+    </style>
+</head>
+
+<body>
+    <!-- LOGIN -->
+    <div id="loginPage" class="login-page">
+        <div class="login-bg"></div>
+        <div class="login-card">
+            <div class="login-logo">Đ</div>
+            <h1>Đoàn TNCS HCM</h1>
+            <p class="login-subtitle">Hệ thống Quản lý & Số hóa Tài liệu</p>
+            <form id="loginForm" autocomplete="off">
+                <div class="login-field"><label for="loginUser">Tên đăng nhập</label><input type="text" id="loginUser"
+                        placeholder="Nhập tên đăng nhập" required></div>
+                <div class="login-field"><label for="loginPass">Mật khẩu</label><input type="password" id="loginPass"
+                        placeholder="Nhập mật khẩu" required></div>
+                <div id="loginError" class="login-error"></div>
+                <label class="login-remember"><input type="checkbox" id="rememberMe"> Ghi nhớ đăng nhập</label>
+                <button type="submit" class="login-btn">Đăng nhập</button>
+            </form>
+
+            <a href="#" class="login-forgot"
+                onclick="showToast('Vui lòng liên hệ Admin để đặt lại mật khẩu','warning');return false">Quên mật
+                khẩu?</a>
+        </div>
+    </div>
+    <!-- TOAST -->
+    <div id="toastContainer" class="toast-container"></div>
+    <!-- LOADING -->
+    <div id="loadingOverlay" class="loading-overlay" style="display:none">
+        <div class="spinner"></div>
+    </div>
+    <!-- APP -->
+    <div class="app-layout" id="appLayout" style="display:none">
+        <div class="sidebar-overlay" id="sidebarOverlay"></div>
+        <aside class="sidebar" id="sidebar">
+            <div class="sidebar-logo"><img src="doantn.png" alt="Logo Đoàn"
+                    style="width:40px;height:40px;border-radius:8px;object-fit:contain">
+                <div><span>Đoàn TNCS HCM</span><small>Chi Đoàn 24ICD</small></div>
+            </div>
+            <nav class="sidebar-nav">
+                <div class="nav-group">
+                    <div class="nav-group-title">Chính</div>
+                    <div class="nav-item active" data-page="dashboard"><span class="icon">📊</span>Dashboard</div>
+                    <div class="nav-item" data-page="members"><span class="icon">👤</span>Đoàn viên<span class="badge"
+                            id="memberBadge">0</span></div>
+                    <div class="nav-item" data-page="events"><span class="icon">🏅</span>Hoạt động</div>
+                </div>
+                <div class="nav-group">
+                    <div class="nav-group-title">Tài liệu</div>
+                    <div class="nav-item" data-page="documents"><span class="icon">📂</span>Thư viện<span class="badge"
+                            id="docBadge">0</span></div>
+                    <div class="nav-item" id="navUpload"><span class="icon">📤</span>Upload mới</div>
+                </div>
+                <div class="nav-group">
+                    <div class="nav-group-title">Hệ thống</div>
+                    <div class="nav-item" data-page="reports"><span class="icon">📈</span>Báo cáo</div>
+                    <div class="nav-item" data-page="settings"><span class="icon">⚙️</span>Cài đặt</div>
+                </div>
+            </nav>
+            <div style="padding:12px 16px;margin-top:auto;border-top:1px solid var(--border)">
+                <button id="themeToggleBtn" onclick="App.CaiDat.toggleTheme()" style="width:100%;padding:8px 12px;border-radius:8px;border:1px solid var(--border);background:var(--input);color:var(--text);cursor:pointer;font-size:13px;display:flex;align-items:center;gap:8px;transition:all .2s">
+                    <span id="themeIcon">🌙</span>
+                    <span id="themeLabel">Chế độ tối</span>
+                </button>
+            </div>
+        </aside>
+        <main class="main-content">
+            <header class="header">
+                <div class="header-left">
+                    <button class="menu-toggle" id="menuToggle" aria-label="Menu">☰</button>
+                    <div class="header-search"><span class="search-icon">🔍</span><input type="text"
+                            placeholder="Tìm kiếm..." id="globalSearch">
+                        <div class="search-results" id="searchResults" style="display:none"></div>
+                    </div>
+                </div>
+                <div class="header-right">
+                    <div class="notif-wrapper"><button class="header-btn" id="notifBtn" aria-label="Thông báo">🔔<span
+                                class="notif-dot" id="notifDot" style="display:none"></span></button>
+                        <div class="notif-panel" id="notifPanel" style="display:none">
+                            <div class="notif-panel-header"><strong>Thông báo</strong><span class="badge badge-danger"
+                                    id="notifCount">0</span></div>
+                            <div id="notifList" class="notif-list"></div>
+                            <div class="notif-panel-footer" style="display:flex;gap:6px;justify-content:center"><button
+                                    class="btn btn-sm btn-outline" onclick="App.ThongBao.markAllRead()">✓ Đã
+                                    đọc</button><button class="btn btn-sm" style="background:#ef4444;color:#fff"
+                                    onclick="App.ThongBao.clearAll()">🗑️ Xóa tất cả</button></div>
+                        </div>
+                    </div>
+                    <span id="syncStatus"
+                        style="font-size:11px;padding:3px 8px;border-radius:10px;background:rgba(16,185,129,.15);color:#10b981"
+                        title="Trạng thái đồng bộ">🟢 Online</span>
+                    <span id="headerUserName" style="font-size:12px;color:var(--text2)"></span>
+                    <div class="user-avatar" id="headerAvatar">AD</div>
+                    <button class="btn btn-outline btn-sm" id="logoutBtn">Đăng xuất</button>
+                </div>
+            </header>
+            <div class="page-content">
+                <!-- DASHBOARD -->
+                <section class="page active" id="page-dashboard">
+                    <div class="page-header">
+                        <h1>Dashboard Tổng quan</h1>
+                        <p id="dashGreeting"></p>
+                    </div>
+                    <div class="stats-grid" id="dashStats"></div>
+                    <div class="dashboard-grid">
+                        <div class="card">
+                            <div class="card-header">
+                                <h3>📈 Kết nạp 6 tháng</h3>
+                            </div>
+                            <div class="card-body">
+                                <div class="chart-area"><canvas id="lineChart"></canvas></div>
+                            </div>
+                        </div>
+                        <div class="card">
+                            <div class="card-header">
+                                <h3>🥧 Phân bố Giới tính</h3>
+                            </div>
+                            <div class="card-body">
+                                <div class="chart-area"><canvas id="pieChart"></canvas></div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card" style="margin-top:16px">
+                        <div class="card-header">
+                            <h3>🕐 Hoạt động gần đây</h3>
+                        </div>
+                        <div class="card-body">
+                            <div class="activity-list" id="recentActivity"></div>
+                        </div>
+                    </div>
+                </section>
+                <!-- MEMBERS -->
+                <section class="page" id="page-members">
+                    <div class="page-header"
+                        style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px">
+                        <div>
+                            <h1>Quản lý Đoàn viên</h1>
+                            <p>Hồ sơ, thi đua và đoàn phí</p>
+                        </div>
+                        <div style="display:flex;gap:6px;flex-wrap:wrap">
+                            <button class="btn btn-primary admin-only" id="btnAddMember">➕ Thêm</button>
+                            <button class="btn btn-outline admin-only" id="btnImportFile">📥 Import CSV/Excel</button>
+                            <input type="file" id="importFileInput" style="display:none" accept=".csv,.xlsx,.xls">
+                        </div>
+                    </div>
+                    <div class="card">
+                        <div class="card-header" style="flex-wrap:wrap;gap:8px">
+                            <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
+                                <input class="form-input" placeholder="🔍 Tìm kiếm..." id="memberSearch"
+                                    style="width:170px">
+                                <select class="form-input" id="memberStatusFilter" style="width:130px">
+                                    <option value="all">Trạng thái ▾</option>
+                                    <option value="hoat-dong">Hoạt động</option>
+                                    <option value="tam-hoan">Tạm hoãn</option>
+                                    <option value="het-han">Hết hạn</option>
+                                </select>
+                            </div>
+                            <span style="color:var(--text2);font-size:12px" id="memberCount"></span>
+                        </div>
+                        <div class="card-body" style="padding:0">
+                            <div class="table-wrapper sticky-table">
+                                <table class="data-table" id="memberTable">
+                                    <thead>
+                                        <tr>
+                                            <th>STT</th>
+                                            <th class="sticky-col sortable" data-sort="hoTen">Họ và tên ⇅</th>
+                                            <th>MSSV</th>
+                                            <th>Mã định danh</th>
+                                            <th>Số thẻ đoàn</th>
+                                            <th>Ngày sinh</th>
+                                            <th>Giới tính</th>
+                                            <th>Dân tộc</th>
+                                            <th>Tôn giáo</th>
+                                            <th>Quê quán</th>
+                                            <th>Địa chỉ thường trú</th>
+                                            <th>Số CMND/CCCD</th>
+                                            <th>Ngày cấp</th>
+                                            <th>Nơi cấp</th>
+                                            <th>Trình độ VH</th>
+                                            <th>Trình độ CM</th>
+                                            <th>Trình độ LLCT</th>
+                                            <th>Tin học</th>
+                                            <th>Ngoại ngữ</th>
+                                            <th>Vào Đoàn</th>
+                                            <th>Số NQ kết nạp</th>
+                                            <th>Vào Đảng</th>
+                                            <th>Nghề nghiệp</th>
+                                            <th>ĐT sinh hoạt</th>
+                                            <th>Rèn luyện</th>
+                                            <th>Đánh giá XL</th>
+                                            <th>Khen thưởng</th>
+                                            <th>Kỷ luật</th>
+                                            <th>Chức vụ</th>
+                                            <th>Hội</th>
+                                            <th>Email</th>
+                                            <th>SĐT</th>
+                                            <th>Thao tác</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="memberTbody"></tbody>
+                                </table>
+                            </div>
+                        </div>
+                        <div class="card-footer" id="memberPagination"></div>
+                    </div>
+                </section>
+                <!-- DOCUMENTS -->
+                <section class="page" id="page-documents">
+                    <div class="page-header"
+                        style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px">
+                        <div>
+                            <h1>Thư viện Tài liệu</h1>
+                            <p>Tra cứu tài liệu số hóa</p>
+                        </div>
+                        <button class="btn btn-primary" id="btnUploadDoc">📤 Upload</button>
+                    </div>
+                    <div class="tab-filters" id="docTabs"></div>
+                    <div class="toolbar">
+                        <input class="form-input" placeholder="🔍 Tìm theo tiêu đề, tags..." id="docSearch"
+                            style="width:240px">
+                        <div style="display:flex;gap:6px">
+                            <select class="form-input" id="docTypeFilter" style="width:120px">
+                                <option value="all">Loại file ▾</option>
+                                <option value="PDF">PDF</option>
+                                <option value="DOCX">DOCX</option>
+                                <option value="PPTX">PPTX</option>
+                                <option value="Image">Ảnh</option>
+                            </select>
+                            <select class="form-input" id="docSort" style="width:130px">
+                                <option value="newest">Mới nhất</option>
+                                <option value="views">Lượt xem ▾</option>
+                                <option value="az">A → Z</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="doc-grid" id="docGrid"></div>
+                </section>
+                <!-- EVENTS -->
+                <section class="page" id="page-events">
+                    <div class="page-header"
+                        style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px">
+                        <div>
+                            <h1>Hoạt động & Sự kiện</h1>
+                            <p>Quản lý sự kiện và điểm danh</p>
+                        </div>
+                        <button class="btn btn-primary admin-only" id="btnAddEvent">📅 Tạo sự kiện</button>
+                    </div>
+                    <div class="stats-grid" id="eventStats"></div>
+                    <div class="card">
+                        <div class="card-header">
+                            <h3>Danh sách sự kiện</h3>
+                            <div style="display:flex;gap:4px"><button class="filter-btn active" data-ef="all">Tất
+                                    cả</button><button class="filter-btn" data-ef="sap-dien-ra">Sắp tới</button><button
+                                    class="filter-btn" data-ef="dang-dien-ra">Đang diễn ra</button><button
+                                    class="filter-btn" data-ef="hoan-thanh">Đã xong</button></div>
+                        </div>
+                        <div class="card-body">
+                            <div class="event-list" id="eventList"></div>
+                        </div>
+                    </div>
+                </section>
+                <!-- REPORTS -->
+                <section class="page" id="page-reports">
+                    <div class="page-header">
+                        <h1>Báo cáo & Thống kê</h1>
+                        <p>Xuất báo cáo định kỳ</p>
+                    </div>
+                    <div class="report-grid">
+                        <div class="card">
+                            <div class="card-header">
+                                <h3>📊 Đoàn viên</h3>
+                            </div>
+                            <div class="card-body">
+                                <div class="chart-area" style="height:180px"><canvas id="rptChart1"></canvas></div>
+                                <p style="color:var(--text2);font-size:12px;margin:10px 0">Theo chi đoàn, thi đua, đoàn
+                                    phí</p>
+                                <div style="display:flex;gap:6px"><button class="btn btn-primary btn-sm"
+                                        onclick="App.BaoCao.exportExcel('doanvien')">📥 Excel</button><button
+                                        class="btn btn-outline btn-sm" onclick="App.BaoCao.exportPDF('doanvien')">📄
+                                        PDF</button></div>
+                            </div>
+                        </div>
+                        <div class="card">
+                            <div class="card-header">
+                                <h3>📅 Hoạt động</h3>
+                            </div>
+                            <div class="card-body">
+                                <div class="chart-area" style="height:180px"><canvas id="rptChart2"></canvas></div>
+                                <p style="color:var(--text2);font-size:12px;margin:10px 0">Sự kiện, lượt tham gia</p>
+                                <div style="display:flex;gap:6px"><button class="btn btn-primary btn-sm"
+                                        onclick="App.BaoCao.exportExcel('sukien')">📥 Excel</button><button
+                                        class="btn btn-outline btn-sm" onclick="App.BaoCao.exportPDF('sukien')">📄
+                                        PDF</button></div>
+                            </div>
+                        </div>
+                        <div class="card">
+                            <div class="card-header">
+                                <h3>📂 Tài liệu</h3>
+                            </div>
+                            <div class="card-body">
+                                <div class="chart-area" style="height:180px"><canvas id="rptChart3"></canvas></div>
+                                <p style="color:var(--text2);font-size:12px;margin:10px 0">Upload, lượt xem theo danh
+                                    mục</p>
+                                <div style="display:flex;gap:6px"><button class="btn btn-primary btn-sm"
+                                        onclick="App.BaoCao.exportExcel('tailieu')">📥 Excel</button><button
+                                        class="btn btn-outline btn-sm" onclick="App.BaoCao.exportPDF('tailieu')">📄
+                                        PDF</button></div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+                <!-- SETTINGS -->
+                <section class="page" id="page-settings">
+                    <div class="page-header">
+                        <h1>Cài đặt</h1>
+                        <p>Cấu hình hệ thống</p>
+                    </div>
+                    <div class="card">
+                        <div class="card-body">
+                            <div class="settings-section">
+                                <h3>🔔 Thông báo</h3>
+                                <div class="setting-row">
+                                    <div class="setting-label">
+                                        <h4>Email</h4>
+                                        <p>Gửi email khi có hoạt động mới</p>
+                                    </div>
+                                    <div class="toggle" data-key="thongBaoEmail"></div>
+                                </div>
+                                <div class="setting-row">
+                                    <div class="setting-label">
+                                        <h4>Web push</h4>
+                                        <p>Thông báo trên trình duyệt</p>
+                                    </div>
+                                    <div class="toggle" data-key="thongBaoWeb"></div>
+                                </div>
+                                <div class="setting-row">
+                                    <div class="setting-label">
+                                        <h4>Nhắc đoàn phí</h4>
+                                        <p>Tự động nhắc khi chưa đóng</p>
+                                    </div>
+                                    <div class="toggle" data-key="nhacDoanPhi"></div>
+                                </div>
+                            </div>
+                            <div class="settings-section">
+                                <h3>🎨 Giao diện</h3>
+                                <div class="setting-row">
+                                    <div class="setting-label">
+                                        <h4>Chế độ tối</h4>
+                                        <p>Giao diện nền tối</p>
+                                    </div>
+                                    <div class="toggle" id="darkModeToggle" data-key="darkMode"></div>
+                                </div>
+                                <div class="setting-row">
+                                    <div class="setting-label">
+                                        <h4>Hiệu ứng</h4>
+                                        <p>Animation chuyển động</p>
+                                    </div>
+                                    <div class="toggle" data-key="hieu_ung"></div>
+                                </div>
+                            </div>
+                            <div class="settings-section admin-only">
+                                <h3>🔐 Bảo mật</h3>
+                                <div class="setting-row">
+                                    <div class="setting-label">
+                                        <h4>2FA</h4>
+                                        <p>Xác thực hai lớp</p>
+                                    </div>
+                                    <div class="toggle" data-key="baoMat2FA"></div>
+                                </div>
+                                <div class="setting-row">
+                                    <div class="setting-label">
+                                        <h4>Tự động đăng xuất</h4>
+                                        <p>Sau 30 phút không hoạt động</p>
+                                    </div>
+                                    <div class="toggle" data-key="tuDongDangXuat"></div>
+                                </div>
+                                <div style="margin-top:16px"><button class="btn btn-primary btn-sm"
+                                        onclick="App.CaiDat.save()">💾 Lưu cài đặt</button><button class="btn btn-sm"
+                                        style="background:#ef4444;color:#fff;margin-left:8px"
+                                        onclick="App.CaiDat.resetData()">🗑️ Xóa dữ liệu</button></div>
+                            </div>
+                            <div class="settings-section admin-only">
+                                <h3>🔑 Đổi mật khẩu</h3>
+                                <div class="form-group"><label>Mật khẩu hiện tại</label><input type="password"
+                                        id="oldPass" class="form-input"></div>
+                                <div class="form-group"><label>Mật khẩu mới</label><input type="password" id="newPass"
+                                        class="form-input"></div>
+                                <button class="btn btn-primary btn-sm" onclick="App.CaiDat.changePassword()">Đổi mật
+                                    khẩu</button>
+                            </div>
+                            <div class="settings-section">
+                                <h3>ℹ️ Hệ thống</h3>
+                                <div class="setting-row">
+                                    <div class="setting-label">
+                                        <h4>Phiên bản</h4>
+                                        <p>v2.0.0 — 30/04/2025</p>
+                                    </div>
+                                </div>
+                                <div class="setting-row">
+                                    <div class="setting-label">
+                                        <h4>Đơn vị</h4>
+                                        <p>Đoàn TNCS HCM — Khoa CNTT</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+            </div>
+        </main>
+    </div>
+    <!-- MODAL: Upload -->
+    <div class="modal-overlay" id="uploadModal">
+        <div class="modal">
+            <div class="modal-header">
+                <h3>📤 Upload tài liệu</h3><button class="modal-close"
+                    onclick="closeModal('uploadModal')">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="upload-zone" id="uploadZone">
+                    <div class="icon">📁</div>
+                    <p>Kéo thả hoặc <strong>nhấn chọn file</strong></p><small>PDF, DOCX, PPTX, JPG/PNG, MP4 — Max
+                        100MB</small><input type="file" id="fileInput" style="display:none"
+                        accept=".pdf,.docx,.pptx,.jpg,.jpeg,.png,.mp4">
+                </div>
+                <div id="filePreview"
+                    style="display:none;margin:12px 0;padding:10px;background:var(--input);border-radius:8px"></div>
+                <div id="uploadProgress" style="display:none;margin:8px 0">
+                    <div class="progress-bar">
+                        <div class="progress-fill" id="progressFill"></div>
+                    </div><span id="progressText" style="font-size:11px;color:var(--text2)">0%</span>
+                </div>
+                <div class="form-group" style="margin-top:12px"><label>Tiêu đề *</label><input type="text" id="docTitle"
+                        class="form-input" required><span class="field-error" id="docTitleErr"></span></div>
+                <div class="form-group"><label>Mô tả</label><textarea id="docDesc" class="form-input"></textarea></div>
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+                    <div class="form-group"><label>Danh mục</label><select id="docCat" class="form-input">
+                            <option value="Nghị quyết">Nghị quyết</option>
+                            <option value="Học tập CT">Học tập CT</option>
+                            <option value="Phong trào">Phong trào</option>
+                            <option value="Hành chính">Hành chính</option>
+                            <option value="Khác">Khác</option>
+                        </select></div>
+                    <div class="form-group"><label>Quyền xem</label><select id="docAccess" class="form-input">
+                            <option>Công khai</option>
+                            <option>Nội bộ</option>
+                            <option>Giới hạn</option>
+                        </select></div>
+                </div>
+                <div class="form-group"><label>Tags</label><input type="text" id="docTags" class="form-input"
+                        placeholder="tag1, tag2..."></div>
+            </div>
+            <div class="modal-footer"><button class="btn btn-outline"
+                    onclick="closeModal('uploadModal')">Hủy</button><button class="btn btn-primary" id="uploadBtn"
+                    onclick="App.TaiLieu.upload()">📤 Upload</button></div>
+        </div>
+    </div>
+    <!-- MODAL: Member -->
+    <div class="modal-overlay" id="memberModal">
+        <div class="modal">
+            <div class="modal-header">
+                <h3 id="memberModalTitle">➕ Thêm Đoàn viên</h3><button class="modal-close"
+                    onclick="closeModal('memberModal')">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+                    <div class="form-group"><label>Họ tên *</label><input type="text" id="mName" class="form-input"
+                            required><span class="field-error" id="mNameErr"></span></div>
+                    <div class="form-group"><label>Ngày sinh *</label><input type="date" id="mDob" class="form-input"
+                            required><span class="field-error" id="mDobErr"></span></div>
+                </div>
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+                    <div class="form-group"><label>Giới tính</label><select id="mGender" class="form-input">
+                            <option>Nam</option>
+                            <option>Nữ</option>
+                        </select></div>
+                    <div class="form-group"><label>Chi đoàn</label><select id="mUnit" class="form-input">
+                            <option>24ICD</option>
+                        </select></div>
+                </div>
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+                    <div class="form-group"><label>SĐT *</label><input type="tel" id="mPhone" class="form-input"
+                            required><span class="field-error" id="mPhoneErr"></span></div>
+                    <div class="form-group"><label>Email *</label><input type="email" id="mEmail" class="form-input"
+                            required><span class="field-error" id="mEmailErr"></span></div>
+                </div>
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+                    <div class="form-group"><label>Ngày kết nạp</label><input type="date" id="mJoinDate"
+                            class="form-input"></div>
+                    <div class="form-group"><label>Thi đua</label><select id="mRank" class="form-input">
+                            <option>Xuất sắc</option>
+                            <option>Tiên tiến</option>
+                            <option>Hoàn thành</option>
+                            <option>Không HT</option>
+                        </select></div>
+                </div>
+            </div>
+            <div class="modal-footer"><button class="btn btn-outline"
+                    onclick="closeModal('memberModal')">Hủy</button><button class="btn btn-primary"
+                    onclick="App.DoanVien.save()">💾 Lưu</button></div>
+        </div>
+    </div>
+    <!-- MODAL: Event -->
+    <div class="modal-overlay" id="eventModal">
+        <div class="modal">
+            <div class="modal-header">
+                <h3>📅 Tạo sự kiện</h3><button class="modal-close" onclick="closeModal('eventModal')">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group"><label>Tên sự kiện *</label><input type="text" id="eName" class="form-input"
+                        required><span class="field-error" id="eNameErr"></span></div>
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+                    <div class="form-group"><label>Ngày *</label><input type="date" id="eDate" class="form-input"
+                            required><span class="field-error" id="eDateErr"></span></div>
+                    <div class="form-group"><label>Giờ</label><input type="time" id="eTime" class="form-input"
+                            value="08:00"></div>
+                </div>
+                <div class="form-group"><label>Địa điểm</label><input type="text" id="eLocation" class="form-input">
+                </div>
+                <div class="form-group"><label>Mô tả</label><textarea id="eDesc" class="form-input"></textarea></div>
+                <div class="form-group"><label>Số lượng dự kiến</label><input type="number" id="eMax" class="form-input"
+                        value="100"></div>
+            </div>
+            <div class="modal-footer"><button class="btn btn-outline"
+                    onclick="closeModal('eventModal')">Hủy</button><button class="btn btn-primary"
+                    onclick="App.SuKien.create()">💾 Tạo</button></div>
+        </div>
+    </div>
+    <!-- MODAL: Preview -->
+    <div class="modal-overlay" id="previewModal">
+        <div class="modal" style="max-width:600px">
+            <div class="modal-header">
+                <h3 id="previewTitle">Chi tiết</h3><button class="modal-close"
+                    onclick="closeModal('previewModal')">&times;</button>
+            </div>
+            <div class="modal-body" id="previewBody"></div>
+        </div>
+    </div>
+    <!-- CONFIRM -->
+    <div class="modal-overlay" id="confirmModal">
+        <div class="modal" style="max-width:380px">
+            <div class="modal-header">
+                <h3>⚠️ Xác nhận</h3><button class="modal-close" onclick="closeModal('confirmModal')">&times;</button>
+            </div>
+            <div class="modal-body">
+                <p id="confirmMsg"></p>
+            </div>
+            <div class="modal-footer"><button class="btn btn-outline"
+                    onclick="closeModal('confirmModal')">Hủy</button><button class="btn" id="confirmOk"
+                    style="background:#ef4444;color:#fff">Xác nhận</button></div>
+        </div>
+    </div>
+    <!-- FOOTER -->
+    <footer
+        style="background:linear-gradient(135deg,#1a1a2e 0%,#16213e 50%,#0f3460 100%);padding:28px 32px;margin-top:auto;font-family:'Inter',sans-serif">
+        <div
+            style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:20px;max-width:1200px;margin:0 auto">
+            <div style="display:flex;align-items:center;gap:16px">
+                <img src="hcmus.png" alt="HCMUS"
+                    style="height:60px;object-fit:contain;filter:drop-shadow(0 2px 8px rgba(0,0,0,.3))">
+                <img src="fetel.png" alt="FETEL"
+                    style="height:60px;object-fit:contain;filter:drop-shadow(0 2px 8px rgba(0,0,0,.3))">
+            </div>
+            <div style="text-align:center;line-height:1.8">
+                <div style="font-size:16px;font-weight:700;color:#fff;letter-spacing:.5px">Chi Đoàn — Chi Hội ICD1 K24 —
+                    HCMUS</div>
+                <div style="font-size:14px;color:rgba(255,255,255,.85)">📧 <a href="mailto:chidoan24icd@gmail.com"
+                        style="color:#60a5fa;text-decoration:none">Email contact: chidoan24icd@gmail.com</a></div>
+                <div style="font-size:14px;color:rgba(255,255,255,.85)">📘 <a href="https://www.facebook.com/24icd1"
+                        target="_blank" style="color:#60a5fa;text-decoration:none">Fanpage: Chi Đoàn - Chi Hội ICD1 K24
+                        - HCMUS</a></div>
+            </div>
+            <div style="text-align:right">
+                <div style="font-size:12px;color:rgba(255,255,255,.6)">© 2025 Copyright by <strong
+                        style="color:#fff">Huy Huynh</strong></div>
+                <div style="font-size:11px;color:rgba(255,255,255,.4)">All rights reserved.</div>
+            </div>
+        </div>
+    </footer>
+    </div><!-- end app-layout -->
+    <script>
+        __JS_PLACEHOLDER__
+    </script>
 </body>
+
 </html>
