@@ -400,7 +400,7 @@ body.light .sticky-table tbody tr:hover .sticky-col{background:#e2e8f0!important
                         style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px">
                         <div>
                             <h1>Quản lý Đoàn viên</h1>
-                            <p>Hồ sơ, thi đua và đoàn phí</p>
+                            <p>Hồ sơ và thi đua</p>
                         </div>
                         <div style="display:flex;gap:6px;flex-wrap:wrap">
                             <button class="btn btn-primary admin-only" id="btnAddMember">➕ Thêm</button>
@@ -598,13 +598,7 @@ body.light .sticky-table tbody tr:hover .sticky-col{background:#e2e8f0!important
                                     </div>
                                     <div class="toggle" data-key="thongBaoWeb"></div>
                                 </div>
-                                <div class="setting-row">
-                                    <div class="setting-label">
-                                        <h4>Nhắc đoàn phí</h4>
-                                        <p>Tự động nhắc khi chưa đóng</p>
-                                    </div>
-                                    <div class="toggle" data-key="nhacDoanPhi"></div>
-                                </div>
+
                             </div>
                             <div class="settings-section">
                                 <h3>🎨 Giao diện</h3>
@@ -1023,16 +1017,16 @@ function initSampleData(){
 function seedLocalData(){
   if(!DB.get('doanvien')){
     DB.set('doanvien',[
-      {id:'DV001',hoTen:'Nguyễn Văn An',ngaySinh:'2002-05-15',gioiTinh:'Nam',chiDoan:'24ICD',soDienThoai:'0901234001',email:'an@email.com',ngayKetNap:'2024-09-01',trangThai:'hoat-dong',thiDua:'Xuất sắc',doanPhi:{Q1_2025:true,Q2_2025:true,Q3_2025:false,Q4_2025:false}},
-      {id:'DV002',hoTen:'Trần Thị Bích',ngaySinh:'2003-06-20',gioiTinh:'Nữ',chiDoan:'24ICD',soDienThoai:'0901234002',email:'bich@email.com',ngayKetNap:'2024-10-15',trangThai:'hoat-dong',thiDua:'Tiên tiến',doanPhi:{Q1_2025:true,Q2_2025:false,Q3_2025:false,Q4_2025:false}},
-      {id:'DV003',hoTen:'Lê Minh Đức',ngaySinh:'2001-01-10',gioiTinh:'Nam',chiDoan:'24ICD',soDienThoai:'0901234003',email:'duc@email.com',ngayKetNap:'2024-03-20',trangThai:'tam-hoan',thiDua:'Hoàn thành',doanPhi:{Q1_2025:true,Q2_2025:false,Q3_2025:false,Q4_2025:false}},
-      {id:'DV004',hoTen:'Phạm Thị Hoa',ngaySinh:'2004-09-05',gioiTinh:'Nữ',chiDoan:'24ICD',soDienThoai:'0901234004',email:'hoa@email.com',ngayKetNap:'2025-01-15',trangThai:'hoat-dong',thiDua:'Xuất sắc',doanPhi:{Q1_2025:true,Q2_2025:true,Q3_2025:true,Q4_2025:false}},
-      {id:'DV005',hoTen:'Hoàng Văn Khánh',ngaySinh:'2002-12-25',gioiTinh:'Nam',chiDoan:'24ICD',soDienThoai:'0901234005',email:'khanh@email.com',ngayKetNap:'2024-11-01',trangThai:'hoat-dong',thiDua:'Tiên tiến',doanPhi:{Q1_2025:true,Q2_2025:true,Q3_2025:false,Q4_2025:false}},
-      {id:'DV006',hoTen:'Ngô Thị Lan',ngaySinh:'2003-04-18',gioiTinh:'Nữ',chiDoan:'24ICD',soDienThoai:'0901234006',email:'lan@email.com',ngayKetNap:'2025-02-10',trangThai:'hoat-dong',thiDua:'Xuất sắc',doanPhi:{Q1_2025:true,Q2_2025:true,Q3_2025:true,Q4_2025:true}},
-      {id:'DV007',hoTen:'Đỗ Quang Minh',ngaySinh:'2001-07-30',gioiTinh:'Nam',chiDoan:'24ICD',soDienThoai:'0901234007',email:'minh@email.com',ngayKetNap:'2024-06-15',trangThai:'hoat-dong',thiDua:'Hoàn thành',doanPhi:{Q1_2025:true,Q2_2025:true,Q3_2025:true,Q4_2025:true}},
-      {id:'DV008',hoTen:'Vũ Thanh Nga',ngaySinh:'2004-02-14',gioiTinh:'Nữ',chiDoan:'24ICD',soDienThoai:'0901234008',email:'nga@email.com',ngayKetNap:'2024-12-01',trangThai:'het-han',thiDua:'Không HT',doanPhi:{Q1_2025:false,Q2_2025:false,Q3_2025:false,Q4_2025:false}},
-      {id:'DV009',hoTen:'Bùi Văn Phong',ngaySinh:'2002-08-22',gioiTinh:'Nam',chiDoan:'24ICD',soDienThoai:'0901234009',email:'phong@email.com',ngayKetNap:'2025-03-01',trangThai:'hoat-dong',thiDua:'Tiên tiến',doanPhi:{Q1_2025:true,Q2_2025:true,Q3_2025:true,Q4_2025:false}},
-      {id:'DV010',hoTen:'Lý Thị Quỳnh',ngaySinh:'2003-11-08',gioiTinh:'Nữ',chiDoan:'24ICD',soDienThoai:'0901234010',email:'quynh@email.com',ngayKetNap:'2024-08-20',trangThai:'tam-hoan',thiDua:'Hoàn thành',doanPhi:{Q1_2025:true,Q2_2025:false,Q3_2025:false,Q4_2025:false}}
+      {id:'DV001',hoTen:'Nguyễn Văn An',ngaySinh:'2002-05-15',gioiTinh:'Nam',chiDoan:'24ICD',soDienThoai:'0901234001',email:'an@email.com',ngayKetNap:'2024-09-01',trangThai:'hoat-dong',thiDua:'Xuất sắc'},
+      {id:'DV002',hoTen:'Trần Thị Bích',ngaySinh:'2003-06-20',gioiTinh:'Nữ',chiDoan:'24ICD',soDienThoai:'0901234002',email:'bich@email.com',ngayKetNap:'2024-10-15',trangThai:'hoat-dong',thiDua:'Tiên tiến'},
+      {id:'DV003',hoTen:'Lê Minh Đức',ngaySinh:'2001-01-10',gioiTinh:'Nam',chiDoan:'24ICD',soDienThoai:'0901234003',email:'duc@email.com',ngayKetNap:'2024-03-20',trangThai:'tam-hoan',thiDua:'Hoàn thành'},
+      {id:'DV004',hoTen:'Phạm Thị Hoa',ngaySinh:'2004-09-05',gioiTinh:'Nữ',chiDoan:'24ICD',soDienThoai:'0901234004',email:'hoa@email.com',ngayKetNap:'2025-01-15',trangThai:'hoat-dong',thiDua:'Xuất sắc'},
+      {id:'DV005',hoTen:'Hoàng Văn Khánh',ngaySinh:'2002-12-25',gioiTinh:'Nam',chiDoan:'24ICD',soDienThoai:'0901234005',email:'khanh@email.com',ngayKetNap:'2024-11-01',trangThai:'hoat-dong',thiDua:'Tiên tiến'},
+      {id:'DV006',hoTen:'Ngô Thị Lan',ngaySinh:'2003-04-18',gioiTinh:'Nữ',chiDoan:'24ICD',soDienThoai:'0901234006',email:'lan@email.com',ngayKetNap:'2025-02-10',trangThai:'hoat-dong',thiDua:'Xuất sắc'},
+      {id:'DV007',hoTen:'Đỗ Quang Minh',ngaySinh:'2001-07-30',gioiTinh:'Nam',chiDoan:'24ICD',soDienThoai:'0901234007',email:'minh@email.com',ngayKetNap:'2024-06-15',trangThai:'hoat-dong',thiDua:'Hoàn thành'},
+      {id:'DV008',hoTen:'Vũ Thanh Nga',ngaySinh:'2004-02-14',gioiTinh:'Nữ',chiDoan:'24ICD',soDienThoai:'0901234008',email:'nga@email.com',ngayKetNap:'2024-12-01',trangThai:'het-han',thiDua:'Không HT'},
+      {id:'DV009',hoTen:'Bùi Văn Phong',ngaySinh:'2002-08-22',gioiTinh:'Nam',chiDoan:'24ICD',soDienThoai:'0901234009',email:'phong@email.com',ngayKetNap:'2025-03-01',trangThai:'hoat-dong',thiDua:'Tiên tiến'},
+      {id:'DV010',hoTen:'Lý Thị Quỳnh',ngaySinh:'2003-11-08',gioiTinh:'Nữ',chiDoan:'24ICD',soDienThoai:'0901234010',email:'quynh@email.com',ngayKetNap:'2024-08-20',trangThai:'tam-hoan',thiDua:'Hoàn thành'}
     ]);
   }
   if(!DB.get('tailieu')){
@@ -1054,13 +1048,13 @@ function seedLocalData(){
   }
   if(!DB.get('thongbao')){
     DB.set('thongbao',[
-      {id:'TB001',tieuDe:'Nhắc đóng đoàn phí',noiDung:'Bạn chưa đóng đoàn phí Q2/2025. Vui lòng đóng trước 30/06.',loai:'warning',daDoc:false,thoiGian:new Date(Date.now()-1000*60*5).toISOString()},
-      {id:'TB002',tieuDe:'Sự kiện sắp diễn ra',noiDung:'Ngày hội Thanh niên tình nguyện sẽ diễn ra vào 15/05.',loai:'info',daDoc:false,thoiGian:new Date(Date.now()-1000*60*60).toISOString()},
+      {id:'TB001',tieuDe:'Hoạt động mới',noiDung:'Sự kiện "Ngày hội Thanh niên tình nguyện" sẽ diễn ra vào 15/05.',loai:'info',daDoc:false,thoiGian:new Date(Date.now()-1000*60*60).toISOString()},
+      {id:'TB002',tieuDe:'Tài liệu mới',noiDung:'Tài liệu "Nghị quyết Đại hội Đoàn lần XII" đã được upload.',loai:'info',daDoc:false,thoiGian:new Date(Date.now()-1000*60*60*2).toISOString()},
       {id:'TB003',tieuDe:'Kết nạp thành công',noiDung:'Bạn đã được kết nạp vào Đoàn TNCS HCM.',loai:'success',daDoc:true,thoiGian:new Date(Date.now()-1000*60*60*24).toISOString()}
     ]);
   }
   if(!DB.get('caiDat')){
-    DB.set('caiDat',{thongBaoEmail:true,thongBaoWeb:false,nhacDoanPhi:true,darkMode:false,hieu_ung:true,baoMat2FA:false,tuDongDangXuat:true});
+    DB.set('caiDat',{thongBaoEmail:true,thongBaoWeb:false,darkMode:false,hieu_ung:true,baoMat2FA:false,tuDongDangXuat:true});
   }
 }
 // ===== UTILITIES =====
@@ -1273,7 +1267,9 @@ TaiLieu:{
     const saveMeta=(driveUrl)=>{
       const tl=DB.get('tailieu')||[];
       tl.push({id:genId('TL',tl),tieuDe:title,moTa:$('#docDesc').value,danhMuc:$('#docCat').value,loaiFile:loaiFile,quyenXem:$('#docAccess').value,tags:$('#docTags').value.split(',').map(s=>s.trim()).filter(Boolean),ngayUpload:new Date().toISOString(),nguoiUpload:currentUser?currentUser.name:'Admin',luotXem:0,kichThuoc:fi?(fi.size/1024/1024).toFixed(1)+' MB':'0 KB',driveUrl:driveUrl||null,fileName:fi?fi.name:''});
-      DB.set('tailieu',tl);closeModal('uploadModal');resetUI();this.renderTabs();this.render();
+      DB.set('tailieu',tl);
+      const tb=DB.get('thongbao')||[];tb.unshift({id:'TB'+Date.now(),tieuDe:'Tài liệu mới',noiDung:'Tài liệu "'+title+'" đã được upload.',loai:'info',daDoc:false,thoiGian:new Date().toISOString()});DB.set('thongbao',tb);App.ThongBao.render();
+      closeModal('uploadModal');resetUI();this.renderTabs();this.render();
       showToast(driveUrl?'Upload thành công! File lưu trên Google Drive ☁️':'Đã lưu thông tin tài liệu');
     };
     if(fi){
@@ -1308,7 +1304,7 @@ TaiLieu:{
 SuKien:{
   renderStats(){const sk=DB.get('sukien')||[];const done=sk.filter(e=>e.trangThai==='hoan-thanh').length;const upcoming=sk.filter(e=>e.trangThai==='sap-dien-ra'||e.trangThai==='dang-dien-ra').length;const att=sk.reduce((s,e)=>s+e.soLuongThamGia,0);$('#eventStats').innerHTML=[{icon:'📅',val:sk.length,label:'Tổng sự kiện'},{icon:'✅',val:done,label:'Đã hoàn thành'},{icon:'⏳',val:upcoming,label:'Sắp/Đang diễn ra'},{icon:'👥',val:att,label:'Lượt tham gia'}].map(s=>`<div class="stat-card"><div class="stat-icon">${s.icon}</div><div class="stat-value">${s.val}</div><div class="stat-label">${s.label}</div></div>`).join('')},
   render(filter='all'){const sk=DB.get('sukien')||[];const list=sk.filter(e=>filter==='all'||e.trangThai===filter);const isAdmin=currentUser&&currentUser.role==='admin';$('#eventList').innerHTML=list.map(e=>{const d=new Date(e.ngayToChuc);const st=EVT_STATUS[e.trangThai]||{l:'?',c:''};const regBtn=e.trangThai==='sap-dien-ra'&&!isAdmin?`<button class="btn btn-primary btn-sm" style="margin-top:6px" onclick="App.SuKien.register('${e.id}')">Đăng ký</button>`:'';const expBtn=isAdmin&&(e.danhSachThamGia||[]).length>0?`<button class="btn btn-sm btn-outline" style="margin-top:6px;font-size:11px" onclick="App.SuKien.exportRegList('${e.id}')">📋 Xuất DS (${(e.danhSachThamGia||[]).length})</button>`:'';const delBtn=isAdmin?`<button class="btn-icon" onclick="App.SuKien.confirmDel('${e.id}')" title="Xóa" style="margin-top:6px">🗑️</button>`:'';return`<div class="event-card"><div class="event-date"><div class="day">${d.getDate()}</div><div class="month">${MONTHS[d.getMonth()]}</div></div><div class="event-info"><h4>${e.tenSuKien}</h4><p>${e.moTa||''}</p><div class="event-meta"><span>📍 ${e.diaDiem}</span><span>🕐 ${e.thoiGian||''}</span><span>👥 ${e.soLuongThamGia}</span></div></div><div class="event-status"><span class="badge ${st.c}">${st.l}</span>${regBtn}${expBtn}${delBtn}</div></div>`}).join('')||'<p style="color:var(--muted)">Không có sự kiện</p>'},
-  register(id){const sk=DB.get('sukien')||[];const e=sk.find(x=>x.id===id);if(!e)return;if(!currentUser){showToast('Vui lòng đăng nhập','error');return}if((e.danhSachThamGia||[]).includes(currentUser.username)){showToast('Bạn đã đăng ký rồi','warning');return}e.soLuongThamGia++;if(!e.danhSachThamGia)e.danhSachThamGia=[];e.danhSachThamGia.push(currentUser.username);DB.set('sukien',sk);this.render();this.renderStats();showToast('Đã đăng ký tham gia!')},
+  register(id){const sk=DB.get('sukien')||[];const e=sk.find(x=>x.id===id);if(!e)return;if(!currentUser){showToast('Vui lòng đăng nhập','error');return}if((e.danhSachThamGia||[]).includes(currentUser.username)){showToast('Bạn đã đăng ký rồi','warning');return}e.soLuongThamGia++;if(!e.danhSachThamGia)e.danhSachThamGia=[];e.danhSachThamGia.push(currentUser.username);DB.set('sukien',sk);const tb=DB.get('thongbao')||[];tb.unshift({id:'TB'+Date.now(),tieuDe:'Đăng ký hoạt động',noiDung:'Bạn đã đăng ký tham gia "'+e.tenSuKien+'"',loai:'success',daDoc:false,thoiGian:new Date().toISOString()});DB.set('thongbao',tb);App.ThongBao.render();this.render();this.renderStats();showToast('Đã đăng ký tham gia!')},
   exportRegList(id){if(typeof XLSX==='undefined'){showToast('XLSX chưa tải','error');return}const sk=DB.get('sukien')||[];const e=sk.find(x=>x.id===id);if(!e)return;const dv=DB.get('doanvien')||[];const wb=XLSX.utils.book_new();const data=[['Họ tên','MSSV','Trạng thái','Đăng ký hoạt động']];(e.danhSachThamGia||[]).forEach(uid=>{const acc=ACCOUNTS[uid];const m=dv.find(x=>x.mssv===uid||x.id===uid);data.push([acc?acc.name:(m?m.hoTen:uid),uid,(STATUS_MAP[(m||{}).trangThai]||{}).l||'Đoàn viên',e.tenSuKien])});XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet(data),'Đăng ký');XLSX.writeFile(wb,'DangKy_'+e.tenSuKien.replace(/[^a-zA-Z0-9\u00C0-\u024F]/g,'_')+'.xlsx');showToast('Đã xuất danh sách đăng ký!')},
   create(){
     let ok=true;$('#eNameErr').textContent='';$('#eDateErr').textContent='';
@@ -1316,7 +1312,7 @@ SuKien:{
     if(!name){$('#eNameErr').textContent='Nhập tên sự kiện';ok=false}
     if(!date){$('#eDateErr').textContent='Chọn ngày';ok=false}else if(new Date(date)<new Date(new Date().toDateString())){$('#eDateErr').textContent='Ngày không được trong quá khứ';ok=false}
     if(!ok)return;
-    const sk=DB.get('sukien')||[];sk.push({id:genId('SK',sk),tenSuKien:name,moTa:$('#eDesc').value,ngayToChuc:date,thoiGian:$('#eTime').value||'08:00',diaDiem:$('#eLocation').value||'TBD',trangThai:'sap-dien-ra',soLuongThamGia:0,danhSachThamGia:[]});DB.set('sukien',sk);closeModal('eventModal');this.render();this.renderStats();showToast('Đã tạo sự kiện mới!')
+    const sk=DB.get('sukien')||[];sk.push({id:genId('SK',sk),tenSuKien:name,moTa:$('#eDesc').value,ngayToChuc:date,thoiGian:$('#eTime').value||'08:00',diaDiem:$('#eLocation').value||'TBD',trangThai:'sap-dien-ra',soLuongThamGia:0,danhSachThamGia:[]});DB.set('sukien',sk);const tb=DB.get('thongbao')||[];tb.unshift({id:'TB'+Date.now(),tieuDe:'Hoạt động mới',noiDung:'Sự kiện "'+name+'" đã được tạo.',loai:'info',daDoc:false,thoiGian:new Date().toISOString()});DB.set('thongbao',tb);App.ThongBao.render();closeModal('eventModal');this.render();this.renderStats();showToast('Đã tạo sự kiện mới!')
   },
   confirmDel(id){const e=(DB.get('sukien')||[]).find(x=>x.id===id);$('#confirmMsg').textContent=`Xóa sự kiện "${e?e.tenSuKien:id}"? Hành động này không thể hoàn tác.`;$('#confirmOk').onclick=()=>{const arr=(DB.get('sukien')||[]).filter(x=>x.id!==id);DB.set('sukien',arr);closeModal('confirmModal');this.render();this.renderStats();showToast('Đã xóa sự kiện')};openModal('confirmModal')}
 },
@@ -1338,7 +1334,6 @@ BaoCao:{
     if(type==='doanvien'){
       const dv=DB.get('doanvien')||[];
       const ws1Data=[['MSSV','Họ tên','Ngày sinh','Giới tính','Chi đoàn','SĐT','Email','Kết nạp','Trạng thái','Đánh giá XL']];dv.forEach(m=>ws1Data.push([m.mssv||m.maDinhDanh||m.id,m.hoTen,m.ngaySinh,m.gioiTinh,m.chiDoan||'24ICD',m.soDienThoai,m.email,m.ngayKetNap,(STATUS_MAP[m.trangThai]||{}).l||m.trangThai,m.danhGia||'Chưa đánh giá']));XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet(ws1Data),'Danh sách');
-      const ws2Data=[['Quý','Đã đóng','Chưa đóng']];['Q1_2025','Q2_2025','Q3_2025','Q4_2025'].forEach(q=>{const paid=dv.filter(m=>m.doanPhi&&m.doanPhi[q]).length;ws2Data.push([q.replace('_','/'),paid,dv.length-paid])});XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet(ws2Data),'Đoàn phí');
       const ws3Data=[['Xếp loại','Số lượng']];['Xuất sắc','Tiên tiến','Hoàn thành','Không HT'].forEach(r=>ws3Data.push([r,dv.filter(m=>m.thiDua===r).length]));XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet(ws3Data),'Thi đua');
       XLSX.writeFile(wb,'BaoCao_DoanVien_'+today+'.xlsx');
     }else if(type==='sukien'){

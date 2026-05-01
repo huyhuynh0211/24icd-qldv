@@ -16,7 +16,6 @@ BaoCao:{
     if(type==='doanvien'){
       const dv=DB.get('doanvien')||[];
       const ws1Data=[['MSSV','Họ tên','Ngày sinh','Giới tính','Chi đoàn','SĐT','Email','Kết nạp','Trạng thái','Đánh giá XL']];dv.forEach(m=>ws1Data.push([m.mssv||m.maDinhDanh||m.id,m.hoTen,m.ngaySinh,m.gioiTinh,m.chiDoan||'24ICD',m.soDienThoai,m.email,m.ngayKetNap,(STATUS_MAP[m.trangThai]||{}).l||m.trangThai,m.danhGia||'Chưa đánh giá']));XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet(ws1Data),'Danh sách');
-      const ws2Data=[['Quý','Đã đóng','Chưa đóng']];['Q1_2025','Q2_2025','Q3_2025','Q4_2025'].forEach(q=>{const paid=dv.filter(m=>m.doanPhi&&m.doanPhi[q]).length;ws2Data.push([q.replace('_','/'),paid,dv.length-paid])});XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet(ws2Data),'Đoàn phí');
       const ws3Data=[['Xếp loại','Số lượng']];['Xuất sắc','Tiên tiến','Hoàn thành','Không HT'].forEach(r=>ws3Data.push([r,dv.filter(m=>m.thiDua===r).length]));XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet(ws3Data),'Thi đua');
       XLSX.writeFile(wb,'BaoCao_DoanVien_'+today+'.xlsx');
     }else if(type==='sukien'){

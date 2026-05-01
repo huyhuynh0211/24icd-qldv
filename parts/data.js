@@ -177,16 +177,16 @@ function initSampleData(){
 function seedLocalData(){
   if(!DB.get('doanvien')){
     DB.set('doanvien',[
-      {id:'DV001',hoTen:'Nguyễn Văn An',ngaySinh:'2002-05-15',gioiTinh:'Nam',chiDoan:'24ICD',soDienThoai:'0901234001',email:'an@email.com',ngayKetNap:'2024-09-01',trangThai:'hoat-dong',thiDua:'Xuất sắc',doanPhi:{Q1_2025:true,Q2_2025:true,Q3_2025:false,Q4_2025:false}},
-      {id:'DV002',hoTen:'Trần Thị Bích',ngaySinh:'2003-06-20',gioiTinh:'Nữ',chiDoan:'24ICD',soDienThoai:'0901234002',email:'bich@email.com',ngayKetNap:'2024-10-15',trangThai:'hoat-dong',thiDua:'Tiên tiến',doanPhi:{Q1_2025:true,Q2_2025:false,Q3_2025:false,Q4_2025:false}},
-      {id:'DV003',hoTen:'Lê Minh Đức',ngaySinh:'2001-01-10',gioiTinh:'Nam',chiDoan:'24ICD',soDienThoai:'0901234003',email:'duc@email.com',ngayKetNap:'2024-03-20',trangThai:'tam-hoan',thiDua:'Hoàn thành',doanPhi:{Q1_2025:true,Q2_2025:false,Q3_2025:false,Q4_2025:false}},
-      {id:'DV004',hoTen:'Phạm Thị Hoa',ngaySinh:'2004-09-05',gioiTinh:'Nữ',chiDoan:'24ICD',soDienThoai:'0901234004',email:'hoa@email.com',ngayKetNap:'2025-01-15',trangThai:'hoat-dong',thiDua:'Xuất sắc',doanPhi:{Q1_2025:true,Q2_2025:true,Q3_2025:true,Q4_2025:false}},
-      {id:'DV005',hoTen:'Hoàng Văn Khánh',ngaySinh:'2002-12-25',gioiTinh:'Nam',chiDoan:'24ICD',soDienThoai:'0901234005',email:'khanh@email.com',ngayKetNap:'2024-11-01',trangThai:'hoat-dong',thiDua:'Tiên tiến',doanPhi:{Q1_2025:true,Q2_2025:true,Q3_2025:false,Q4_2025:false}},
-      {id:'DV006',hoTen:'Ngô Thị Lan',ngaySinh:'2003-04-18',gioiTinh:'Nữ',chiDoan:'24ICD',soDienThoai:'0901234006',email:'lan@email.com',ngayKetNap:'2025-02-10',trangThai:'hoat-dong',thiDua:'Xuất sắc',doanPhi:{Q1_2025:true,Q2_2025:true,Q3_2025:true,Q4_2025:true}},
-      {id:'DV007',hoTen:'Đỗ Quang Minh',ngaySinh:'2001-07-30',gioiTinh:'Nam',chiDoan:'24ICD',soDienThoai:'0901234007',email:'minh@email.com',ngayKetNap:'2024-06-15',trangThai:'hoat-dong',thiDua:'Hoàn thành',doanPhi:{Q1_2025:true,Q2_2025:true,Q3_2025:true,Q4_2025:true}},
-      {id:'DV008',hoTen:'Vũ Thanh Nga',ngaySinh:'2004-02-14',gioiTinh:'Nữ',chiDoan:'24ICD',soDienThoai:'0901234008',email:'nga@email.com',ngayKetNap:'2024-12-01',trangThai:'het-han',thiDua:'Không HT',doanPhi:{Q1_2025:false,Q2_2025:false,Q3_2025:false,Q4_2025:false}},
-      {id:'DV009',hoTen:'Bùi Văn Phong',ngaySinh:'2002-08-22',gioiTinh:'Nam',chiDoan:'24ICD',soDienThoai:'0901234009',email:'phong@email.com',ngayKetNap:'2025-03-01',trangThai:'hoat-dong',thiDua:'Tiên tiến',doanPhi:{Q1_2025:true,Q2_2025:true,Q3_2025:true,Q4_2025:false}},
-      {id:'DV010',hoTen:'Lý Thị Quỳnh',ngaySinh:'2003-11-08',gioiTinh:'Nữ',chiDoan:'24ICD',soDienThoai:'0901234010',email:'quynh@email.com',ngayKetNap:'2024-08-20',trangThai:'tam-hoan',thiDua:'Hoàn thành',doanPhi:{Q1_2025:true,Q2_2025:false,Q3_2025:false,Q4_2025:false}}
+      {id:'DV001',hoTen:'Nguyễn Văn An',ngaySinh:'2002-05-15',gioiTinh:'Nam',chiDoan:'24ICD',soDienThoai:'0901234001',email:'an@email.com',ngayKetNap:'2024-09-01',trangThai:'hoat-dong',thiDua:'Xuất sắc'},
+      {id:'DV002',hoTen:'Trần Thị Bích',ngaySinh:'2003-06-20',gioiTinh:'Nữ',chiDoan:'24ICD',soDienThoai:'0901234002',email:'bich@email.com',ngayKetNap:'2024-10-15',trangThai:'hoat-dong',thiDua:'Tiên tiến'},
+      {id:'DV003',hoTen:'Lê Minh Đức',ngaySinh:'2001-01-10',gioiTinh:'Nam',chiDoan:'24ICD',soDienThoai:'0901234003',email:'duc@email.com',ngayKetNap:'2024-03-20',trangThai:'tam-hoan',thiDua:'Hoàn thành'},
+      {id:'DV004',hoTen:'Phạm Thị Hoa',ngaySinh:'2004-09-05',gioiTinh:'Nữ',chiDoan:'24ICD',soDienThoai:'0901234004',email:'hoa@email.com',ngayKetNap:'2025-01-15',trangThai:'hoat-dong',thiDua:'Xuất sắc'},
+      {id:'DV005',hoTen:'Hoàng Văn Khánh',ngaySinh:'2002-12-25',gioiTinh:'Nam',chiDoan:'24ICD',soDienThoai:'0901234005',email:'khanh@email.com',ngayKetNap:'2024-11-01',trangThai:'hoat-dong',thiDua:'Tiên tiến'},
+      {id:'DV006',hoTen:'Ngô Thị Lan',ngaySinh:'2003-04-18',gioiTinh:'Nữ',chiDoan:'24ICD',soDienThoai:'0901234006',email:'lan@email.com',ngayKetNap:'2025-02-10',trangThai:'hoat-dong',thiDua:'Xuất sắc'},
+      {id:'DV007',hoTen:'Đỗ Quang Minh',ngaySinh:'2001-07-30',gioiTinh:'Nam',chiDoan:'24ICD',soDienThoai:'0901234007',email:'minh@email.com',ngayKetNap:'2024-06-15',trangThai:'hoat-dong',thiDua:'Hoàn thành'},
+      {id:'DV008',hoTen:'Vũ Thanh Nga',ngaySinh:'2004-02-14',gioiTinh:'Nữ',chiDoan:'24ICD',soDienThoai:'0901234008',email:'nga@email.com',ngayKetNap:'2024-12-01',trangThai:'het-han',thiDua:'Không HT'},
+      {id:'DV009',hoTen:'Bùi Văn Phong',ngaySinh:'2002-08-22',gioiTinh:'Nam',chiDoan:'24ICD',soDienThoai:'0901234009',email:'phong@email.com',ngayKetNap:'2025-03-01',trangThai:'hoat-dong',thiDua:'Tiên tiến'},
+      {id:'DV010',hoTen:'Lý Thị Quỳnh',ngaySinh:'2003-11-08',gioiTinh:'Nữ',chiDoan:'24ICD',soDienThoai:'0901234010',email:'quynh@email.com',ngayKetNap:'2024-08-20',trangThai:'tam-hoan',thiDua:'Hoàn thành'}
     ]);
   }
   if(!DB.get('tailieu')){
@@ -208,12 +208,12 @@ function seedLocalData(){
   }
   if(!DB.get('thongbao')){
     DB.set('thongbao',[
-      {id:'TB001',tieuDe:'Nhắc đóng đoàn phí',noiDung:'Bạn chưa đóng đoàn phí Q2/2025. Vui lòng đóng trước 30/06.',loai:'warning',daDoc:false,thoiGian:new Date(Date.now()-1000*60*5).toISOString()},
-      {id:'TB002',tieuDe:'Sự kiện sắp diễn ra',noiDung:'Ngày hội Thanh niên tình nguyện sẽ diễn ra vào 15/05.',loai:'info',daDoc:false,thoiGian:new Date(Date.now()-1000*60*60).toISOString()},
+      {id:'TB001',tieuDe:'Hoạt động mới',noiDung:'Sự kiện "Ngày hội Thanh niên tình nguyện" sẽ diễn ra vào 15/05.',loai:'info',daDoc:false,thoiGian:new Date(Date.now()-1000*60*60).toISOString()},
+      {id:'TB002',tieuDe:'Tài liệu mới',noiDung:'Tài liệu "Nghị quyết Đại hội Đoàn lần XII" đã được upload.',loai:'info',daDoc:false,thoiGian:new Date(Date.now()-1000*60*60*2).toISOString()},
       {id:'TB003',tieuDe:'Kết nạp thành công',noiDung:'Bạn đã được kết nạp vào Đoàn TNCS HCM.',loai:'success',daDoc:true,thoiGian:new Date(Date.now()-1000*60*60*24).toISOString()}
     ]);
   }
   if(!DB.get('caiDat')){
-    DB.set('caiDat',{thongBaoEmail:true,thongBaoWeb:false,nhacDoanPhi:true,darkMode:false,hieu_ung:true,baoMat2FA:false,tuDongDangXuat:true});
+    DB.set('caiDat',{thongBaoEmail:true,thongBaoWeb:false,darkMode:false,hieu_ung:true,baoMat2FA:false,tuDongDangXuat:true});
   }
 }
