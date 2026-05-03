@@ -1,0 +1,50 @@
+{
+  "rules": {
+    /* 
+      WARNING: This application does not use Firebase Authentication. 
+      Because of this, `auth != null` cannot be used to verify users.
+      This means read access to `accounts` must be public for the login 
+      script to work, which exposes password hashes to anyone who queries the API directly.
+      
+      To truly secure password changes on the server side, you MUST migrate to Firebase Authentication.
+      
+      The rules below lock down the database to prevent arbitrary data wiping
+      and restrict writes as much as possible without a backend.
+    */
+    ".read": true,
+    
+    "accounts": {
+      // Allow reading accounts for login verification
+      ".read": true,
+      
+      "$username": {
+        "pass": {
+          // Allow writing to the password field only if it's a valid SHA-256 hash length (64 chars)
+          // and the new value is a string. This provides basic data validation.
+          ".write": "newData.isString() && newData.val().length === 64"
+        },
+        "role": {
+          // Roles should never be updatable from the client side!
+          ".write": false
+        }
+      }
+    },
+
+    "sessions": {
+      ".read": true,
+      "$session_id": {
+        // Anyone can create a session, but they must provide a valid username
+        ".write": "!data.exists() && newData.child('username').isString() || data.exists() && !newData.exists()"
+      }
+    },
+
+    // Other collections (doanvien, sukien, tailieu, thongbao, caiDat)
+    // In a real app with Firebase Auth, you would restrict these to `.write: auth != null`
+    // Since we don't have Auth, we have to leave them open or they will break the app.
+    "doanvien": { ".write": true },
+    "sukien": { ".write": true },
+    "tailieu": { ".write": true },
+    "thongbao": { ".write": true },
+    "caiDat": { ".write": true }
+  }
+}

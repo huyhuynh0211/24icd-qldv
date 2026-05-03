@@ -1,9 +1,44 @@
 // ===== UTILITIES =====
 function $(s){return document.querySelector(s)}
 function $$(s){return document.querySelectorAll(s)}
-function openModal(id){$('#'+id).classList.add('show')}
-function closeModal(id){$('#'+id).classList.remove('show')}
-function showToast(msg,type='success'){const t=document.createElement('div');t.className='toast '+type;t.textContent=msg;$('#toastContainer').appendChild(t);setTimeout(()=>t.remove(),3000)}
+function openModal(id){
+  const modal = $('#'+id);
+  modal.classList.add('show');
+  setTimeout(() => {
+    if(modal.querySelector('.modal')) modal.querySelector('.modal').style.transition = 'all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1)';
+  }, 10);
+}
+function closeModal(id){
+  const modal = $('#'+id);
+  if(modal.querySelector('.modal')) modal.querySelector('.modal').style.transition = 'all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1)';
+  if(modal.classList.contains('show')) {
+    setTimeout(() => { modal.classList.remove('show'); }, 10);
+  } else { modal.classList.remove('show'); }
+}
+function showToast(msg,type='success'){
+  const t=document.createElement('div');
+  t.className='toast '+type;
+  t.textContent=msg;
+  $('#toastContainer').appendChild(t);
+  setTimeout(() => { t.classList.add('show'); }, 10);
+  setTimeout(()=>{
+    t.style.animation = 'toastExit 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) forwards';
+    setTimeout(() => { if(t.parentNode) t.remove(); }, 400);
+  }, 3000);
+}
+function animateValue(element, start, end, duration) {
+  const startTime = performance.now();
+  function update(currentTime) {
+    const elapsed = currentTime - startTime;
+    const progress = Math.min(elapsed / duration, 1);
+    const easedProgress = 1 - Math.pow(1 - progress, 3);
+    const currentValue = Math.floor(start + (end - start) * easedProgress);
+    element.textContent = currentValue.toLocaleString();
+    if (progress < 1) requestAnimationFrame(update);
+    else { element.textContent = end.toLocaleString(); element.style.animation = 'counterUp 0.3s ease-out'; }
+  }
+  requestAnimationFrame(update);
+}
 function showLoading(){$('#loadingOverlay').style.display='flex'}
 function hideLoading(){$('#loadingOverlay').style.display='none'}
 function timeAgo(d){const s=Math.floor((Date.now()-new Date(d))/1000);if(s<60)return s+' giây trước';if(s<3600)return Math.floor(s/60)+' phút trước';if(s<86400)return Math.floor(s/3600)+' giờ trước';return Math.floor(s/86400)+' ngày trước'}
@@ -29,13 +64,32 @@ Auth:{
     const hashed=await hashPass(p);
     if(acc.pass!==hashed)return false;
     currentUser={username:u,...acc};
+    
+    const token = 'sess_' + Date.now().toString(36) + Math.random().toString(36).substring(2);
+    sessionStorage.setItem('_sessionToken', token);
+    sessionStorage.setItem('_sessionUser', u);
+    if(firebaseReady && firebaseDB) {
+      firebaseDB.ref('sessions/' + token).set({
+        username: u,
+        createdAt: new Date().toISOString()
+      });
+    }
+
     $('#loginPage').classList.add('hidden');$('#appLayout').style.display='flex';
     document.body.classList.toggle('role-admin',acc.role==='admin');
     $('#headerUserName').textContent=acc.name+' ('+acc.role+')';
     $('#headerAvatar').textContent=acc.name.substring(0,2).toUpperCase();
     App.init();return true;
   },
-  logout(){currentUser=null;$('#loginPage').classList.remove('hidden');$('#appLayout').style.display='none';document.body.classList.remove('role-admin');Object.values(charts).forEach(c=>{if(c&&c.destroy)c.destroy()});charts={}}
+  logout(){
+    const token = sessionStorage.getItem('_sessionToken');
+    if(token && firebaseReady && firebaseDB) {
+      firebaseDB.ref('sessions/' + token).remove().catch(()=>{});
+    }
+    sessionStorage.removeItem('_sessionToken');
+    sessionStorage.removeItem('_sessionUser');
+    currentUser=null;$('#loginPage').classList.remove('hidden');$('#appLayout').style.display='none';document.body.classList.remove('role-admin');Object.values(charts).forEach(c=>{if(c&&c.destroy)c.destroy()});charts={}
+  }
 },
 
 // DASHBOARD
@@ -50,7 +104,13 @@ Dashboard:{
       {icon:'✅',val:active,label:'Đang hoạt động',ch:dv.length?Math.round(active/dv.length*100)+'%':'0%'},
       {icon:'📅',val:thisMonth,label:'Sự kiện tháng này',ch:sk.filter(e=>e.trangThai==='hoan-thanh').length+' hoàn thành'},
       {icon:'📄',val:tl.length,label:'Tài liệu số hóa',ch:'Đa dạng danh mục'}
-    ].map(s=>`<div class="stat-card"><div class="stat-icon">${s.icon}</div><div class="stat-value">${s.val}</div><div class="stat-label">${s.label}</div><div class="stat-change up">${s.ch}</div></div>`).join('');
+    ].map(s=>`<div class="stat-card"><div class="stat-icon">${s.icon}</div><div class="stat-value" data-value="${s.val}">0</div><div class="stat-label">${s.label}</div><div class="stat-change up">${s.ch}</div></div>`).join('');
+    setTimeout(() => {
+      $$('.stat-value').forEach((element, index) => {
+        const targetValue = parseInt(element.getAttribute('data-value'));
+        animateValue(element, 0, targetValue, 1000 + (index * 200));
+      });
+    }, 100);
     // Recent activity
     let tb=DB.get('thongbao')||[];
     if(typeof currentUser!=='undefined'&&currentUser){ tb=tb.filter(n=>!n.targetUser||n.targetUser==='all'||n.targetUser===currentUser.username); }

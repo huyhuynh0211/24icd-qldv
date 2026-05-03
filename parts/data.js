@@ -1,3 +1,8 @@
+// Clean up legacy localStorage data to protect user privacy
+try {
+  ['_accounts', 'doanvien', 'sukien', 'tailieu', 'thongbao', 'caiDat'].forEach(k => localStorage.removeItem(k));
+} catch(e) {}
+
 // ===== FIREBASE SETUP =====
 const firebaseConfig = {
   apiKey: "AIzaSyBB8Bus9Tqlrssa9hl1BNlXv5jzYUVdQPw",
@@ -16,13 +21,11 @@ try {
   console.log('Firebase connected');
 } catch (e) { console.warn('Firebase init failed, using localStorage only', e) }
 
-// ===== STORAGE HELPERS (Firebase + localStorage cache) =====
+const MEMORY_DB = {};
 const DB = {
-  // Read from localStorage cache (instant), Firebase updates via listeners
-  // Ensures array keys always return arrays (Firebase may convert to objects)
   get(key) {
     try {
-      const val = JSON.parse(localStorage.getItem(key));
+      const val = MEMORY_DB[key];
       if (!val) return null;
       // Known array keys - ensure they're always arrays
       const arrayKeys = ['doanvien', 'sukien', 'tailieu', 'thongbao'];
@@ -32,9 +35,8 @@ const DB = {
       return val;
     } catch (e) { return null }
   },
-  // Write to both localStorage AND Firebase
   set(key, val) {
-    try { localStorage.setItem(key, JSON.stringify(val)) } catch (e) { console.warn('localStorage error', e) }
+    MEMORY_DB[key] = val;
     if (firebaseReady && firebaseDB) {
       try {
         // Don't save fileData to Firebase (too large), strip it
@@ -47,7 +49,7 @@ const DB = {
     }
   },
   remove(key) {
-    try { localStorage.removeItem(key) } catch (e) { }
+    delete MEMORY_DB[key];
     if (firebaseReady && firebaseDB) {
       try { firebaseDB.ref(key).remove() } catch (e) { }
     }
@@ -74,11 +76,11 @@ function setupFirebaseListeners() {
     firebaseDB.ref(key).on('value', (snap) => {
       const data = snap.val();
       if (data !== null && data !== undefined) {
-        // Only update localStorage if data is different (avoid loops)
-        const current = localStorage.getItem(key);
+        // Only update memory if data is different (avoid loops)
+        const current = JSON.stringify(MEMORY_DB[key] || null);
         const incoming = JSON.stringify(data);
         if (current !== incoming) {
-          localStorage.setItem(key, incoming);
+          MEMORY_DB[key] = data;
           // Re-render the relevant section if app is loaded
           if (typeof App !== 'undefined' && App.init) {
             try {
@@ -103,6 +105,10 @@ let accountsLoaded = false;
 
 // Simple SHA-256 hash for password security
 async function hashPass(str) {
+  if (!crypto || !crypto.subtle) {
+    console.warn('crypto.subtle not available (needs HTTPS or localhost). Using plain text comparison for testing.');
+    return str; // Fallback for file:// testing (INSECURE in production)
+  }
   const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(str));
   return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2, '0')).join('');
 }
@@ -110,8 +116,7 @@ async function hashPass(str) {
 // Load accounts from Firebase into memory
 async function loadAccounts() {
   if (!firebaseReady || !firebaseDB) {
-    // Offline fallback: try localStorage cache
-    try { const cached = JSON.parse(localStorage.getItem('_accounts')); if (cached) { ACCOUNTS = cached; accountsLoaded = true } } catch (e) { }
+    console.warn('Offline mode: Cannot load accounts.');
     return;
   }
   try {
@@ -120,15 +125,12 @@ async function loadAccounts() {
     if (data) {
       ACCOUNTS = data;
       accountsLoaded = true;
-      // Cache locally for offline access
-      try { localStorage.setItem('_accounts', JSON.stringify(data)) } catch (e) { }
     } else {
       // First time: seed accounts to Firebase
       await seedAccountsToFirebase();
     }
   } catch (e) {
     console.warn('Failed to load accounts from Firebase:', e);
-    try { const cached = JSON.parse(localStorage.getItem('_accounts')); if (cached) { ACCOUNTS = cached; accountsLoaded = true } } catch (e2) { }
   }
 }
 
@@ -146,10 +148,10 @@ function initSampleData() {
   if (firebaseReady && firebaseDB) {
     firebaseDB.ref('doanvien').once('value').then(snap => {
       if (snap.val()) {
-        // Firebase has data — sync to localStorage
+        // Firebase has data — sync to memory
         SYNC_KEYS.forEach(k => {
           firebaseDB.ref(k).once('value').then(s => {
-            if (s.val() !== null) localStorage.setItem(k, JSON.stringify(s.val()));
+            if (s.val() !== null) MEMORY_DB[k] = s.val();
           });
         });
       } else {

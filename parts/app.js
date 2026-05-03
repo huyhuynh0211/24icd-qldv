@@ -1,9 +1,52 @@
 // ===== UTILITIES =====
 function $(s){return document.querySelector(s)}
 function $$(s){return document.querySelectorAll(s)}
-function showToast(msg,type='success'){const t=document.createElement('div');t.className='toast '+type;t.textContent=msg;$('#toastContainer').appendChild(t);setTimeout(()=>t.remove(),3000)}
-function openModal(id){$('#'+id).classList.add('show')}
-function closeModal(id){$('#'+id).classList.remove('show')}
+function showToast(msg,type='success'){
+  const t=document.createElement('div');
+  t.className='toast '+type;
+  t.textContent=msg;
+  $('#toastContainer').appendChild(t);
+
+  // Trigger entrance animation
+  setTimeout(() => {
+    t.classList.add('show');
+  }, 10);
+
+  // Auto remove after 3 seconds with exit animation
+  setTimeout(()=>{
+    t.style.animation = 'toastExit 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) forwards';
+    setTimeout(() => {
+      if(t.parentNode) t.remove();
+    }, 400);
+  }, 3000);
+}
+function openModal(id){
+  const modal = $('#'+id);
+  modal.classList.add('show');
+
+  // Add slight delay to ensure proper animation sequence
+  setTimeout(() => {
+    if(modal.querySelector('.modal')) {
+      modal.querySelector('.modal').style.transition = 'all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1)';
+    }
+  }, 10);
+}
+
+function closeModal(id){
+  const modal = $('#'+id);
+  if(modal.querySelector('.modal')) {
+    modal.querySelector('.modal').style.transition = 'all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1)';
+  }
+
+  // Add exit animation before removing show class
+  if(modal.classList.contains('show')) {
+    setTimeout(() => {
+      modal.classList.remove('show');
+    }, 10);
+  } else {
+    modal.classList.remove('show');
+  }
+}
 function getCatLabel(c){return{['nghi-quyet']:'Nghị quyết',['hoc-tap']:'Học tập CT',['phong-trao']:'Phong trào',['hanh-chinh']:'Hành chính'}[c]||c}
 const TYPE_ICONS={pdf:'📄',docx:'📘',pptx:'📊',img:'🖼️'};
 const STATUS_MAP={active:{l:'Hoạt động',c:'badge-ok'},paused:{l:'Tạm hoãn',c:'badge-warn'},expired:{l:'Hết hạn',c:'badge-danger'}};
@@ -60,15 +103,49 @@ $('#sidebarOverlay').addEventListener('click',closeSidebar);
 document.addEventListener('keydown',e=>{if(e.key==='Escape')$$('.modal-overlay.show').forEach(m=>m.classList.remove('show'))});
 
 // ===== DASHBOARD =====
+function animateValue(element, start, end, duration) {
+  const startTime = performance.now();
+
+  function update(currentTime) {
+    const elapsed = currentTime - startTime;
+    const progress = Math.min(elapsed / duration, 1);
+
+    // Ease-out function for smoother animation
+    const easedProgress = 1 - Math.pow(1 - progress, 3);
+    const currentValue = Math.floor(start + (end - start) * easedProgress);
+
+    element.textContent = currentValue.toLocaleString();
+
+    if (progress < 1) {
+      requestAnimationFrame(update);
+    } else {
+      element.textContent = end.toLocaleString();
+      element.style.animation = 'counterUp 0.3s ease-out';
+    }
+  }
+
+  requestAnimationFrame(update);
+}
+
 function renderDashStats(){
   const active=MEMBERS.filter(m=>m.status==='active').length;
   const upcoming=EVENTS.filter(e=>e.status==='upcoming'||e.status==='ongoing').length;
+
+  // Create stat cards with animated values
   $('#dashStats').innerHTML=[
     {icon:'👥',val:MEMBERS.length,label:'Tổng Đoàn viên',change:'↑ Chi đoàn: 4'},
     {icon:'✅',val:active,label:'Đang hoạt động',change:Math.round(active/MEMBERS.length*100)+'%'},
     {icon:'📅',val:upcoming,label:'Sự kiện sắp tới',change:EVENTS.filter(e=>e.status==='done').length+' đã hoàn thành'},
     {icon:'📄',val:DOCUMENTS.length,label:'Tài liệu số hóa',change:'↑ Đa dạng danh mục'}
-  ].map(s=>`<div class="stat-card"><div class="stat-icon">${s.icon}</div><div class="stat-value">${s.val}</div><div class="stat-label">${s.label}</div><div class="stat-change up">${s.change}</div></div>`).join('');
+  ].map(s=>`<div class="stat-card"><div class="stat-icon">${s.icon}</div><div class="stat-value" data-value="${s.val}">0</div><div class="stat-label">${s.label}</div><div class="stat-change up">${s.change}</div></div>`).join('');
+
+  // Animate the values after a short delay
+  setTimeout(() => {
+    $$('.stat-value').forEach((element, index) => {
+      const targetValue = parseInt(element.getAttribute('data-value'));
+      animateValue(element, 0, targetValue, 1000 + (index * 200));
+    });
+  }, 100);
 }
 function renderRecentActivity(){
   const acts=[

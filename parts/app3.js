@@ -129,7 +129,7 @@ CaiDat:{
     if(icon)icon.textContent=isLight?'☀️':'🌙';
     if(label)label.textContent=isLight?'Chế độ sáng':'Chế độ tối';
   },
-  changePassword(){const o=$('#oldPass').value,n=$('#newPass').value;if(!o||!n){showToast('Nhập đầy đủ mật khẩu','error');return}hashPass(o).then(ho=>{if(currentUser&&ACCOUNTS[currentUser.username]&&ACCOUNTS[currentUser.username].pass===ho){hashPass(n).then(hn=>{ACCOUNTS[currentUser.username].pass=hn;if(firebaseReady&&firebaseDB)firebaseDB.ref('accounts/'+currentUser.username+'/pass').set(hn);try{localStorage.setItem('_accounts',JSON.stringify(ACCOUNTS))}catch(e){}showToast('Đã đổi mật khẩu');$('#oldPass').value='';$('#newPass').value=''})}else showToast('Mật khẩu cũ không đúng','error')})},
+  changePassword(){const o=$('#oldPass').value,n=$('#newPass').value;if(!o||!n){showToast('Nhập đầy đủ mật khẩu','error');return}hashPass(o).then(ho=>{if(currentUser&&ACCOUNTS[currentUser.username]&&ACCOUNTS[currentUser.username].pass===ho){hashPass(n).then(hn=>{ACCOUNTS[currentUser.username].pass=hn;if(firebaseReady&&firebaseDB)firebaseDB.ref('accounts/'+currentUser.username+'/pass').set(hn);showToast('Đã đổi mật khẩu');$('#oldPass').value='';$('#newPass').value=''})}else showToast('Mật khẩu cũ không đúng','error')})},
   resetData(){$('#confirmMsg').textContent='Xóa toàn bộ dữ liệu? Trang sẽ tải lại.';$('#confirmOk').onclick=()=>{localStorage.clear();location.reload()};openModal('confirmModal')}
 },
 
@@ -152,8 +152,58 @@ document.addEventListener('DOMContentLoaded',async ()=>{
   initSampleData();
   // Load accounts from Firebase
   await loadAccounts();
+  
+  // Auto-login from session
+  const storedToken = sessionStorage.getItem('_sessionToken');
+  const storedUser = sessionStorage.getItem('_sessionUser');
+  if(storedToken && storedUser && ACCOUNTS[storedUser]) {
+    if(firebaseReady && firebaseDB) {
+      try {
+        const snap = await firebaseDB.ref('sessions/' + storedToken).once('value');
+        if(snap.exists() && snap.val().username === storedUser) {
+          currentUser = {username: storedUser, ...ACCOUNTS[storedUser]};
+          $('#loginPage').classList.add('hidden');$('#appLayout').style.display='flex';
+          document.body.classList.toggle('role-admin',currentUser.role==='admin');
+          $('#headerUserName').textContent=currentUser.name+' ('+currentUser.role+')';
+          $('#headerAvatar').textContent=currentUser.name.substring(0,2).toUpperCase();
+          App.init();
+        } else {
+          sessionStorage.removeItem('_sessionToken');
+          sessionStorage.removeItem('_sessionUser');
+        }
+      } catch (e) {
+        console.warn('Session check failed', e);
+      }
+    } else {
+      // Offline fallback
+      currentUser = {username: storedUser, ...ACCOUNTS[storedUser]};
+      $('#loginPage').classList.add('hidden');$('#appLayout').style.display='flex';
+      document.body.classList.toggle('role-admin',currentUser.role==='admin');
+      $('#headerUserName').textContent=currentUser.name+' ('+currentUser.role+')';
+      $('#headerAvatar').textContent=currentUser.name.substring(0,2).toUpperCase();
+      App.init();
+    }
+  }
+
   // Login (async)
-  $('#loginForm').addEventListener('submit',async e=>{e.preventDefault();const u=$('#loginUser').value.trim(),p=$('#loginPass').value;if(!u||!p){$('#loginError').textContent='Vui lòng nhập đầy đủ';return}const ok=await App.Auth.login(u,p);if(!ok)$('#loginError').textContent='Sai tên đăng nhập hoặc mật khẩu'});
+  $('#loginForm').addEventListener('submit',async e=>{
+    e.preventDefault();
+    const u=$('#loginUser').value.trim(),p=$('#loginPass').value;
+    if(!u||!p){$('#loginError').textContent='Vui lòng nhập đầy đủ';return}
+    try {
+      $('#loginError').textContent='';
+      $('#loginError').classList.remove('show');
+      const ok=await App.Auth.login(u,p);
+      if(!ok) {
+        $('#loginError').textContent='Sai tên đăng nhập hoặc mật khẩu';
+        $('#loginError').classList.add('show');
+      }
+    } catch(err) {
+      console.error(err);
+      $('#loginError').textContent='Lỗi: ' + (err.message || 'Không thể đăng nhập');
+      $('#loginError').classList.add('show');
+    }
+  });
   $('#logoutBtn').addEventListener('click',()=>App.Auth.logout());
   // Nav
   $$('.nav-item[data-page]').forEach(item=>item.addEventListener('click',()=>{showLoading();$$('.nav-item').forEach(n=>n.classList.remove('active'));item.classList.add('active');setTimeout(()=>{$$('.page').forEach(p=>p.classList.remove('active'));$('#page-'+item.dataset.page).classList.add('active');hideLoading();if(item.dataset.page==='dashboard'){App.Dashboard.render();App.Dashboard.initCharts()}if(item.dataset.page==='reports')App.BaoCao.initCharts();$('#sidebar').classList.remove('open');$('#sidebarOverlay').classList.remove('show')},200)}));
@@ -207,3 +257,9 @@ function handleFile(f){
   if(!$('#docTitle').value)$('#docTitle').value=f.name.replace('.'+ext,'');
 }
 
+// Expose globals for inline HTML event handlers
+window.App = App;
+window.showToast = showToast;
+window.openModal = openModal;
+window.closeModal = closeModal;
+window.handleFile = handleFile;
