@@ -12,6 +12,7 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
     <style>
@@ -1285,6 +1286,44 @@ body.light .sticky-table tbody tr:hover .sticky-col{background:#e2e8f0!important
 .admin-only{display:none!important}
 .role-admin .admin-only{display:inline-flex!important}
 .role-admin .admin-only.btn{display:inline-flex!important}
+/* CALENDAR */
+.event-tabs{display:flex;gap:4px;margin-bottom:16px}
+.event-tab{padding:8px 20px;border-radius:20px;background:transparent;color:var(--text2);font-size:13px;font-weight:600;border:1px solid var(--border);cursor:pointer;transition:var(--tr)}
+.event-tab.active,.event-tab:hover{background:var(--primary);color:#fff;border-color:var(--primary)}
+.calendar{display:none;background:var(--card);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden}
+.calendar.active{display:block}
+.cal-header{display:flex;align-items:center;justify-content:space-between;padding:12px 16px;border-bottom:1px solid var(--border)}
+.cal-header h4{font-size:15px;font-weight:700}
+.cal-nav{display:flex;gap:4px}
+.cal-nav button{width:32px;height:32px;border-radius:var(--radius-sm);background:var(--surface);border:1px solid var(--border);color:var(--text2);font-size:14px;cursor:pointer;transition:var(--tr)}
+.cal-nav button:hover{background:var(--hover);color:var(--text)}
+.cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:1px;background:var(--border)}
+.cal-cell{background:var(--card);padding:8px 4px;text-align:center;min-height:60px;font-size:12px;cursor:default;transition:var(--tr)}
+.cal-cell.header{background:var(--bg);font-weight:700;font-size:11px;color:var(--muted);text-transform:uppercase;min-height:auto;padding:8px 4px}
+.cal-cell.other{opacity:.3}
+.cal-cell.today{border:2px solid var(--primary);border-radius:var(--radius-sm)}
+.cal-cell.has-event{background:rgba(211,47,47,.15);cursor:pointer;font-weight:700;color:var(--primary-light);position:relative}
+.cal-cell.has-event:hover{background:rgba(211,47,47,.3)}
+.cal-cell.has-event::after{content:'';position:absolute;bottom:4px;left:50%;transform:translateX(-50%);width:6px;height:6px;border-radius:50%;background:var(--primary)}
+/* TASKS */
+.task-list{display:flex;flex-direction:column;gap:8px}
+.task-item{display:flex;align-items:center;gap:12px;padding:12px 16px;background:var(--card);border:1px solid var(--border);border-radius:var(--radius);transition:var(--tr)}
+.task-item:hover{border-color:var(--primary)}
+.task-item.done{opacity:.6}
+.task-item.done .task-title{text-decoration:line-through}
+.task-title{font-weight:600;font-size:13px;flex:1}
+.task-meta{display:flex;gap:12px;font-size:11px;color:var(--muted);flex-wrap:wrap}
+.task-deadline{color:var(--danger);font-weight:600}
+.task-filter-row{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:12px}
+/* AUDIT LOG */
+.log-timeline{position:relative;padding-left:24px}
+.log-timeline::before{content:'';position:absolute;left:8px;top:0;bottom:0;width:2px;background:var(--border)}
+.log-entry{position:relative;padding:8px 0 8px 16px;border-bottom:1px solid rgba(51,65,85,.3);font-size:13px}
+.log-entry:last-child{border-bottom:none}
+.log-icon{position:absolute;left:-20px;top:10px;width:18px;height:18px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:10px;color:#fff}
+.log-icon.add{background:var(--ok)}.log-icon.edit{background:var(--info)}.log-icon.delete{background:var(--danger)}
+.log-time{font-size:11px;color:var(--muted)}
+.log-action{font-weight:600}
     </style>
 </head>
 
@@ -1536,16 +1575,39 @@ body.light .sticky-table tbody tr:hover .sticky-col{background:#e2e8f0!important
                         <button class="btn btn-primary admin-only" id="btnAddEvent">📅 Tạo sự kiện</button>
                     </div>
                     <div class="stats-grid" id="eventStats"></div>
-                    <div class="card">
+                    <div class="event-tabs">
+                        <button class="event-tab active" data-et="list">📋 List</button>
+                        <button class="event-tab" data-et="calendar">📅 Calendar</button>
+                        <button class="event-tab" data-et="tasks">📋 Tasks</button>
+                    </div>
+                    <div class="card" id="eventListCard">
                         <div class="card-header">
                             <h3>Danh sách sự kiện</h3>
-                            <div style="display:flex;gap:4px"><button class="filter-btn active" data-ef="all">Tất
-                                    cả</button><button class="filter-btn" data-ef="sap-dien-ra">Sắp tới</button><button
-                                    class="filter-btn" data-ef="dang-dien-ra">Đang diễn ra</button><button
-                                    class="filter-btn" data-ef="hoan-thanh">Đã xong</button></div>
+                            <div style="display:flex;gap:4px"><button class="filter-btn active" data-ef="all">Tất cả</button><button class="filter-btn" data-ef="sap-dien-ra">Sắp tới</button><button class="filter-btn" data-ef="dang-dien-ra">Đang diễn ra</button><button class="filter-btn" data-ef="hoan-thanh">Đã xong</button></div>
                         </div>
                         <div class="card-body">
                             <div class="event-list" id="eventList"></div>
+                        </div>
+                    </div>
+                    <div class="calendar" id="eventCalendar">
+                        <div class="cal-header">
+                            <div class="cal-nav"><button id="calPrev">◀</button></div>
+                            <h4 id="calMonthYear"></h4>
+                            <div class="cal-nav"><button id="calNext">▶</button></div>
+                        </div>
+                        <div class="cal-grid" id="calGrid"></div>
+                    </div>
+                    <div class="card" id="eventTasksCard" style="display:none">
+                        <div class="card-header">
+                            <h3>Danh sách công việc</h3>
+                            <button class="btn btn-primary btn-sm admin-only" id="btnAddTask">➕ New Task</button>
+                        </div>
+                        <div class="card-body">
+                            <div class="task-filter-row">
+                                <select class="form-input" id="taskEventFilter" style="width:140px"><option value="all">Tất cả sự kiện ▾</option></select>
+                                <select class="form-input" id="taskStatusFilter" style="width:120px"><option value="all">Tất cả ▾</option><option value="todo">Todo</option><option value="done">Done</option></select>
+                            </div>
+                            <div class="task-list" id="taskList"></div>
                         </div>
                     </div>
                 </section>
@@ -1687,6 +1749,11 @@ body.light .sticky-table tbody tr:hover .sticky-col{background:#e2e8f0!important
                                     </div>
                                 </div>
                             </div>
+                            <div class="settings-section admin-only" id="auditLogSection">
+                                <h3>📋 System Log</h3>
+                                <div style="margin-bottom:12px"><button class="btn btn-primary btn-sm" id="btnExportLog">📥 Export Log</button></div>
+                                <div class="log-timeline" id="logTimeline"></div>
+                            </div>
                         </div>
                     </div>
                 </section>
@@ -1753,7 +1820,9 @@ body.light .sticky-table tbody tr:hover .sticky-col{background:#e2e8f0!important
                     <div class="form-group"><label>Ngày sinh *</label><input type="date" id="mDob" class="form-input"
                             required><span class="field-error" id="mDobErr"></span></div>
                 </div>
-                <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+                <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px">
+                    <div class="form-group"><label>MSSV</label><input type="text" id="mMssv" class="form-input"
+                            placeholder="VD: B2401234"></div>
                     <div class="form-group"><label>Giới tính</label><select id="mGender" class="form-input">
                             <option>Nam</option>
                             <option>Nữ</option>
@@ -1818,6 +1887,21 @@ body.light .sticky-table tbody tr:hover .sticky-col{background:#e2e8f0!important
                     onclick="closeModal('previewModal')">&times;</button>
             </div>
             <div class="modal-body" id="previewBody"></div>
+        </div>
+    </div>
+    <!-- MODAL: Task -->
+    <div class="modal-overlay" id="taskModal">
+        <div class="modal">
+            <div class="modal-header">
+                <h3>📋 New Task</h3><button class="modal-close" onclick="closeModal('taskModal')">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group"><label>Title *</label><input type="text" id="taskTitle" class="form-input" required></div>
+                <div class="form-group"><label>Assignee (member) *</label><select id="taskAssignee" class="form-input"></select></div>
+                <div class="form-group"><label>Event *</label><select id="taskEventId" class="form-input"></select></div>
+                <div class="form-group"><label>Deadline *</label><input type="date" id="taskDeadline" class="form-input" required></div>
+            </div>
+            <div class="modal-footer"><button class="btn btn-outline" onclick="closeModal('taskModal')">Hủy</button><button class="btn btn-primary" onclick="App.NhiemVu.create()">💾 Create</button></div>
         </div>
     </div>
     <!-- CONFIRM -->
@@ -1894,7 +1978,7 @@ const DB = {
       const val = MEMORY_DB[key];
       if (!val) return null;
       // Known array keys - ensure they're always arrays
-      const arrayKeys = ['doanvien', 'sukien', 'tailieu', 'thongbao'];
+      const arrayKeys = ['doanvien', 'sukien', 'tailieu', 'thongbao', 'tasks', 'logs'];
       if (arrayKeys.includes(key) && val && !Array.isArray(val)) {
         return Object.values(val);
       }
@@ -1924,7 +2008,7 @@ const DB = {
 
 // ===== FIREBASE REAL-TIME LISTENERS =====
 // These auto-update localStorage when another device changes data
-const SYNC_KEYS = ['doanvien', 'tailieu', 'sukien', 'thongbao', 'caiDat'];
+const SYNC_KEYS = ['doanvien', 'tailieu', 'sukien', 'thongbao', 'tasks', 'logs', 'caiDat'];
 function setupFirebaseListeners() {
   if (!firebaseReady || !firebaseDB) return;
   // Monitor connection status
@@ -1954,6 +2038,8 @@ function setupFirebaseListeners() {
               if (key === 'tailieu' && App.TaiLieu) { App.TaiLieu.renderTabs(); App.TaiLieu.render() }
               if (key === 'sukien' && App.SuKien) { App.SuKien.renderStats(); App.SuKien.render() }
               if (key === 'thongbao' && App.ThongBao) App.ThongBao.render();
+              if (key === 'tasks' && App.NhiemVu) App.NhiemVu.render();
+              if (key === 'logs' && App.NhatKyHeThong) App.NhatKyHeThong.render();
               if (key === 'doanvien' || key === 'tailieu' || key === 'sukien') {
                 if (App.Dashboard) { App.Dashboard.render() }
               }
@@ -2091,6 +2177,16 @@ const EVT_STATUS={'sap-dien-ra':{l:'Sắp diễn ra',c:'badge-info'},'dang-dien-
 const TYPE_ICONS={PDF:'📄',DOCX:'📘',PPTX:'📊',Image:'🖼️',MP4:'🎬'};
 const TYPE_CSS={PDF:'pdf',DOCX:'docx',PPTX:'pptx',Image:'img',MP4:'pdf'};
 let charts={},memberPage=1,memberSort={key:'hoTen',asc:true},editingId=null;
+let calYear=new Date().getFullYear(),calMonth=new Date().getMonth(),calFilterDate=null;
+
+// ===== AUDIT LOG =====
+function writeLog(action,target){
+  if(!currentUser)return;
+  const logs=DB.get('logs')||[];
+  logs.unshift({action,target,user:currentUser.username,time:Date.now()});
+  if(logs.length>200)logs.length=200;
+  DB.set('logs',logs);
+}
 
 // ===== APP OBJECT =====
 const App={
@@ -2138,12 +2234,15 @@ Dashboard:{
     const dv=DB.get('doanvien')||[],tl=DB.get('tailieu')||[],sk=DB.get('sukien')||[];
     const active=dv.filter(m=>m.trangThai==='hoat-dong').length;
     const now=new Date(),thisMonth=sk.filter(e=>{const d=new Date(e.ngayToChuc);return d.getMonth()===now.getMonth()&&d.getFullYear()===now.getFullYear()}).length;
+    const todayStr=new Date().toISOString().slice(0,10);
+    const pendingTasks=(DB.get('tasks')||[]).filter(t=>t.status==='todo'&&t.deadline&&t.deadline<=todayStr).length;
     $('#dashGreeting').textContent='Xin chào '+((currentUser&&currentUser.name)||'')+', tổng quan hệ thống';
     $('#dashStats').innerHTML=[
       {icon:'👥',val:dv.length,label:'Tổng Đoàn viên',ch:'Chi đoàn: 24ICD'},
       {icon:'✅',val:active,label:'Đang hoạt động',ch:dv.length?Math.round(active/dv.length*100)+'%':'0%'},
       {icon:'📅',val:thisMonth,label:'Sự kiện tháng này',ch:sk.filter(e=>e.trangThai==='hoan-thanh').length+' hoàn thành'},
-      {icon:'📄',val:tl.length,label:'Tài liệu số hóa',ch:'Đa dạng danh mục'}
+      {icon:'📄',val:tl.length,label:'Tài liệu số hóa',ch:'Đa dạng danh mục'},
+      {icon:'📋',val:pendingTasks,label:'Tasks due today',ch:pendingTasks+' pending'}
     ].map(s=>`<div class="stat-card"><div class="stat-icon">${s.icon}</div><div class="stat-value" data-value="${s.val}">0</div><div class="stat-label">${s.label}</div><div class="stat-change up">${s.ch}</div></div>`).join('');
     setTimeout(() => {
       $$('.stat-value').forEach((element, index) => {
@@ -2200,7 +2299,7 @@ DoanVien:{
     $('#memberPagination').innerHTML=Array.from({length:totalPages},(_,i)=>`<button class="page-btn ${i+1===memberPage?'active':''}" onclick="memberPage=${i+1};App.DoanVien.render()">${i+1}</button>`).join('');
   },
   view(id){const m=(DB.get('doanvien')||[]).find(x=>x.id===id);if(!m)return;$('#previewTitle').textContent=m.hoTen;$('#previewBody').innerHTML=`
-    <p><b>Mã định danh:</b> ${m.maDinhDanh||''}</p><p><b>Số thẻ đoàn:</b> ${m.soTheDoan||''}</p>
+    <p><b>MSSV:</b> ${m.mssv||''}</p><p><b>Mã định danh:</b> ${m.maDinhDanh||''}</p><p><b>Số thẻ đoàn:</b> ${m.soTheDoan||''}</p>
     <p><b>Ngày sinh:</b> ${fmtDate(m.ngaySinh)}</p><p><b>Giới tính:</b> ${m.gioiTinh||''}</p>
     <p><b>Dân tộc:</b> ${m.danToc||''}</p><p><b>Tôn giáo:</b> ${m.tonGiao||''}</p>
     <p><b>Quê quán:</b> ${m.queQuan||''}</p><p><b>Địa chỉ:</b> ${m.diaChi||''}</p>
@@ -2211,21 +2310,56 @@ DoanVien:{
     <p><b>Đối tượng SH:</b> ${m.doiTuongSH||''}</p><p><b>Rèn luyện:</b> ${m.renLuyen||''}</p>
     <p><b>Đánh giá:</b> ${m.danhGia||''}</p><p><b>Khen thưởng:</b> ${m.khenThuong||''}</p><p><b>Kỷ luật:</b> ${m.kyLuat||''}</p>
     <p><b>Chức vụ:</b> ${m.chucVu||''}</p><p><b>Hội:</b> ${m.hoi||''}</p>
-    <p><b>Email:</b> ${m.email||''}</p><p><b>SĐT:</b> ${m.soDienThoai||''}</p>`;openModal('previewModal')},
-  openAdd(){editingId=null;$('#memberModalTitle').textContent='➕ Thêm Đoàn viên';['mName','mDob','mPhone','mEmail','mJoinDate'].forEach(id=>$('#'+id).value='');$$('.field-error').forEach(e=>e.textContent='');openModal('memberModal')},
-  edit(id){const m=(DB.get('doanvien')||[]).find(x=>x.id===id);if(!m)return;editingId=id;$('#memberModalTitle').textContent='✏️ Sửa Đoàn viên';$('#mName').value=m.hoTen;$('#mDob').value=m.ngaySinh||'';$('#mGender').value=m.gioiTinh||'Nam';$('#mUnit').value=m.chiDoan||'Chi đoàn 24ICD';$('#mPhone').value=m.soDienThoai||'';$('#mEmail').value=m.email||'';$('#mJoinDate').value=m.ngayKetNap||'';$('#mRank').value=m.thiDua||'Hoàn thành';$$('.field-error').forEach(e=>e.textContent='');openModal('memberModal')},
+    <p><b>Email:</b> ${m.email||''}</p><p><b>SĐT:</b> ${m.soDienThoai||''}</p><div style="margin-top:14px"><button class="btn btn-primary btn-sm" onclick="App.DoanVien.printCard('${m.id}')">🪪 Print Card</button></div>`;openModal('previewModal')},
+  openAdd(){editingId=null;$('#memberModalTitle').textContent='➕ Thêm Đoàn viên';['mName','mDob','mMssv','mPhone','mEmail','mJoinDate'].forEach(id=>$('#'+id).value='');$$('.field-error').forEach(e=>e.textContent='');openModal('memberModal')},
+  edit(id){const m=(DB.get('doanvien')||[]).find(x=>x.id===id);if(!m)return;editingId=id;$('#memberModalTitle').textContent='✏️ Sửa Đoàn viên';$('#mName').value=m.hoTen;$('#mDob').value=m.ngaySinh||'';$('#mMssv').value=m.mssv||'';$('#mGender').value=m.gioiTinh||'Nam';$('#mUnit').value=m.chiDoan||'Chi đoàn 24ICD';$('#mPhone').value=m.soDienThoai||'';$('#mEmail').value=m.email||'';$('#mJoinDate').value=m.ngayKetNap||'';$('#mRank').value=m.thiDua||'Hoàn thành';$$('.field-error').forEach(e=>e.textContent='');openModal('memberModal')},
   save(){
-    let ok=true;const name=$('#mName').value.trim(),dob=$('#mDob').value,phone=$('#mPhone').value.trim(),email=$('#mEmail').value.trim();
+    let ok=true;const name=$('#mName').value.trim(),dob=$('#mDob').value,phone=$('#mPhone').value.trim(),email=$('#mEmail').value.trim(),mssv=$('#mMssv').value.trim();
     $$('.field-error').forEach(e=>e.textContent='');
     if(!name){$('#mNameErr').textContent='Vui lòng nhập họ tên';ok=false}
     if(!ok)return;
     const arr=DB.get('doanvien')||[];
-    if(editingId){const m=arr.find(x=>x.id===editingId);if(m){m.hoTen=name;m.ngaySinh=dob;m.gioiTinh=$('#mGender').value;m.chiDoan=$('#mUnit').value;m.soDienThoai=phone;m.email=email;m.ngayKetNap=$('#mJoinDate').value;m.thiDua=$('#mRank').value}showToast('Đã cập nhật đoàn viên')}
-    else{arr.push({id:genId('DV',arr),hoTen:name,ngaySinh:dob,gioiTinh:$('#mGender').value,chiDoan:$('#mUnit').value,soDienThoai:phone,email,ngayKetNap:$('#mJoinDate').value||new Date().toISOString().slice(0,10),trangThai:'hoat-dong',thiDua:$('#mRank').value,maDinhDanh:'',soTheDoan:'',soCCCD:'',chucVu:'Đoàn viên'});showToast('Đã thêm đoàn viên thành công!')}
+    if(editingId){const m=arr.find(x=>x.id===editingId);if(m){m.hoTen=name;m.ngaySinh=dob;m.mssv=mssv;m.gioiTinh=$('#mGender').value;m.chiDoan=$('#mUnit').value;m.soDienThoai=phone;m.email=email;m.ngayKetNap=$('#mJoinDate').value;m.thiDua=$('#mRank').value}showToast('Đã cập nhật đoàn viên');writeLog('edit','DoanVien: '+name)}
+    else{arr.push({id:genId('DV',arr),hoTen:name,ngaySinh:dob,mssv,gioiTinh:$('#mGender').value,chiDoan:$('#mUnit').value,soDienThoai:phone,email,ngayKetNap:$('#mJoinDate').value||new Date().toISOString().slice(0,10),trangThai:'hoat-dong',thiDua:$('#mRank').value,maDinhDanh:'',soTheDoan:'',soCCCD:'',chucVu:'Đoàn viên'});showToast('Đã thêm đoàn viên thành công!');writeLog('add','DoanVien: '+name)}
     DB.set('doanvien',arr);closeModal('memberModal');this.render();editingId=null;
   },
   updateDanhGia(id,val){const arr=DB.get('doanvien')||[];const m=arr.find(x=>x.id===id);if(m){m.danhGia=val;DB.set('doanvien',arr);showToast('Đã cập nhật đánh giá')}},
-  confirmDel(id){const m=(DB.get('doanvien')||[]).find(x=>x.id===id);$('#confirmMsg').textContent=`Bạn có chắc muốn xóa đoàn viên ${m?m.hoTen:id}? Hành động này không thể hoàn tác.`;$('#confirmOk').onclick=()=>{const arr=(DB.get('doanvien')||[]).filter(x=>x.id!==id);DB.set('doanvien',arr);closeModal('confirmModal');this.render();showToast('Đã xóa đoàn viên')};openModal('confirmModal')},
+  printCard(id){
+    const m=(DB.get('doanvien')||[]).find(x=>x.id===id);if(!m){showToast('Không tìm thấy đoàn viên','error');return}
+    if(typeof jspdf==='undefined'){showToast('jsPDF chưa tải','error');return}
+    const{jsPDF}=jspdf;
+    // Build card via Canvas so Vietnamese renders correctly (browser handles Unicode)
+    const W=320,H=230;
+    const cvs=document.createElement('canvas');cvs.width=W;cvs.height=H;
+    const ctx=cvs.getContext('2d');
+    // Header
+    ctx.fillStyle='#D32F2F';ctx.fillRect(0,0,W,60);
+    ctx.fillStyle='#fff';ctx.font='bold 20px Arial';ctx.textAlign='center';
+    ctx.fillText('DOÀN TNCS HỒ CHÍ MINH',W/2,23);
+    ctx.font='13px Arial';
+    ctx.fillText('Chi Đoàn 24ICD — HCMUS',W/2,43);
+    // Body
+    ctx.textAlign='left';ctx.fillStyle='#808080';
+    const drawRow=(label,value,ly,vy)=>{ctx.font='bold 15px Arial';ctx.fillText(label,22,ly);ctx.fillStyle='#333';ctx.font='14px Arial';ctx.fillText(value,22,vy);ctx.fillStyle='#808080'};
+    drawRow('Họ tên:',m.hoTen||'',84,101);
+    drawRow('MSSV:',m.mssv||m.id||'',121,138);
+    drawRow('Chi đoàn:',m.chiDoan||'24ICD',158,175);
+    drawRow('Kết nạp:',fmtDate(m.ngayKetNap)||'',195,212);
+    const cardURL=cvs.toDataURL('image/png');
+    const doc=new jsPDF({orientation:'landscape',unit:'mm',format:[85,54]});
+    if(typeof QRCode==='undefined'){doc.addImage(cardURL,'PNG',0,0,85,54);const fn='the-'+(m.hoTen||'member').replace(/\s+/g,'-').toLowerCase()+'.pdf';doc.save(fn);showToast('PDF: '+fn);return}
+    const qrDiv=document.createElement('div');qrDiv.style.cssText='position:absolute;left:-9999px';document.body.appendChild(qrDiv);
+    new QRCode(qrDiv,{text:m.mssv||m.id||'',width:80,height:80});
+    setTimeout(()=>{
+      const cvs2=qrDiv.querySelector('canvas');
+      if(cvs2){const qrimg=cvs2.toDataURL('image/png');doc.addImage(cardURL,'PNG',0,0,85,54);doc.addImage(qrimg,'PNG',66,4,16,16)}
+      else doc.addImage(cardURL,'PNG',0,0,85,54);
+      document.body.removeChild(qrDiv);
+      const fn='the-'+(m.hoTen||'member').replace(/\s+/g,'-').toLowerCase()+'-'+(m.id||'')+'.pdf';
+      doc.save(fn);showToast('Đã tạo: '+fn)
+    },300);
+  },
+  confirmDel(id){const m=(DB.get('doanvien')||[]).find(x=>x.id===id);$('#confirmMsg').textContent=`Bạn có chắc muốn xóa đoàn viên ${m?m.hoTen:id}? Hành động này không thể hoàn tác.`;$('#confirmOk').onclick=()=>{writeLog('delete','DoanVien: '+(m?m.hoTen:id));const arr=(DB.get('doanvien')||[]).filter(x=>x.id!==id);DB.set('doanvien',arr);closeModal('confirmModal');this.render();showToast('Đã xóa đoàn viên')};openModal('confirmModal')},
   // Import CSV/XLSX
   importFile(file){
     if(typeof XLSX==='undefined'){showToast('Thư viện XLSX chưa tải','error');return}
@@ -2295,7 +2429,7 @@ TaiLieu:{
     if(d.driveUrl){window.open(d.driveUrl,'_blank');showToast('Đang mở file từ Google Drive...')}
     else{showToast('Tài liệu chưa có file đính kèm','warning')}
   },
-  confirmDel(id){const d=(DB.get('tailieu')||[]).find(x=>x.id===id);$('#confirmMsg').textContent=`Xóa tài liệu "${d?d.tieuDe:id}"?`;$('#confirmOk').onclick=()=>{const arr=(DB.get('tailieu')||[]).filter(x=>x.id!==id);DB.set('tailieu',arr);closeModal('confirmModal');closeModal('previewModal');this.renderTabs();this.render();showToast('Đã xóa tài liệu')};openModal('confirmModal')},
+  confirmDel(id){const d=(DB.get('tailieu')||[]).find(x=>x.id===id);$('#confirmMsg').textContent=`Xóa tài liệu "${d?d.tieuDe:id}"?`;$('#confirmOk').onclick=()=>{writeLog('delete','TaiLieu: '+(d?d.tieuDe:id));const arr=(DB.get('tailieu')||[]).filter(x=>x.id!==id);DB.set('tailieu',arr);closeModal('confirmModal');closeModal('previewModal');this.renderTabs();this.render();showToast('Đã xóa tài liệu')};openModal('confirmModal')},
   upload(){
     const title=$('#docTitle').value.trim();$('#docTitleErr').textContent='';
     if(!title){$('#docTitleErr').textContent='Vui lòng nhập tiêu đề';return}
@@ -2354,9 +2488,74 @@ SuKien:{
     if(!name){$('#eNameErr').textContent='Nhập tên sự kiện';ok=false}
     if(!date){$('#eDateErr').textContent='Chọn ngày';ok=false}else if(new Date(date)<new Date(new Date().toDateString())){$('#eDateErr').textContent='Ngày không được trong quá khứ';ok=false}
     if(!ok)return;
-    const sk=DB.get('sukien')||[];sk.push({id:genId('SK',sk),tenSuKien:name,moTa:$('#eDesc').value,ngayToChuc:date,thoiGian:$('#eTime').value||'08:00',diaDiem:$('#eLocation').value||'TBD',trangThai:'sap-dien-ra',soLuongThamGia:0,danhSachThamGia:[]});DB.set('sukien',sk);const tb=DB.get('thongbao')||[];tb.unshift({id:'TB'+Date.now(),tieuDe:'Hoạt động mới',noiDung:'Sự kiện "'+name+'" đã được tạo.',loai:'info',daDocBoi:[],thoiGian:new Date().toISOString(),targetUser:'all'});DB.set('thongbao',tb);App.ThongBao.render();closeModal('eventModal');this.render();this.renderStats();showToast('Đã tạo sự kiện mới!')
+    const sk=DB.get('sukien')||[];sk.push({id:genId('SK',sk),tenSuKien:name,moTa:$('#eDesc').value,ngayToChuc:date,thoiGian:$('#eTime').value||'08:00',diaDiem:$('#eLocation').value||'TBD',trangThai:'sap-dien-ra',soLuongThamGia:0,danhSachThamGia:[]});DB.set('sukien',sk);const tb=DB.get('thongbao')||[];tb.unshift({id:'TB'+Date.now(),tieuDe:'Hoạt động mới',noiDung:'Sự kiện "'+name+'" đã được tạo.',loai:'info',daDocBoi:[],thoiGian:new Date().toISOString(),targetUser:'all'});DB.set('thongbao',tb);App.ThongBao.render();writeLog('add','SuKien: '+name);closeModal('eventModal');this.render();this.renderStats();showToast('Đã tạo sự kiện mới!')
   },
-  confirmDel(id){const e=(DB.get('sukien')||[]).find(x=>x.id===id);$('#confirmMsg').textContent=`Xóa sự kiện "${e?e.tenSuKien:id}"? Hành động này không thể hoàn tác.`;$('#confirmOk').onclick=()=>{const arr=(DB.get('sukien')||[]).filter(x=>x.id!==id);DB.set('sukien',arr);closeModal('confirmModal');this.render();this.renderStats();showToast('Đã xóa sự kiện')};openModal('confirmModal')}
+  confirmDel(id){const e=(DB.get('sukien')||[]).find(x=>x.id===id);$('#confirmMsg').textContent=`Xóa sự kiện "${e?e.tenSuKien:id}"? Hành động này không thể hoàn tác.`;$('#confirmOk').onclick=()=>{writeLog('delete','SuKien: '+(e?e.tenSuKien:id));const arr=(DB.get('sukien')||[]).filter(x=>x.id!==id);DB.set('sukien',arr);closeModal('confirmModal');this.render();this.renderStats();showToast('Đã xóa sự kiện')};openModal('confirmModal')}
+},
+Lich:{
+  render(){
+    const MONTH_VN=['Tháng 1','Tháng 2','Tháng 3','Tháng 4','Tháng 5','Tháng 6','Tháng 7','Tháng 8','Tháng 9','Tháng 10','Tháng 11','Tháng 12'];
+    const sk=DB.get('sukien')||[];
+    const firstDay=new Date(calYear,calMonth,1).getDay();
+    const daysInMon=new Date(calYear,calMonth+1,0).getDate();
+    const today=new Date();
+    $('#calMonthYear').textContent=MONTH_VN[calMonth]+' '+calYear;
+    let html='<div class="cal-cell header">CN</div><div class="cal-cell header">T2</div><div class="cal-cell header">T3</div><div class="cal-cell header">T4</div><div class="cal-cell header">T5</div><div class="cal-cell header">T6</div><div class="cal-cell header">T7</div>';
+    for(let i=0;i<firstDay;i++)html+=`<div class="cal-cell other"></div>`;
+    for(let d=1;d<=daysInMon;d++){
+      const dateStr=calYear+'-'+String(calMonth+1).padStart(2,'0')+'-'+String(d).padStart(2,'0');
+      const hasEvt=sk.some(e=>e.ngayToChuc===dateStr);
+      const isToday=today.getFullYear()===calYear&&today.getMonth()===calMonth&&today.getDate()===d;
+      const cls='cal-cell'+(hasEvt?' has-event':'')+(isToday&&!hasEvt?' today':'');
+      html+=`<div class="${cls}" ${hasEvt?`onclick="App.Lich.filterByDate('${dateStr}')"`:'title="'+d+'"'}>${d}</div>`;
+    }
+    $('#calGrid').innerHTML=html;
+  },
+  filterByDate(dateStr){
+    calFilterDate=dateStr;
+    $$('.event-tab').forEach(t=>t.classList.remove('active'));
+    $$('[data-et="list"]').forEach(t=>t.classList.add('active'));
+    $$('[data-ef]').forEach(b=>b.classList.remove('active'));
+    $('#eventCalendar').classList.remove('active');
+    $$('#eventListCard').forEach(el=>el.style.display='block');
+    $('#eventTasksCard').style.display='none';
+    const filtered=(DB.get('sukien')||[]).filter(e=>e.ngayToChuc===dateStr);
+    const isAdmin=currentUser&&currentUser.role==='admin';
+    $('#eventList').innerHTML=filtered.map(e=>{const d=new Date(e.ngayToChuc+'T00:00:00');const st=EVT_STATUS[e.trangThai]||{l:'?',c:''};const delBtn=isAdmin?`<button class="btn-icon" onclick="App.SuKien.confirmDel('${e.id}')" title="Xóa" style="margin-top:6px">🗑️</button>`:'';return`<div class="event-card"><div class="event-date"><div class="day">${d.getDate()}</div><div class="month">${MONTHS[d.getMonth()]}</div></div><div class="event-info"><h4>${e.tenSuKien}</h4><p>${e.moTa||''}</p><div class="event-meta"><span>📍 ${e.diaDiem}</span><span>🕐 ${e.thoiGian||''}</span><span>👥 ${e.soLuongThamGia}</span></div></div><div class="event-status"><span class="badge ${st.c}">${st.l}</span>${delBtn}</div></div>`}).join('')||'<p style="color:var(--muted)">Không có sự kiện</p>';
+    showToast('Tìm: '+dateStr,'info');
+  }
+},
+NhiemVu:{
+  popEventSelect(){
+    const sk=DB.get('sukien')||[];const dv=DB.get('doanvien')||[];
+    $('#taskEventId').innerHTML=sk.map(e=>`<option value="${e.id}">${e.tenSuKien} (${e.ngayToChuc})</option>`).join('')||'<option value="">Không có sự kiện</option>';
+    $('#taskAssignee').innerHTML=dv.map(m=>`<option value="${m.id}">${m.hoTen||m.id}</option>`).join('')||'<option value="">Không có đoàn viên</option>';
+  },
+  isOverdue(dl){if(!dl)return false;return dl<new Date().toISOString().slice(0,10)},
+  render(){
+    let tasks=DB.get('tasks')||[];const sk=DB.get('sukien')||[];const evF=$('#taskEventFilter')?.value||'all',stF=$('#taskStatusFilter')?.value||'all';
+    const isAdmin=currentUser&&currentUser.role==='admin';
+    if(!isAdmin&&currentUser)tasks=tasks.filter(t=>t.assignee===currentUser.username||t.createdBy===currentUser.username);
+    if(evF!=='all')tasks=tasks.filter(t=>t.eventId===evF);
+    if(stF!=='all')tasks=tasks.filter(t=>t.status===stF);
+    const evOpts=sk.map(e=>`<option value="${e.id}">${e.tenSuKien} (${e.ngayToChuc})</option>`).join('');
+    const evSel=$('#taskEventFilter');if(evSel)evSel.innerHTML='<option value="all">Tất cả sự kiện ▾</option>'+evOpts;
+    $('#taskList').innerHTML=tasks.length?tasks.map(t=>{
+      const ev=sk.find(e=>e.id===t.eventId),isDone=t.status==='done',isOv=this.isOverdue(t.deadline)&&!isDone;
+      const canDone=!isDone&&(isAdmin||(currentUser&&(t.assignee===currentUser.username||t.createdBy===currentUser.username)));
+      const markBtn=canDone?`<button class="btn btn-sm" style="background:var(--ok);color:#fff" onclick="App.NhiemVu.markDone('${t.id}')">✅ Done</button>`:'';
+      return`<div class="task-item ${isDone?'done':''}"><div class="task-item-check" style="color:${isDone?'var(--ok)':'var(--muted)'}">${isDone?'✅':'⬜'}</div><div style="flex:1"><div class="task-title">${t.title}</div><div class="task-meta"><span>📅 ${ev?ev.tenSuKien:'—'}</span><span class="${isOv?'task-deadline':''}">⏰ ${t.deadline||'—'}${isOv?' (quá hạn)':''}</span><span>👤 ${t.assignee||'—'}</span></div></div>${markBtn}</div>`;
+    }).join(''):'<p style="color:var(--muted);font-size:13px">Không có công việc</p>';
+  },
+  create(){const title=$('#taskTitle').value.trim(),aid=$('#taskAssignee').value,eid=$('#taskEventId').value,dl=$('#taskDeadline').value;if(!title||!aid||!eid||!dl){showToast('Nhập đầy đủ thông tin','error');return}const tasks=DB.get('tasks')||[];tasks.push({id:genId('TK',tasks),title,assignee:aid,eventId:eid,deadline:dl,status:'todo',createdBy:currentUser?currentUser.username:'',createdAt:Date.now()});DB.set('tasks',tasks);writeLog('add','Task: '+title);closeModal('taskModal');$('#taskTitle').value='';$('#taskDeadline').value='';this.render();showToast('Đã tạo công việc!')},
+  markDone(id){const tasks=DB.get('tasks')||[];const t=tasks.find(x=>x.id===id);if(t){t.status='done';DB.set('tasks',tasks);writeLog('edit','Task done: '+t.title);this.render();showToast('Đã đánh dấu hoàn thành!')}}
+},
+NhatKyHeThong:{
+  render(){
+    const logs=DB.get('logs')||[];const clsMap={add:'add',edit:'edit',delete:'delete'};const ico={add:'➕',edit:'✏️',delete:'🗑️'};
+    $('#logTimeline').innerHTML=logs.slice(0,50).map(l=>{const d=new Date(l.time);const t=String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0')+' '+String(d.getDate()).padStart(2,'0')+'/'+String(d.getMonth()+1).padStart(2,'0');return`<div class="log-entry"><span class="log-icon ${clsMap[l.action]||'edit'}">${ico[l.action]||'📝'}</span><div><span style="font-weight:700">${l.user||''}</span> <span class="log-action">${l.action||''}</span> <span>${l.target||''}</span><div class="log-time">${t}</div></div></div>`}).join('')||'<p style="color:var(--muted);font-size:13px">Không có log</p>';
+  },
+  exportXLSX(){if(typeof XLSX==='undefined'){showToast('XLSX chưa tải','error');return}const logs=DB.get('logs')||[];const wb=XLSX.utils.book_new();const ws=[['Time','Action','Target','User']];logs.slice(0,50).forEach(l=>{const d=new Date(l.time);ws.push([String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0')+' '+String(d.getDate()).padStart(2,'0')+'/'+String(d.getMonth()+1).padStart(2,'0'),l.action,l.target||'',l.user||''])});XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet(ws),'System Log');XLSX.writeFile(wb,'SystemLog_'+new Date().toISOString().slice(0,10).replace(/-/g,'')+'.xlsx');showToast('Đã xuất log!')}
 },
 // APP continued - BaoCao, ThongBao, CaiDat, init
 BaoCao:{
@@ -2475,7 +2674,7 @@ ThongBao:{
   toggle(){const p=$('#notifPanel');p.style.display=p.style.display==='none'?'block':'none'}
 },
 CaiDat:{
-  load(){const cfg=DB.get('caiDat')||{};$$('.toggle[data-key]').forEach(t=>{const v=cfg[t.dataset.key];if(v)t.classList.add('active');else t.classList.remove('active')});if(cfg.darkMode)document.body.classList.add('light');else document.body.classList.remove('light');this.updateThemeBtn()},
+  load(){const cfg=DB.get('caiDat')||{};$$('.toggle[data-key]').forEach(t=>{const v=cfg[t.dataset.key];if(v)t.classList.add('active');else t.classList.remove('active')});if(cfg.darkMode)document.body.classList.add('light');else document.body.classList.remove('light');this.updateThemeBtn();if(App.NhatKyHeThong)App.NhatKyHeThong.render()},
   save(){const cfg={};$$('.toggle[data-key]').forEach(t=>cfg[t.dataset.key]=t.classList.contains('active'));DB.set('caiDat',cfg);showToast('Đã lưu cài đặt thành công!')},
   toggleTheme(){
     const isLight=document.body.classList.toggle('light');
@@ -2566,7 +2765,7 @@ document.addEventListener('DOMContentLoaded',async ()=>{
   });
   $('#logoutBtn').addEventListener('click',()=>App.Auth.logout());
   // Nav
-  $$('.nav-item[data-page]').forEach(item=>item.addEventListener('click',()=>{showLoading();$$('.nav-item').forEach(n=>n.classList.remove('active'));item.classList.add('active');setTimeout(()=>{$$('.page').forEach(p=>p.classList.remove('active'));$('#page-'+item.dataset.page).classList.add('active');hideLoading();if(item.dataset.page==='dashboard'){App.Dashboard.render();App.Dashboard.initCharts()}if(item.dataset.page==='reports')App.BaoCao.initCharts();$('#sidebar').classList.remove('open');$('#sidebarOverlay').classList.remove('show')},200)}));
+  $$('.nav-item[data-page]').forEach(item=>item.addEventListener('click',()=>{showLoading();$$('.nav-item').forEach(n=>n.classList.remove('active'));item.classList.add('active');setTimeout(()=>{$$('.page').forEach(p=>p.classList.remove('active'));$('#page-'+item.dataset.page).classList.add('active');hideLoading();if(item.dataset.page==='dashboard'){App.Dashboard.render();App.Dashboard.initCharts()}if(item.dataset.page==='settings'&&App.NhatKyHeThong)App.NhatKyHeThong.render();if(item.dataset.page==='reports')App.BaoCao.initCharts();$('#sidebar').classList.remove('open');$('#sidebarOverlay').classList.remove('show')},200)}));
   $('#navUpload').addEventListener('click',()=>openModal('uploadModal'));
   $('#menuToggle').addEventListener('click',()=>{$('#sidebar').classList.add('open');$('#sidebarOverlay').classList.add('show')});
   $('#sidebarOverlay').addEventListener('click',()=>{$('#sidebar').classList.remove('open');$('#sidebarOverlay').classList.remove('show')});
@@ -2594,6 +2793,14 @@ document.addEventListener('DOMContentLoaded',async ()=>{
   // Events
   $('#btnAddEvent').addEventListener('click',()=>{$('#eName').value='';$('#eDate').value='';$('#eDesc').value='';$('#eLocation').value='';openModal('eventModal')});
   $$('[data-ef]').forEach(btn=>btn.addEventListener('click',()=>{$$('[data-ef]').forEach(b=>b.classList.remove('active'));btn.classList.add('active');App.SuKien.render(btn.dataset.ef)}));
+  // Event tabs (List/Calendar/Tasks)
+  $$('.event-tab').forEach(t=>t.addEventListener('click',()=>{$$('.event-tab').forEach(x=>x.classList.remove('active'));t.classList.add('active');const tab=t.dataset.et;$$('#eventListCard').forEach(el=>el.style.display=tab==='list'?'block':'none');$('#eventCalendar').classList.toggle('active',tab==='calendar');$('#eventTasksCard').style.display=tab==='tasks'?'block':'none';if(tab==='list'){$$('[data-ef]').forEach(b=>b.classList.remove('active'));App.SuKien.render()}if(tab==='calendar'){calFilterDate=null;App.Lich.render()}if(tab==='tasks')App.NhiemVu.render()}));
+  $('#calPrev').addEventListener('click',()=>{calMonth--;if(calMonth<0){calMonth=11;calYear--}App.Lich.render()});
+  $('#calNext').addEventListener('click',()=>{calMonth++;if(calMonth>11){calMonth=0;calYear++}App.Lich.render()});
+  $('#btnAddTask').addEventListener('click',()=>{App.NhiemVu.popEventSelect();openModal('taskModal')});
+  $('#taskEventFilter').addEventListener('change',()=>App.NhiemVu.render());
+  $('#taskStatusFilter').addEventListener('change',()=>App.NhiemVu.render());
+  $('#btnExportLog').addEventListener('click',()=>App.NhatKyHeThong.exportXLSX());
   // Notifications
   $('#notifBtn').addEventListener('click',e=>{e.stopPropagation();App.ThongBao.toggle()});
   document.addEventListener('click',e=>{if(!e.target.closest('.notif-wrapper'))$('#notifPanel').style.display='none'});
