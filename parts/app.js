@@ -52,6 +52,7 @@ const TYPE_ICONS={pdf:'📄',docx:'📘',pptx:'📊',img:'🖼️'};
 const STATUS_MAP={active:{l:'Hoạt động',c:'badge-ok'},paused:{l:'Tạm hoãn',c:'badge-warn'},expired:{l:'Hết hạn',c:'badge-danger'}};
 const MONTHS=['Th1','Th2','Th3','Th4','Th5','Th6','Th7','Th8','Th9','Th10','Th11','Th12'];
 let memberPage=1,memberSort={key:'name',asc:true},editingMemberId=null,charts={};
+function setMemberPage(n){memberPage=n;renderMembers()}
 
 // ===== AUTH =====
 function doLogin(user,pass){
@@ -202,7 +203,7 @@ function renderMembers(){
     const actions=isAdmin?`<button class="btn-icon" onclick="editMember('${m.id}')" title="Sửa">✏️</button><button class="btn-icon" onclick="confirmDelete('${m.id}')" title="Xóa">🗑️</button>`:'';
     return`<tr><td><div class="member-info"><div class="member-avatar" style="background:${color}">${initials}</div><div><div class="member-name">${m.name}</div><div class="member-id">${m.id}</div></div></div></td><td>${m.unit}</td><td>${feeHtml}</td><td><span class="badge ${rankClass}">${m.rank}</span></td><td><span class="badge ${st.c}">${st.l}</span></td><td style="display:flex;gap:4px">${actions}<button class="btn-icon" onclick="viewMember('${m.id}')" title="Xem">👁️</button></td></tr>`;
   }).join('');
-  $('#memberPagination').innerHTML=Array.from({length:totalPages},(_,i)=>`<button class="page-btn ${i+1===memberPage?'active':''}" onclick="memberPage=${i+1};renderMembers()">${i+1}</button>`).join('');
+  $('#memberPagination').innerHTML=Array.from({length:totalPages},(_,i)=>`<button class="page-btn ${i+1===memberPage?'active':''}" onclick="setMemberPage(${i+1})">${i+1}</button>`).join('');
   $('#memberBadge').textContent=MEMBERS.length;
 }
 function viewMember(id){const m=MEMBERS.find(x=>x.id===id);if(!m)return;$('#previewTitle').textContent=m.name;$('#previewBody').innerHTML=`<p><strong>MSSV:</strong> ${m.id}</p><p><strong>Ngày sinh:</strong> ${m.dob}</p><p><strong>Giới tính:</strong> ${m.gender}</p><p><strong>Chi đoàn:</strong> ${m.unit}</p><p><strong>SĐT:</strong> ${m.phone}</p><p><strong>Email:</strong> ${m.email}</p><p><strong>Kết nạp:</strong> ${m.joinDate}</p><p><strong>Xếp loại:</strong> ${m.rank}</p>`;openModal('docPreviewModal')}

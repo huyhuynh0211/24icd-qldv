@@ -2177,6 +2177,7 @@ const EVT_STATUS={'sap-dien-ra':{l:'Sắp diễn ra',c:'badge-info'},'dang-dien-
 const TYPE_ICONS={PDF:'📄',DOCX:'📘',PPTX:'📊',Image:'🖼️',MP4:'🎬'};
 const TYPE_CSS={PDF:'pdf',DOCX:'docx',PPTX:'pptx',Image:'img',MP4:'pdf'};
 let charts={},memberPage=1,memberSort={key:'hoTen',asc:true},editingId=null;
+function setPage(n){memberPage=n;App.DoanVien.render()}
 let calYear=new Date().getFullYear(),calMonth=new Date().getMonth(),calFilterDate=null;
 
 // ===== AUDIT LOG =====
@@ -2296,7 +2297,7 @@ DoanVien:{
       const dgCell=isAdmin?`<select class="form-input" style="font-size:11px;padding:4px 6px;width:auto;min-width:100px" onchange="App.DoanVien.updateDanhGia('${m.id}',this.value)">${dgOpts.map(o=>`<option${(m.danhGia||'')=== o?' selected':''}>${o}</option>`).join('')}</select>`:`<span style="font-size:11px">${m.danhGia||'Chưa đánh giá'}</span>`;
       return`<tr><td>${stt}</td><td class="sticky-col"><strong>${m.hoTen||''}</strong></td><td>${m.mssv||''}</td><td>${m.maDinhDanh||''}</td><td>${m.soTheDoan||''}</td><td>${fmtDate(m.ngaySinh)||''}</td><td>${m.gioiTinh||''}</td><td>${m.danToc||''}</td><td>${m.tonGiao||''}</td><td>${m.queQuan||''}</td><td>${m.diaChi||''}</td><td>${m.soCCCD||''}</td><td>${m.ngayCapCCCD||''}</td><td>${m.noiCapCCCD||''}</td><td>${m.trinhDoVH||''}</td><td>${m.trinhDoCM||''}</td><td>${m.trinhDoLLCT||''}</td><td>${m.tinHoc||''}</td><td>${m.ngoaiNgu||''}</td><td>${fmtDate(m.ngayKetNap)||''}</td><td>${m.soNghiQuyet||''}</td><td>${m.ngayVaoDang||''}</td><td>${m.ngheNghiep||''}</td><td>${m.doiTuongSH||''}</td><td>${m.renLuyen||''}</td><td>${dgCell}</td><td>${m.khenThuong||''}</td><td>${m.kyLuat||''}</td><td>${m.chucVu||'Đoàn viên'}</td><td>${m.hoi||''}</td><td>${m.email||''}</td><td>${m.soDienThoai||''}</td><td style="display:flex;gap:4px"><button class="btn-icon" onclick="App.DoanVien.view('${m.id}')" title="Xem">👁️</button>${acts}</td></tr>`
     }).join('');
-    $('#memberPagination').innerHTML=Array.from({length:totalPages},(_,i)=>`<button class="page-btn ${i+1===memberPage?'active':''}" onclick="memberPage=${i+1};App.DoanVien.render()">${i+1}</button>`).join('');
+    $('#memberPagination').innerHTML=Array.from({length:totalPages},(_,i)=>`<button class="page-btn ${i+1===memberPage?'active':''}" onclick="setPage(${i+1})">${i+1}</button>`).join('');
   },
   view(id){const m=(DB.get('doanvien')||[]).find(x=>x.id===id);if(!m)return;$('#previewTitle').textContent=m.hoTen;$('#previewBody').innerHTML=`
     <p><b>MSSV:</b> ${m.mssv||''}</p><p><b>Mã định danh:</b> ${m.maDinhDanh||''}</p><p><b>Số thẻ đoàn:</b> ${m.soTheDoan||''}</p>
@@ -2830,6 +2831,7 @@ window.showToast = showToast;
 window.openModal = openModal;
 window.closeModal = closeModal;
 window.handleFile = handleFile;
+window.setPage = setPage;
 })();
     </script>
 </body>
